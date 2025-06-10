@@ -1,4 +1,6 @@
-//상품
+//상품 모델
+const mongoose = require('mongoose');
+
 const ProductSchema = new mongoose.Schema({
   store: { type: mongoose.Schema.Types.ObjectId, ref: 'Store', required: true },
   name: { type: String, required: true },
@@ -7,3 +9,5 @@ const ProductSchema = new mongoose.Schema({
   imageUrl: String,
   createdAt: { type: Date, default: Date.now }
 });
+
+module.exports = mongoose.model('Product', ProductSchema);
