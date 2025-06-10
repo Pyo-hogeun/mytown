@@ -1,0 +1,9 @@
+//사용자
+const UserSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, unique: true, required: true },
+  passwordHash: { type: String, required: true },
+  address: String,
+  phone: String,
+  createdAt: { type: Date, default: Date.now }
+});
