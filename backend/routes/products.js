@@ -3,6 +3,7 @@ const express = require('express');
 const Product = require('../models/product');
 const router = express.Router();
 
+
 // [관리자용] 상품 등록
 router.post('/', async (req, res) => {
   try {
