@@ -34,4 +34,14 @@ router.get('/store/:storeId', async (req, res) => {
   }
 });
 
+//모든 상품 조회
+router.get('/', async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: '전체 상품 조회 실패', error: err.message });
+  }
+});
+
 module.exports = router;
