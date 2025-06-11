@@ -9,18 +9,18 @@ connectDB();     // 🧩 MongoDB 연결
 const app = express();
 
 // 미들웨어
-
-// ✅ 프리플라이트 OPTIONS 요청 허용
-// app.options('*', cors({
-//   origin: 'http://localhost:3000',
-//   credentials: true,
-// }));
-
 //CORS 설정
 app.use(cors({
   origin: 'http://localhost:3000', // 프론트엔드 주소
   credentials: true,              // 쿠키 등 인증이 필요한 경우
 }));
+
+// 프리플라이트 OPTIONS 요청 응답 허용
+// app.options('/api/*', cors({
+//   origin: 'http://localhost:3000',
+//   credentials: true,
+// }));
+
 app.use(express.json());
 
 // 라우트
