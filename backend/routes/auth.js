@@ -34,8 +34,8 @@ router.post('/signup', async (req, res) => {
 
 // 로그인
 router.post('/login', async (req, res) => {
+  console.log('login test');
   const { email, password } = req.body;
-
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: '존재하지 않는 이메일입니다.' });
