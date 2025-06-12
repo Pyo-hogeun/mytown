@@ -7,28 +7,25 @@ const router = express.Router();
 
 // 환경변수: process.env.JWT_SECRET 사용
 
-// 회원가입
-router.post('/signup', async (req, res) => {
-  const { name, email, password, address, phone } = req.body;
-
+// 📌 회원가입 API
+router.post('/register', async (req, res) => {
   try {
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ message: '이미 가입된 이메일입니다.' });
+    const { name, email, password } = req.body;
 
-    const hashed = await bcrypt.hash(password, 10);
+    // 📌 이미 등록된 이메일인지 확인
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: '이미 존재하는 이메일입니다.' });
 
-    const user = new User({
-      name,
-      email,
-      passwordHash: hashed,
-      address,
-      phone
-    });
+    // 📌 비밀번호 해시화
+    const hashedPassword = await bcrypt.hash(password, 10);
 
+    // 📌 새 사용자 생성
+    const user = new User({ name, email, password: hashedPassword });
     await user.save();
-    res.status(201).json({ message: '회원가입 완료' });
+
+    res.status(201).json({ message: '회원가입 성공' });
   } catch (err) {
-    res.status(500).json({ message: '서버 오류', error: err.message });
+    res.status(500).json({ message: '회원가입 실패', error: err.message });
   }
 });
 
@@ -36,11 +33,12 @@ router.post('/signup', async (req, res) => {
 router.post('/login', async (req, res) => {
   console.log('login test');
   const { email, password } = req.body;
+  console.log(email, password);
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: '존재하지 않는 이메일입니다.' });
 
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: '비밀번호가 틀렸습니다.' });
 
     const token = jwt.sign(
