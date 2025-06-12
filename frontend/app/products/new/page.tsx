@@ -2,7 +2,7 @@
 
 import styled from 'styled-components';
 import { useState } from 'react';
-import api from '@/lib/axios';
+import axios from '@/utils/axiosInstance';
 import { useRouter } from 'next/navigation';
 
 const Container = styled.div`
@@ -37,7 +37,7 @@ export default function ProductForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/products', { storeName, name, price, stockQty, imageUrl });
+      await axios.post('/products', { storeName, name, price, stockQty, imageUrl });
       router.push('/products');
     } catch (err) {
       console.error('등록 실패', err);

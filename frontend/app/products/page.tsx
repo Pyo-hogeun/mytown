@@ -2,7 +2,7 @@
 
 import styled from 'styled-components';
 import { useEffect } from 'react';
-import api from '@/lib/axios';
+import axios from '@/utils/axiosInstance';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { setProducts } from '@/store/productSlice';
@@ -24,7 +24,7 @@ export default function ProductListPage() {
   const products = useSelector((state: RootState) => state.product.items);
 
   useEffect(() => {
-    api.get('/products')
+    axios.get('/products')
       .then((res) => dispatch(setProducts(res.data)))
       .catch((err) => console.error(err));
   }, [dispatch]);
