@@ -1,9 +1,9 @@
-// pages/register.tsx
+'use client'; // 👈 필수!
 
 import { useState } from 'react';
 import styled from 'styled-components';
 import axios from '@/utils/axiosInstance';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 // 📌 스타일 정의
 const Container = styled.div`
