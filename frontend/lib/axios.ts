@@ -4,7 +4,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api', // 백엔드 서버 주소 (필요에 따라 수정)
+  baseURL: 'http://localhost:5001/api', // 백엔드 서버 주소 (필요에 따라 수정)
   withCredentials: true, // 쿠키 인증 등 필요한 경우
 });
 
