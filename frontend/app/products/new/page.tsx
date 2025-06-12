@@ -27,15 +27,17 @@ const Button = styled.button`
 `;
 
 export default function ProductForm() {
+  const [storeName, setStoreName] = useState('');
   const [name, setName] = useState('');
   const [price, setPrice] = useState<number | ''>('');
-  const [storeName, setStoreName] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [stockQty, setStockQty] = useState<number>(0);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/products', { name, price, storeName });
+      await api.post('/products', { storeName, name, price, stockQty, imageUrl });
       router.push('/products');
     } catch (err) {
       console.error('등록 실패', err);
@@ -48,7 +50,9 @@ export default function ProductForm() {
       <form onSubmit={handleSubmit}>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="상품 이름" required />
         <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} placeholder="가격" required />
+        <Input type="number" value={stockQty} onChange={(e) => setStockQty(Number(e.target.value))} placeholder="수량" />
         <Input value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="마트 이름" required />
+        <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="상품이미지" />
         <Button type="submit">등록하기</Button>
       </form>
     </Container>
