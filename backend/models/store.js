@@ -3,14 +3,10 @@ const mongoose = require('mongoose');
 
 const StoreSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  ownerName: String,
   address: String,
-  phone: String,
-  location: {
-    lat: Number,
-    lng: Number
-  },
-  createdAt: { type: Date, default: Date.now }
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true } // 해당 마트 관리자
+}, {
+  timestamps: true
 });
 
 module.exports = mongoose.model('Store', StoreSchema);

@@ -2,16 +2,20 @@
 const jwt = require('jsonwebtoken');
 
 const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1]; // Bearer TOKEN
+  // Authorization: Bearer <token> 형식으로 전달되었다고 가정
+  const authHeader = req.header('Authorization');
+  if (!authHeader) {
+    return res.status(401).json({ message: '인증 토큰이 없습니다.' });
+  }
 
-  if (!token) return res.status(401).json({ message: '인증이 필요합니다.' });
+  const token = authHeader.replace('Bearer ', '');
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // userId, name 포함
+    req.user = decoded; // decoded에 사용자 정보가 들어있음 (id, email 등)
     next();
   } catch (err) {
-    res.status(403).json({ message: '토큰이 유효하지 않습니다.' });
+    res.status(401).json({ message: '유효하지 않은 토큰입니다.' });
   }
 };
 
