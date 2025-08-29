@@ -1,4 +1,4 @@
-// app/stores/new/page.tsx
+'use client'
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import StoreForm from './StoreForm';

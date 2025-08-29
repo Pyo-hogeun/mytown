@@ -11,20 +11,33 @@ const router = express.Router();
  * - 기본 role은 'user'
  * - (선택) ADMIN_SIGNUP_CODE가 일치하면 'admin' 부여
  */
+// 회원가입
 router.post('/register', async (req, res) => {
   try {
     const { email, password, name, roleCode } = req.body;
 
+    // 관리자 코드 확인
     let role = 'user';
     if (
       roleCode &&
-      process.env.ADMIN_SIGNUP_CODE && 
+      process.env.ADMIN_SIGNUP_CODE &&
       roleCode === process.env.ADMIN_SIGNUP_CODE
     ) {
       role = 'admin';
     }
 
-    const user = new User({ email, password, name, role });
+    // 비밀번호 해싱 (router에서 직접)
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // 새로운 유저 생성
+    const user = new User({
+      email,
+      password: hashedPassword, // ✅ 해싱된 비밀번호 저장
+      name,
+      role,
+    });
+
     await user.save();
 
     res.status(201).json({

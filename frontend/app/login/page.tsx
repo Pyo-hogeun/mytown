@@ -1,7 +1,7 @@
 'use client';
 // 🔐 로그인 페이지: 입력 → 로그인 요청 → 토큰 저장
 import { useDispatch } from 'react-redux';
-import { setToken } from '@/redux/slices/authSlice';
+import { setToken, setUser } from '@/redux/slices/authSlice';
 import { login } from '@/services/authService';
 import { useState } from 'react';
 
@@ -12,11 +12,17 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      const token = await login({ email, password });
-      dispatch(setToken(token)); // 🔐 Redux + LocalStorage에 저장
-      alert('로그인 성공');
+      const data = await login({ email, password });
+      console.log("로그인 성공:", data);
+
+      // 예시: 토큰 저장
+      localStorage.setItem("token", data.token);
+
+      // 예시: 유저 정보 상태에 저장
+      dispatch(setUser(data.user));
+
     } catch (err) {
-      alert('로그인 실패');
+      console.error("로그인 실패:", err);
     }
   };
 
