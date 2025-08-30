@@ -16,9 +16,13 @@ const CardItem = styled.div`
   margin-bottom: 1rem;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid red;
+  border: 1px solid #333;
   h2{
-    color: red;
+    font-size: 16px;
+    color: #333;
+  }
+  p{
+    margin: 4px;
   }
 `;
 

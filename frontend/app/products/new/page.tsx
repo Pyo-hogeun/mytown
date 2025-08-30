@@ -13,7 +13,9 @@ const Container = styled.div`
   max-width: 400px;
   margin: auto;
 `;
+const Label = styled.label`
 
+`
 const Input = styled.input`
   width: 100%;
   padding: 0.5rem;
@@ -34,7 +36,11 @@ const Button = styled.button`
   border: none;
   border-radius: 6px;
 `;
-
+const List = styled.ul`
+  li{
+    margin-bottom: 10px;
+  }
+`
 export default function ProductForm() {
   const [name, setName] = useState('');
   const [price, setPrice] = useState<number | ''>('');
@@ -66,18 +72,34 @@ export default function ProductForm() {
     <Container>
       <h1>📝 상품 등록</h1>
       <form onSubmit={handleSubmit}>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="상품 이름" required />
-        <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} placeholder="가격" required />
-        <Input type="number" value={stockQty} onChange={(e) => setStockQty(Number(e.target.value))} placeholder="수량" />
+        <List>
+          <li>
+            <Label>상품이름</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="상품 이름" required />
+          </li>
+          <li>
+            <Label>가격</Label>
+            <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} placeholder="가격" required />
+          </li>
+          <li>
+            <Label>수량</Label>
+            <Input type="number" value={stockQty} onChange={(e) => setStockQty(Number(e.target.value))} placeholder="수량" />
+          </li>
+          <li>
+            <Label>마트</Label>
+            <Select value={storeId} onChange={(e) => setStoreId(e.target.value)} required>
+              <option value="">마트 선택</option>
+              {stores.map((store) => (
+                <option key={store._id} value={store._id}>{store.name}</option>
+              ))}
+            </Select>
+          </li>
+          <li>
+            <Label>상품이미지</Label>
+            <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="상품이미지" />
+          </li>
+        </List>
 
-        <Select value={storeId} onChange={(e) => setStoreId(e.target.value)} required>
-          <option value="">마트 선택</option>
-          {stores.map((store) => (
-            <option key={store._id} value={store._id}>{store.name}</option>
-          ))}
-        </Select>
-
-        <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="상품이미지" />
         <Button type="submit">등록하기</Button>
       </form>
     </Container>

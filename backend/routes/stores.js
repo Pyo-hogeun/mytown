@@ -1,6 +1,6 @@
 const express = require('express');
 const Store = require('../models/store');
-const {authMiddleware, adminOnly} = require('../middleware/authMiddleware');
+const {authMiddleware, adminOnly} = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 // [관리자용] 마트 등록

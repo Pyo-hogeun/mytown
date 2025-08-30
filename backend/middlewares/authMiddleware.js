@@ -1,7 +1,7 @@
 // middleware/authMiddleware.js
 // 인증/인가 미들웨어
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const User = require('../models/user');
 
 // ✅ 인증 미들웨어: Bearer 토큰을 검증하고 req.user에 payload 할당
 const authMiddleware = (req, res, next) => {

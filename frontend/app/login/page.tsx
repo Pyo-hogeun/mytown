@@ -20,6 +20,7 @@ export default function LoginPage() {
 
       // 예시: 유저 정보 상태에 저장
       dispatch(setUser(data.user));
+      dispatch(setToken(data.token));
 
     } catch (err) {
       console.error("로그인 실패:", err);

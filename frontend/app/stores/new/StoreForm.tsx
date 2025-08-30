@@ -38,11 +38,12 @@ const StoreForm = () => {
       await axios.post('/stores', { name, address, phone });
       alert('마트 등록 성공');
       router.push('/stores');
-    } catch (err) {
-      console.error('마트 등록 실패', err);
-      alert('마트 등록 실패');
+    } catch (err: any) {
+      console.error('마트 등록 실패', err.response?.data || err.message);
+      alert(err.response?.data?.message || '마트 등록 실패');
     }
   };
+  
 
   return (
     <Container>

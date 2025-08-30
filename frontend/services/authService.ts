@@ -18,5 +18,6 @@ export interface LoginParams {
 
 export const login = async (params: LoginParams): Promise<LoginResponse> => {
   const res = await axios.post<LoginResponse>('/auth/login', params);
+  console.log('log res: ', res.data);
   return res.data; // 📥 response 전체 반환
 };
