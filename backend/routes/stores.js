@@ -10,10 +10,10 @@ router.post('/', authMiddleware, adminOnly, async (req, res) => {
 
   try {
     // 동일한 사용자가 이미 마트를 등록했는지 확인
-    const existingStore = await Store.findOne({ owner: userId });
-    if (existingStore) {
-      return res.status(400).json({ message: '이미 마트를 등록했습니다.' });
-    }
+    // const existingStore = await Store.findOne({ owner: userId });
+    // if (existingStore) {
+    //   return res.status(400).json({ message: '이미 마트를 등록했습니다.' });
+    // }
 
     const store = new Store({ name, address, owner: userId, phone });
     await store.save();

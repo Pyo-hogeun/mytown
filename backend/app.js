@@ -25,7 +25,7 @@ app.use(express.json());
 
 // 라우트
 app.use('/api/auth', require('./routes/auth'));
-// app.use('/api/users', require('./routes/users'));
+app.use('/api/users', require('./routes/users'));
 app.use('/api/stores', require('./routes/stores'));
 app.use('/api/products', require('./routes/products'));
 // app.use('/api/orders', require('./routes/orders'));

@@ -41,7 +41,7 @@ const List = styled.ul`
     margin-bottom: 10px;
   }
 `
-export default function ProductForm() {
+const ProductForm = () => {
   const [name, setName] = useState('');
   const [price, setPrice] = useState<number | ''>('');
   const [imageUrl, setImageUrl] = useState('');
@@ -50,6 +50,8 @@ export default function ProductForm() {
   const router = useRouter();
   const dispatch = useDispatch();
   const stores = useSelector((state: RootState) => state.store.items);
+  const user = useSelector((state: RootState) => state.auth.user);
+
 
   // 마트 목록 불러오기
   useEffect(() => {
@@ -67,41 +69,46 @@ export default function ProductForm() {
       console.error('등록 실패', err);
     }
   };
+  if( !user || user.role !== 'admin'){
+    return (<p>권한이 없습니다.</p>)
+  } else {
 
-  return (
-    <Container>
-      <h1>📝 상품 등록</h1>
-      <form onSubmit={handleSubmit}>
-        <List>
-          <li>
-            <Label>상품이름</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="상품 이름" required />
-          </li>
-          <li>
-            <Label>가격</Label>
-            <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} placeholder="가격" required />
-          </li>
-          <li>
-            <Label>수량</Label>
-            <Input type="number" value={stockQty} onChange={(e) => setStockQty(Number(e.target.value))} placeholder="수량" />
-          </li>
-          <li>
-            <Label>마트</Label>
-            <Select value={storeId} onChange={(e) => setStoreId(e.target.value)} required>
-              <option value="">마트 선택</option>
-              {stores.map((store) => (
-                <option key={store._id} value={store._id}>{store.name}</option>
-              ))}
-            </Select>
-          </li>
-          <li>
-            <Label>상품이미지</Label>
-            <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="상품이미지" />
-          </li>
-        </List>
-
-        <Button type="submit">등록하기</Button>
-      </form>
-    </Container>
-  );
+    return (
+      <Container>
+        <h1>📝 상품 등록 {user.role}</h1>
+        <form onSubmit={handleSubmit}>
+          <List>
+            <li>
+              <Label>상품이름</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="상품 이름" required />
+            </li>
+            <li>
+              <Label>가격</Label>
+              <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} placeholder="가격" required />
+            </li>
+            <li>
+              <Label>수량</Label>
+              <Input type="number" value={stockQty} onChange={(e) => setStockQty(Number(e.target.value))} placeholder="수량" />
+            </li>
+            <li>
+              <Label>마트</Label>
+              <Select value={storeId} onChange={(e) => setStoreId(e.target.value)} required>
+                <option value="">마트 선택</option>
+                {stores.map((store) => (
+                  <option key={store._id} value={store._id}>{store.name}</option>
+                ))}
+              </Select>
+            </li>
+            <li>
+              <Label>상품이미지</Label>
+              <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="상품이미지" />
+            </li>
+          </List>
+  
+          <Button type="submit">등록하기</Button>
+        </form>
+      </Container>
+    );
+  }
 }
+export default ProductForm
