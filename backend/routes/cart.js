@@ -37,4 +37,17 @@ router.post("/add", authMiddleware, async (req, res) => {
   res.json(cart);
 });
 
+// 장바구니 항목 제거
+router.post("/remove", authMiddleware, async (req, res) => {
+  if (req.user.role !== "user") return res.status(403).json({ message: "관리자는 장바구니를 사용할 수 없습니다." });
+
+  const { itemId } = req.body;
+  const cart = await Cart.findOne({ user: req.user.id });
+  if (!cart) return res.status(404).json({ message: "장바구니 없음" });
+
+  cart.items = cart.items.filter(item => item._id.toString() !== itemId);
+  await cart.save();
+  res.json(cart);
+});
+
 export default router;
