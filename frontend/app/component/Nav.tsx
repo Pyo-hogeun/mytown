@@ -26,10 +26,10 @@ const Nav = () => {
         <Item><Link href="/stores">매장 목록</Link></Item>
         <Item><Link href="/users">사용자관리</Link></Item>
         {
-          !token && (<>
+          !token ? (<>
             <Item><Link href="/login">로그인</Link></Item>
             <Item><Link href="/register">회원가입</Link></Item>
-          </>)
+          </>):false
         }
       </ul>
 

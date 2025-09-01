@@ -3,7 +3,7 @@
 import { useDispatch } from 'react-redux';
 import { setToken, setUser } from '@/redux/slices/authSlice';
 import { login } from '@/services/authService';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styled, { keyframes } from 'styled-components';
 
@@ -13,7 +13,6 @@ const spin = keyframes`
   100% { transform: rotate(360deg); }
 `;
 
-// 전체 컨테이너
 const Container = styled.div`
   position: fixed;
   display: flex;
@@ -27,7 +26,6 @@ const Container = styled.div`
   z-index: -1;
 `;
 
-// 카드 UI
 const Card = styled.div`
   background: #fff;
   padding: 40px 32px;
@@ -37,7 +35,6 @@ const Card = styled.div`
   max-width: 400px;
 `;
 
-// 제목
 const Title = styled.h1`
   font-size: 1.5rem;
   margin-bottom: 24px;
@@ -45,7 +42,6 @@ const Title = styled.h1`
   color: #333;
 `;
 
-// 입력창
 const Input = styled.input`
   width: 100%;
   padding: 12px 14px;
@@ -61,7 +57,6 @@ const Input = styled.input`
   }
 `;
 
-// 버튼
 const Button = styled.button<{ loading?: boolean }>`
   width: 100%;
   padding: 12px 14px;
@@ -78,7 +73,6 @@ const Button = styled.button<{ loading?: boolean }>`
   }
 `;
 
-// 로딩 아이콘
 const Spinner = styled.div`
   border: 2px solid #fff;
   border-top: 2px solid transparent;
@@ -99,6 +93,15 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // ✅ 클라이언트 렌더링 후 localStorage에서 토큰 초기화
+  useEffect(() => {
+    const savedToken = localStorage.getItem('token');
+    if (savedToken) {
+      dispatch(setToken(savedToken));
+      // 필요 시 유저 정보도 가져와서 dispatch
+    }
+  }, [dispatch]);
+
   const handleLogin = async () => {
     if (loading) return;
     setLoading(true);
@@ -107,10 +110,11 @@ const LoginPage = () => {
       const data = await login({ email, password });
       console.log("로그인 성공:", data);
 
-      // 토큰 저장
-      localStorage.setItem("token", data.token);
+      // ✅ localStorage는 클라이언트 환경에서만 접근
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("token", data.token);
+      }
 
-      // 유저 정보 저장
       dispatch(setUser(data.user));
       dispatch(setToken(data.token));
 

@@ -134,7 +134,7 @@ const ProductListPage = () => {
               <Price>{product.price.toLocaleString()}원</Price>
               <Store>{product.storeName}</Store>
             </Info>
-            {user?.role === 'user' ? <Button onClick={() => handleAddToCart(product._id)}>장바구니 담기</Button>:false}
+            {user?.role === 'user' ? <Button onClick={() => handleAddToCart(product._id)}>장바구니 담기</Button>:undefined}
             
           </CardItem>
         ))}
