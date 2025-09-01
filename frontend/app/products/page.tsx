@@ -4,31 +4,114 @@ import styled from 'styled-components';
 import { useEffect } from 'react';
 import axios from '@/utils/axiosInstance';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '@/redux/store';
+import { AppDispatch, RootState } from '@/redux/store';
 import { setProducts } from '@/redux/slices/productSlice';
+import { useRequireLogin } from '../hooks/useRequireLogin';
+import { addToCart } from '@/redux/slices/cartSlice';
 
 const Container = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 2rem;
 `;
 
+const Title = styled.h1`
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  text-align: center;
+  color: #2c3e50;
+`;
+
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
+`;
+
 const CardItem = styled.div`
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid #333;
-  h2{
-    font-size: 16px;
-    color: #333;
-  }
-  p{
-    margin: 4px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
   }
 `;
 
-const  ProductListPage = () => {
-  const dispatch = useDispatch();
+const ImageBox = styled.div`
+  width: 100%;
+  height: 160px;
+  background: #f7f7f7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+`;
+
+const Info = styled.div`
+  padding: 1rem;
+  flex: 1;
+`;
+
+const Name = styled.h2`
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+`;
+
+const Price = styled.p`
+  font-size: 18px;
+  font-weight: bold;
+  color: #e74c3c;
+  margin: 0.5rem 0;
+`;
+
+const Store = styled.p`
+  font-size: 14px;
+  color: #888;
+`;
+
+const Button = styled.button`
+  margin: 1rem;
+  padding: 0.6rem;
+  background: #27ae60;
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #219150;
+  }
+`;
+
+const ProductListPage = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { requireLogin } = useRequireLogin();
   const products = useSelector((state: RootState) => state.product.items);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const handleAddToCart = (productId: string) => {
+    requireLogin(() => {
+      if (user?.role === "user") {
+        dispatch(addToCart({ productId }));
+      } else {
+        alert("관리자는 장바구니를 사용할 수 없습니다.");
+      }
+    });
+  };
 
   useEffect(() => {
     axios.get('/products')
@@ -38,16 +121,26 @@ const  ProductListPage = () => {
 
   return (
     <Container>
-      <h1>📦 상품 목록</h1>
-      {products.map((product) => (
-        <CardItem key={product._id}>
-          <h2>{product.name}</h2>
-          <p>가격: {product.price}원</p>
-          <p>마트: {product.storeName}</p>
-        </CardItem>
-      ))}
+      <Title>🛒 오늘의 상품</Title>
+      <Grid>
+        {products.map((product) => (
+          <CardItem key={product._id}>
+            <ImageBox>
+              {/* 상품 이미지 API에 따라 다르게 처리 */}
+              <img src={product.imageUrl || '/no-image.png'} alt={product.name} />
+            </ImageBox>
+            <Info>
+              <Name>{product.name}</Name>
+              <Price>{product.price.toLocaleString()}원</Price>
+              <Store>{product.storeName}</Store>
+            </Info>
+            {user?.role === 'user' ? <Button onClick={() => handleAddToCart(product._id)}>장바구니 담기</Button>:false}
+            
+          </CardItem>
+        ))}
+      </Grid>
     </Container>
   );
-}
+};
 
-export default ProductListPage
+export default ProductListPage;

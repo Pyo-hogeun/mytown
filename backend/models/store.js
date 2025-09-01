@@ -1,6 +1,5 @@
 //마트상점
-const mongoose = require('mongoose');
-
+import mongoose from "mongoose";
 const StoreSchema = new mongoose.Schema({
   name: { type: String, required: true },
   address: { type: String },
@@ -10,4 +9,4 @@ const StoreSchema = new mongoose.Schema({
   timestamps: true
 });
 
-module.exports = mongoose.model('Store', StoreSchema);
+export default mongoose.model('Store', StoreSchema);

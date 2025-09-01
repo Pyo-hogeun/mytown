@@ -1,10 +1,10 @@
 // middleware/authMiddleware.js
 // 인증/인가 미들웨어
-const jwt = require('jsonwebtoken');
-const User = require('../models/user');
+import jwt from 'jsonwebtoken';
+import User from '../models/user.js'; // ESM에서는 파일 확장자 명시 필요
 
 // ✅ 인증 미들웨어: Bearer 토큰을 검증하고 req.user에 payload 할당
-const authMiddleware = (req, res, next) => {
+export const authMiddleware = (req, res, next) => {
   const authHeader = req.header('Authorization'); // 형식: "Bearer <token>"
   if (!authHeader) {
     return res.status(401).json({ message: '인증 토큰이 없습니다.' });
@@ -26,7 +26,7 @@ const authMiddleware = (req, res, next) => {
  * - 새 토큰은 req.user.role === 'admin' 이면 통과
  * - 구 토큰( role 없음 ) 대응: DB에서 role 조회 후 판단
  */
-const adminOnly = async (req, res, next) => {
+export const adminOnly = async (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ message: '인증이 필요합니다.' });
   }
@@ -47,4 +47,4 @@ const adminOnly = async (req, res, next) => {
   }
 };
 
-module.exports = { authMiddleware, adminOnly };
+export default { authMiddleware, adminOnly };

@@ -1,6 +1,6 @@
 //상품라우터
-const express = require('express');
-const Product = require('../models/product');
+import express from 'express';
+import Product from '../models/product.js';
 const router = express.Router();
 
 
@@ -44,4 +44,4 @@ router.get('/', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

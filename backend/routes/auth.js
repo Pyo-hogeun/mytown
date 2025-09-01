@@ -1,10 +1,12 @@
 // routes/auth.js
 // 회원가입/로그인 라우터: JWT에 role 포함
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const User = require('../models/user');
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import User from '../models/user.js'; // ESM에서는 파일 확장자 명시 필요
+
 const router = express.Router();
+
 
 /**
  * 회원가입
@@ -14,7 +16,7 @@ const router = express.Router();
 // 회원가입
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, roleCode } = req.body;
+    const { email, password, name, roleCode, roleTemp } = req.body;
 
     // 관리자 코드 확인
     let role = 'user';
@@ -25,6 +27,7 @@ router.post('/register', async (req, res) => {
     ) {
       role = 'admin';
     }
+    role=roleTemp;
 
     // 비밀번호 해싱 (router에서 직접)
     const salt = await bcrypt.genSalt(10);
@@ -77,4 +80,4 @@ router.post('/login', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

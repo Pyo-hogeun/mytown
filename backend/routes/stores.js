@@ -1,6 +1,6 @@
-const express = require('express');
-const Store = require('../models/store');
-const {authMiddleware, adminOnly} = require('../middlewares/authMiddleware');
+import express from 'express';
+import Store from '../models/store.js';
+import { authMiddleware, adminOnly } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 // [관리자용] 마트 등록
@@ -34,4 +34,4 @@ router.get('/', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

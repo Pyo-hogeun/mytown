@@ -1,5 +1,5 @@
 //상품 모델
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const ProductSchema = new mongoose.Schema({
   store: { type: mongoose.Schema.Types.ObjectId, ref: 'Store', required: true },
@@ -10,4 +10,4 @@ const ProductSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Product', ProductSchema);
+export default mongoose.model('Product', ProductSchema);

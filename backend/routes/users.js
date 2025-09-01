@@ -1,7 +1,7 @@
-const express = require("express");
+import express from "express";
+import User from '../models/user.js';
+import { authMiddleware, adminOnly } from '../middlewares/authMiddleware.js';
 const router = express.Router();
-const User = require("../models/user");
-const { authMiddleware, adminOnly } = require("../middlewares/authMiddleware");
 
 // 사용자 목록 조회 (관리자만 가능)
 router.get("/", async (req, res) => {
@@ -41,4 +41,4 @@ router.patch('/:id/role', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

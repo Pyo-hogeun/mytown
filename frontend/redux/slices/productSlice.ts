@@ -5,6 +5,7 @@ type Product = {
   name: string;
   price: number;
   storeName: string;
+  imageUrl: string;
 };
 
 interface ProductState {
