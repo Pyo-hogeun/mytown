@@ -6,6 +6,7 @@ import styled, { keyframes } from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
 import { createOrder, PaymentMethod } from '@/redux/slices/orderSlice';
 import type { RootState } from '@/redux/store';
+import { fetchCart } from '@/redux/slices/cartSlice';
 
 const Container = styled.div`
   max-width:900px;
@@ -169,21 +170,29 @@ const CheckoutPage = () => {
   const onPay = async () => {
     if (!canPay) return;
     try {
-      const action = await dispatch(createOrder({ items, paymentMethod: method, maskedCard }));
+      const action = await dispatch(
+        createOrder({ items, paymentMethod: method, maskedCard })
+      );
+
       if (createOrder.fulfilled.match(action)) {
         // 서버 응답에서 orders 배열 꺼내기
         const orders = action.payload.orders || [];
 
+        // ✅ 주문 완료 후 장바구니 최신화
+        dispatch(fetchCart());
+
         // orderId만 추출
         const orderIds = orders.map((o: any) => o.orderId);
 
-        // 배열을 JSON 문자열로 query에 붙임
+        // 주문 완료 페이지 이동
         router.push(`/order-complete`);
       }
     } catch (e) {
       // 실패는 slice에서 처리
     }
   };
+
+
 
   return (
     <Container>
