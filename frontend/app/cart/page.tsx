@@ -62,11 +62,22 @@ export default function CartPage() {
     .filter(item => selectedIds.includes(item._id))
     .reduce((sum, item) => sum + item.quantity * item.product.price, 0);
 
-  const handleCheckout = () => {
-    if (selectedIds.length === 0) return alert('결제할 항목을 선택하세요.');
-    const selectedItems = cart.filter(item => selectedIds.includes(item._id));
-    router.push(`/checkout?items=${encodeURIComponent(JSON.stringify(selectedItems))}`);
-  };
+    const handleCheckout = () => {
+      if (selectedIds.length === 0) return alert('결제할 항목을 선택하세요.');
+      
+      const selectedItems = cart
+        .filter(item => selectedIds.includes(item._id))
+        .map(i => ({
+          ...i,
+          product: {
+            ...i.product,
+            store: i.product.store?._id ?? null, // null 방어
+          }
+        }));
+    
+      router.push(`/checkout?items=${encodeURIComponent(JSON.stringify(selectedItems))}`);
+    };
+    
 
   return (
     <Container>

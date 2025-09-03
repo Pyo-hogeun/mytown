@@ -85,9 +85,15 @@ const PayButton = styled.button<{ disabled?: boolean }>`
 
 type CartItem = {
   _id: string;
-  product: { _id: string; name: string; price: number; store: string; };
+  product: {
+    _id: string;
+    name: string;
+    price: number;
+    store: string | null;
+  };
   quantity: number;
 };
+
 
 const CheckoutPage = () => {
   const searchParams = useSearchParams();

@@ -2,29 +2,37 @@
 import express from "express";
 import Cart from "../models/cart.js";
 import Order from "../models/order.js";
+import Product from "../models/product.js";   // ✅ 이거 빠져있음
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// 주문 생성 (스토어별 분리)
+// 주문 생성
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== "user") {
-      return res
-        .status(403)
-        .json({ message: "관리자는 주문할 수 없습니다." });
-    }
-
-    const { items } = req.body; 
-    // items 예시: [{ _id, product: { _id, price, store }, quantity }]
+    const { items } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ message: "주문할 항목이 없습니다." });
     }
 
-    // 스토어별로 그룹화
-    const storeGrouped = items.reduce((acc, item) => {
-      const storeId = item.product.store.toString();
+    // ✅ productId만 넘어왔다면 DB에서 populate
+    const populatedItems = await Promise.all(
+      items.map(async (i) => {
+        const product = await Product.findById(i.product).populate("store");
+        if (!product || !product.store) {
+          throw new Error(`상품 ${i.product}에 스토어 정보가 없습니다.`);
+        }
+        return {
+          product,
+          quantity: i.quantity,
+        };
+      })
+    );
+
+    // ✅ 스토어별 그룹화
+    const storeGrouped = populatedItems.reduce((acc, item) => {
+      const storeId = item.product.store._id.toString();
       if (!acc[storeId]) acc[storeId] = [];
       acc[storeId].push(item);
       return acc;
@@ -39,12 +47,12 @@ router.post("/", authMiddleware, async (req, res) => {
       );
 
       const order = new Order({
-        user: req.user._id,  // ✅ id 대신 _id 사용
+        user: req.user._id,
         store: storeId,
         orderItems: storeItems.map((i) => ({
           product: i.product._id,
           quantity: i.quantity,
-          unitPrice: i.product.price,   // ✅ 필수 필드 추가
+          unitPrice: i.product.price,
         })),
         totalPrice,
         status: "pending",
@@ -54,11 +62,11 @@ router.post("/", authMiddleware, async (req, res) => {
       createdOrders.push(order);
     }
 
-    // 주문 완료 후 장바구니에서 제거
+    // ✅ 주문 완료 후 장바구니 정리
     const cart = await Cart.findOne({ user: req.user._id });
     if (cart) {
       cart.items = cart.items.filter(
-        (ci) => !items.find((i) => i._id === ci._id.toString())
+        (ci) => !items.find((i) => i.product._id === ci.product.toString())
       );
       await cart.save();
     }
@@ -70,10 +78,11 @@ router.post("/", authMiddleware, async (req, res) => {
         store: o.store,
         totalPrice: o.totalPrice,
       })),
+      cart, // 최신 cart 같이 내려줌
     });
   } catch (err) {
     console.error("주문 생성 오류:", err);
-    return res.status(500).json({ message: "주문 생성 중 오류가 발생했습니다." });
+    return res.status(500).json({ message: err.message });
   }
 });
 

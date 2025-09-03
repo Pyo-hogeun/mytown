@@ -14,10 +14,24 @@ export const addToCart = createAsyncThunk(
   }
 );
 
+// ✅ 주문 생성 & 장바구니 업데이트
+export const checkout = createAsyncThunk(
+  'cart/checkout',
+  async (items, { dispatch }) => {
+    const res = await axios.post('/order/checkout', { items });
+    // 최신 cart 상태 반영
+    dispatch(updateCart(res.data.cart));
+    return res.data.order;
+  }
+);
 const cartSlice = createSlice({
   name: "cart",
   initialState: { items: [], loading: false },
-  reducers: {},
+  reducers: {
+    updateCart: (state, action) => {
+      state.items = action.payload.items;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchCart.pending, (state) => {
@@ -32,5 +46,5 @@ const cartSlice = createSlice({
       });
   },
 });
-
+export const { updateCart } = cartSlice.actions;
 export default cartSlice.reducer;
