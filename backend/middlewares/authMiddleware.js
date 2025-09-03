@@ -3,23 +3,28 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/user.js'; // ESM에서는 파일 확장자 명시 필요
 
-// ✅ 인증 미들웨어: Bearer 토큰을 검증하고 req.user에 payload 할당
-export const authMiddleware = (req, res, next) => {
-  const authHeader = req.header('Authorization'); // 형식: "Bearer <token>"
+export const authMiddleware = async (req, res, next) => {
+  const authHeader = req.header("Authorization");
   if (!authHeader) {
-    return res.status(401).json({ message: '인증 토큰이 없습니다.' });
+    return res.status(401).json({ message: "인증 토큰이 없습니다." });
   }
 
-  const token = authHeader.replace('Bearer ', '');
+  const token = authHeader.replace("Bearer ", "");
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // { id, email, role? }
+
+    // ✅ DB에서 유저 조회
+    const user = await User.findById(decoded.id).lean();
+    if (!user) return res.status(401).json({ message: "유효하지 않은 사용자입니다." });
+
+    req.user = user; // 이제 _id 포함됨
     next();
   } catch (err) {
-    res.status(401).json({ message: '유효하지 않은 토큰입니다.' });
+    res.status(401).json({ message: "유효하지 않은 토큰입니다." });
   }
 };
+
 
 /**
  * ✅ 관리자 권한 확인 미들웨어

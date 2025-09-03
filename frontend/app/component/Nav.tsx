@@ -1,22 +1,26 @@
 'use client'
 
 import Link from "next/link"
-import styled from "styled-components"
+import styled, { css, keyframes } from "styled-components"
 import Profile from "./Profile"
 import { useSelector } from "react-redux"
 import { RootState } from "@/redux/store"
+import { useEffect, useState } from "react"
+
 const Container = styled.div`
   ul{
     display: flex;
     gap: 20px;
   }
-`
+`;
 const Item = styled.li`
   list-style: none;
-`
+`;
+
 const Nav = () => {
   // 🔐 Redux에서 인증 상태 가져오기
-  const token = useSelector((state: RootState) => state.auth.token)
+  const token = useSelector((state: RootState) => state.auth.token);
+  
   return (
     <Container>
       <ul>
@@ -25,7 +29,7 @@ const Nav = () => {
         <Item><Link href="/stores/new">매장 등록</Link></Item>
         <Item><Link href="/stores">매장 목록</Link></Item>
         <Item><Link href="/users">사용자관리</Link></Item>
-        <Item><Link href="/cart">장바구니</Link></Item>
+        
         {
           !token ? (<>
             <Item><Link href="/login">로그인</Link></Item>
@@ -33,7 +37,6 @@ const Nav = () => {
           </>):false
         }
       </ul>
-
       <Profile />
     </Container>
   )

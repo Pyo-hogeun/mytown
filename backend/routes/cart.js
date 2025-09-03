@@ -9,21 +9,30 @@ router.get("/", authMiddleware, async (req, res) => {
   if (req.user.role !== "user") {
     return res.status(403).json({ message: "관리자는 장바구니를 사용할 수 없습니다." });
   }
-  const cart = await Cart.findOne({ user: req.user.id }).populate("items.product");
+
+  const cart = await Cart.findOne({ user: req.user._id })
+    .populate({
+      path: "items.product",
+      populate: { path: "store" } // ✅ product.store 까지 채움
+    });
+
   res.json(cart || { items: [] });
 });
 
+
 // 장바구니 담기
 router.post("/add", authMiddleware, async (req, res) => {
+  console.log("req.user from token:", req.user); // ✅ 확인
+
   if (req.user.role !== "user") {
     return res.status(403).json({ message: "관리자는 장바구니를 사용할 수 없습니다." });
   }
 
   const { productId, quantity } = req.body;
-  let cart = await Cart.findOne({ user: req.user.id });
+  let cart = await Cart.findOne({ user: req.user._id });
 
   if (!cart) {
-    cart = new Cart({ user: req.user.id, items: [] });
+    cart = new Cart({ user: req.user._id, items: [] });
   }
 
   const itemIndex = cart.items.findIndex((i) => i.product.toString() === productId);
@@ -42,7 +51,7 @@ router.post("/remove", authMiddleware, async (req, res) => {
   if (req.user.role !== "user") return res.status(403).json({ message: "관리자는 장바구니를 사용할 수 없습니다." });
 
   const { itemId } = req.body;
-  const cart = await Cart.findOne({ user: req.user.id });
+  const cart = await Cart.findOne({ user: req.user._id });
   if (!cart) return res.status(404).json({ message: "장바구니 없음" });
 
   cart.items = cart.items.filter(item => item._id.toString() !== itemId);
