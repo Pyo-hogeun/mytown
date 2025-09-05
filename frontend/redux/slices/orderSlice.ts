@@ -34,16 +34,31 @@ export interface StoreOrder {
   items: StoreOrderItem[];
 }
 
+export interface OrderItem {
+  _id?: string;
+  product: string | { _id: string; name?: string; price?: number };
+  quantity: number;
+  unitPrice: number;
+}
+
 export interface UserOrder {
   _id: string;
+  user?: string | { _id: string; name?: string };
+  store?: string | { _id: string; name?: string };
+  orderItems: OrderItem[];
+
   paymentMethod?: PaymentMethod | string;
   status?: OrderStatus;
   createdAt: string;
+
   // 백엔드에 따라 필드명이 다를 수 있어 둘 다 지원
   totalAmount?: number;
   totalPrice?: number;
-  storeOrders: StoreOrder[];
+
+  // 👉 일부 프론트 코드 호환을 위해 남겨둠 (필요 없으면 제거 가능)
+  storeOrders?: StoreOrder[];
 }
+
 
 // ✅ 주문 생성 (여러 가맹점 주문 생성)
 export const createOrder = createAsyncThunk(

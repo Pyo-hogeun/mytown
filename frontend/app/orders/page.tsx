@@ -1,4 +1,3 @@
-// app/orders/page.tsx
 "use client";
 
 import { useEffect, useMemo } from "react";
@@ -15,23 +14,15 @@ export default function OrdersPage() {
   }, [dispatch]);
 
   const isLoading = status === "processing";
-
   const empty = useMemo(() => orders.length === 0, [orders]);
 
   const formatKrw = (n: number) => n.toLocaleString() + "원";
 
   const calcOrderTotal = (o: any) => {
-    if (typeof o?.totalAmount === "number") return o.totalAmount;
-    if (typeof o?.totalPrice === "number") return o.totalPrice;
-    // fallback: storeOrders 기준 합산
     try {
-      return (o.storeOrders || []).reduce(
-        (sum: number, so: any) =>
-          sum +
-          (so.items || []).reduce(
-            (s: number, it: any) => s + (it.price || 0) * (it.quantity || 0),
-            0
-          ),
+      return (o.orderItems || []).reduce(
+        (sum: number, it: any) =>
+          sum + (it.unitPrice || 0) * (it.quantity || 0),
         0
       );
     } catch {
@@ -64,6 +55,7 @@ export default function OrdersPage() {
                 background: "#fff",
               }}
             >
+              {/* 주문 상단 정보 */}
               <div
                 style={{
                   display: "flex",
@@ -87,51 +79,39 @@ export default function OrdersPage() {
                 상태: {order.status || "-"}
               </div>
 
+              {/* 매장 + 상품 목록 */}
               <div
                 style={{
                   marginTop: 12,
-                  display: "grid",
-                  gap: 8,
+                  border: "1px solid #f3f3f3",
+                  borderRadius: 10,
+                  padding: 12,
                 }}
               >
-                {(order.storeOrders || []).map((so, idx) => {
-                  const storeName =
-                    typeof so.store === "string"
-                      ? so.store
-                      : so.store?.name || so.store?._id || "가맹점";
-                  return (
-                    <div
-                      key={(so as any)._id ?? idx}
-                      style={{
-                        border: "1px solid #f3f3f3",
-                        borderRadius: 10,
-                        padding: 12,
-                      }}
-                    >
-                      <div style={{ fontWeight: 600, marginBottom: 6 }}>
-                        매장: {storeName}
-                      </div>
-                      <ul style={{ margin: 0, paddingLeft: 18 }}>
-                        {(so.items || []).map((it, iidx) => {
-                          const name =
-                            (typeof it.product === "object" &&
-                              (it.product?.name || (it.product as any)?._id)) ||
-                            it.productName ||
-                            String(it.product ?? "상품");
-                          const line =
-                            (it.price || 0) * (it.quantity || 0);
-                          return (
-                            <li key={iidx}>
-                              {name} × {it.quantity} = {formatKrw(line)}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  );
-                })}
+                <div style={{ fontWeight: 600, marginBottom: 6 }}>
+                  매장:{" "}
+                  {typeof order.store === "object"
+                    ? order.store?.name
+                    : String(order.store ?? "가맹점")}
+                </div>
+
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  {(order.orderItems || []).map((it, iidx) => {
+                    const name =
+                      typeof it.product === "object"
+                        ? it.product?.name || it.product?._id
+                        : String(it.product ?? "상품");
+                    const line = (it.unitPrice || 0) * (it.quantity || 0);
+                    return (
+                      <li key={iidx}>
+                        {name} × {it.quantity} = {formatKrw(line)}
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
 
+              {/* 합계 */}
               <div
                 style={{
                   marginTop: 12,

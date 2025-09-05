@@ -123,7 +123,8 @@ const ProductListPage = () => {
     <Container>
       <Title>🛒 오늘의 상품</Title>
       <Grid>
-        {products.map((product) => (
+        { products.length > 0 ? 
+        products.map((product) => (
           <CardItem key={product._id}>
             <ImageBox>
               {/* 상품 이미지 API에 따라 다르게 처리 */}
@@ -137,7 +138,7 @@ const ProductListPage = () => {
             {user?.role === 'user' ? <Button onClick={() => handleAddToCart(product._id)}>장바구니 담기</Button>:undefined}
             
           </CardItem>
-        ))}
+        )): '상품이 없습니다'}
       </Grid>
     </Container>
   );

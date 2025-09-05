@@ -93,6 +93,7 @@ router.get("/", authMiddleware, async (req, res) => {
     const orders = await Order.find({ user: userId })
       .sort({ createdAt: -1 })
       .populate("store") // 가게 정보 populate
+      .populate("orderItems.product") // ✅ 상품 정보까지 join
       .lean();
 
     res.json({ orders });

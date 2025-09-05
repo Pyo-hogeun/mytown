@@ -44,13 +44,16 @@ const List = styled.ul`
 const ProductForm = () => {
   const [name, setName] = useState('');
   const [price, setPrice] = useState<number | ''>('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageUrl, setImageUrl] = useState<string>('');
   const [stockQty, setStockQty] = useState<number>(0);
   const [storeId, setStoreId] = useState('');
   const router = useRouter();
   const dispatch = useDispatch();
   const stores = useSelector((state: RootState) => state.store.items);
   const user = useSelector((state: RootState) => state.auth.user);
+
+  // ✅ 권한이 있는 역할들을 배열로 정의
+  const allowedRoles = ['admin', 'manager'];
 
 
   // 마트 목록 불러오기
@@ -69,7 +72,7 @@ const ProductForm = () => {
       console.error('등록 실패', err);
     }
   };
-  if( !user || user.role !== 'admin'){
+  if( !user || !allowedRoles.includes(user.role)){
     return (<p>권한이 없습니다.</p>)
   } else {
 
@@ -102,6 +105,7 @@ const ProductForm = () => {
             <li>
               <Label>상품이미지</Label>
               <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="상품이미지" />
+              <p>'https://...' 처럼 절대경로를 포함해야합니다.</p>
             </li>
           </List>
   
