@@ -9,6 +9,7 @@ import storeRoutes from './routes/stores.js';
 import productRoutes from './routes/products.js';
 import cartRoutes from './routes/cart.js';
 import orderRoutes from './routes/order.js';
+import { setupSwagger } from './swagger.js';
 // import riderRoutes from './routes/riders.js';
 // import reviewRoutes from './routes/reviews.js';
 
@@ -39,6 +40,9 @@ app.use('/api/order', orderRoutes);
 app.get('/', (req, res) => {
   res.send('🛒 Shopping Delivery API is running');
 });
+
+// Swagger UI
+setupSwagger(app);
 
 // 서버 시작
 const PORT = process.env.PORT || 5001;

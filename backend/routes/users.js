@@ -1,13 +1,51 @@
+// routes/users.js
 import express from "express";
 import User from '../models/user.js';
 import { authMiddleware, adminOnly } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
-// 사용자 목록 조회 (관리자만 가능)
+/**
+ * @swagger
+ * tags:
+ *   name: Users
+ *   description: 사용자 관리 API
+ */
+
+/**
+ * @swagger
+ * /users:
+ *   get:
+ *     summary: 사용자 목록 조회 (관리자만 가능)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 사용자 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   _id:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   role:
+ *                     type: string
+ *                     enum: [user, admin]
+ *       403:
+ *         description: 권한 없음
+ *       500:
+ *         description: 서버 오류
+ */
 router.get("/", async (req, res) => {
   try {
-    // role 검사 로직이 있다면 추가 (예: req.user.role === 'admin')
-    const users = await User.find().select("-password"); // password 제외
+    const users = await User.find().select("-password");
     res.json(users);
   } catch (error) {
     console.error("사용자 목록 조회 실패:", error);
@@ -15,11 +53,60 @@ router.get("/", async (req, res) => {
   }
 });
 
-// role 변경 (관리자 전용)
+/**
+ * @swagger
+ * /users/{id}/role:
+ *   patch:
+ *     summary: 사용자 권한 변경 (관리자 전용)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: 사용자 ID
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - role
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 enum: [user, admin]
+ *     responses:
+ *       200:
+ *         description: 권한 변경 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 role:
+ *                   type: string
+ *                   enum: [user, admin]
+ *       400:
+ *         description: 잘못된 role 값
+ *       404:
+ *         description: 해당 사용자 없음
+ *       500:
+ *         description: 서버 오류
+ */
 router.patch('/:id/role', authMiddleware, adminOnly, async (req, res) => {
   try {
     const { role } = req.body;
-
     if (!['user', 'admin'].includes(role)) {
       return res.status(400).json({ message: 'Invalid role' });
     }
