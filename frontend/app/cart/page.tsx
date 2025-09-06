@@ -7,6 +7,7 @@ import styled from 'styled-components';
 import { AppDispatch, RootState } from '@/redux/store';
 import axios from '@/utils/axiosInstance';
 import { useRouter } from 'next/navigation';
+import ShippingForm from './ShippingForm';
 
 const Container = styled.div`max-width:800px;margin:60px auto;padding:20px;`;
 const CartItemRow = styled.div`display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #eee;padding:10px 0;`;
@@ -20,10 +21,10 @@ const CheckoutButton = styled.button`margin-top:10px;padding:10px 16px;backgroun
 
 interface CartItem {
   _id: string;
-  product: { 
-    _id: string; 
-    name: string; 
-    price: number; 
+  product: {
+    _id: string;
+    name: string;
+    price: number;
     store?: { _id: string; name: string }; // ✅ 추가
   };
   quantity: number;
@@ -35,6 +36,7 @@ export default function CartPage() {
   const router = useRouter();
   const cart = useSelector((state: RootState) => state.cart.items) as CartItem[];
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [shippingFormOpen, setShippingFormOpen ] = useState<boolean>(false);
 
   useEffect(() => { dispatch(fetchCart()); }, [dispatch]);
 
@@ -62,25 +64,30 @@ export default function CartPage() {
     .filter(item => selectedIds.includes(item._id))
     .reduce((sum, item) => sum + item.quantity * item.product.price, 0);
 
-    const handleCheckout = () => {
-      if (selectedIds.length === 0) return alert('결제할 항목을 선택하세요.');
-      
-      const selectedItems = cart
-        .filter(item => selectedIds.includes(item._id))
-        .map(i => ({
-          ...i,
-          product: {
-            ...i.product,
-            store: i.product.store?._id ?? null, // null 방어
-          }
-        }));
-    
-      router.push(`/checkout?items=${encodeURIComponent(JSON.stringify(selectedItems))}`);
-    };
-    
+  const handleCheckout = () => {
+    if (selectedIds.length === 0) return alert('결제할 항목을 선택하세요.');
+
+    const selectedItems = cart
+      .filter(item => selectedIds.includes(item._id))
+      .map(i => ({
+        ...i,
+        product: {
+          ...i.product,
+          store: i.product.store?._id ?? null, // null 방어
+        }
+      }));
+
+    router.push(`/checkout?items=${encodeURIComponent(JSON.stringify(selectedItems))}`);
+  };
+
+  const handleOrder = () => {
+    setShippingFormOpen(true);
+  }
+
 
   return (
     <Container>
+      
       {cart.map(item => (
         <CartItemRow key={item._id}>
           <Checkbox type="checkbox" checked={selectedIds.includes(item._id)} onChange={() => handleCheckbox(item._id)} />
@@ -95,7 +102,11 @@ export default function CartPage() {
         </CartItemRow>
       ))}
       <Total>총 결제금액: {totalPrice.toLocaleString()}원</Total>
-      <CheckoutButton onClick={handleCheckout}>결제</CheckoutButton>
+
+      {shippingFormOpen?<ShippingForm />:false}
+      {shippingFormOpen?<CheckoutButton onClick={handleCheckout}>결제</CheckoutButton>:<CheckoutButton onClick={handleOrder}>주문하기</CheckoutButton>}
+      
+      
     </Container>
   );
 }
