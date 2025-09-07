@@ -1,79 +1,62 @@
-// redux/slices/orderSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "@/utils/axiosInstance";
 
 export interface OrderItemPayload {
-  _id: string; // cart item id
+  _id: string;
   product: { _id: string; name: string; price: number };
   quantity: number;
 }
 
 export type PaymentMethod = "card" | "kakao" | "naver";
+export type OrderStatus = "pending" | "accepted" | "delivering" | "completed" | "cancelled";
 
-// ✅ 결제 직후 서버가 돌려주는 "생성된 주문 요약" (여러 가맹점 건)
+export interface DeliveryTime {
+  day: string;
+  time: string;
+}
+
+export interface CreateOrderPayload {
+  items: OrderItemPayload[];
+  paymentMethod: PaymentMethod;
+  receiver: string;
+  phone: string;
+  address: string;
+  deliveryTime?: DeliveryTime;
+  maskedCard?: string;
+}
+
 export interface CreatedOrder {
   orderId: string;
   store?: string;
   totalPrice?: number;
-}
-
-// ✅ 주문 목록/상세에서 사용하는 "실제 주문 문서" 타입
-export type OrderStatus = "pending" | "accepted" | "delivering" | "completed" | "cancelled";
-
-export interface StoreOrderItem {
-  // 백엔드 구현 편차 대응: productName 또는 product 객체/ID가 올 수 있음
-  product?: string | { _id: string; name?: string; price?: number };
-  productName?: string;
-  price: number;
-  quantity: number;
-}
-
-export interface StoreOrder {
-  _id?: string;
-  store?: string | { _id: string; name?: string };
-  items: StoreOrderItem[];
-}
-
-export interface OrderItem {
-  _id?: string;
-  product: string | { _id: string; name?: string; price?: number };
-  quantity: number;
-  unitPrice: number;
+  receiver?: string;
+  phone?: string;
+  address?: string;
+  deliveryTime?: DeliveryTime;
 }
 
 export interface UserOrder {
   _id: string;
-  user?: string | { _id: string; name?: string };
+  user?: string;
   store?: string | { _id: string; name?: string };
-  orderItems: OrderItem[];
-
-  paymentMethod?: PaymentMethod | string;
+  orderItems: {
+    product: string | { _id: string; name?: string; price?: number };
+    quantity: number;
+    unitPrice: number;
+  }[];
   status?: OrderStatus;
   createdAt: string;
-
-  // 백엔드에 따라 필드명이 다를 수 있어 둘 다 지원
-  totalAmount?: number;
   totalPrice?: number;
-
-  // 👉 일부 프론트 코드 호환을 위해 남겨둠 (필요 없으면 제거 가능)
-  storeOrders?: StoreOrder[];
+  receiver: string;
+  phone: string;
+  address: string;
+  deliveryTime?: DeliveryTime;
 }
 
-
-// ✅ 주문 생성 (여러 가맹점 주문 생성)
 export const createOrder = createAsyncThunk(
   "order/createOrder",
-  async (payload: {
-    items: OrderItemPayload[];
-    paymentMethod: PaymentMethod;
-    maskedCard?: string;
-  }) => {
-    const res = await axios.post("/order", {
-      items: payload.items,
-      paymentMethod: payload.paymentMethod,
-    });
-
-    // 서버 응답: { orders: [{ orderId, store, totalPrice } ...] }
+  async (payload: CreateOrderPayload) => {
+    const res = await axios.post("/order", payload);
     return {
       orders: res.data.orders as CreatedOrder[],
       paymentMethod: payload.paymentMethod,
@@ -82,14 +65,11 @@ export const createOrder = createAsyncThunk(
   }
 );
 
-// ✅ 로그인 사용자의 전체 주문 목록 조회
 export const fetchOrders = createAsyncThunk("order/fetchOrders", async () => {
-  // 서버 응답: { orders: UserOrder[] } 형태로 가정
   const res = await axios.get("/order");
   return res.data.orders as UserOrder[];
 });
 
-// ✅ 특정 주문 상세 조회
 export const fetchOrderById = createAsyncThunk(
   "order/fetchOrderById",
   async (orderId: string) => {
@@ -102,26 +82,32 @@ interface OrderState {
   status: "idle" | "processing" | "succeeded" | "failed";
   error?: string | null;
 
-  // 최근 결제 결과(여러 주문 가능)
   lastOrders: CreatedOrder[];
   lastPaymentMethod?: PaymentMethod | null;
   maskedCard?: string | null;
 
-  // 목록/상세 조회용
   orders: UserOrder[];
   selectedOrder?: UserOrder;
+
+  // ✅ 배송 관련 상태
+  receiver: string;
+  phone: string;
+  address: string;
+  deliveryTime?: DeliveryTime;
 }
 
 const initialState: OrderState = {
   status: "idle",
   error: null,
-
   lastOrders: [],
   lastPaymentMethod: null,
   maskedCard: null,
-
   orders: [],
   selectedOrder: undefined,
+  receiver: "",
+  phone: "",
+  address: "",
+  deliveryTime: undefined,
 };
 
 const orderSlice = createSlice({
@@ -129,34 +115,30 @@ const orderSlice = createSlice({
   initialState,
   reducers: {
     resetOrderState: (state) => {
-      state.status = "idle";
-      state.error = null;
-
-      state.lastOrders = [];
-      state.lastPaymentMethod = null;
-      state.maskedCard = null;
-
-      state.orders = [];
-      state.selectedOrder = undefined;
+      Object.assign(state, initialState);
+    },
+    setReceiver: (state, action: PayloadAction<string>) => {
+      state.receiver = action.payload;
+    },
+    setPhone: (state, action: PayloadAction<string>) => {
+      state.phone = action.payload;
+    },
+    setAddress: (state, action: PayloadAction<string>) => {
+      state.address = action.payload;
+    },
+    setDeliveryTime: (state, action: PayloadAction<DeliveryTime>) => {
+      state.deliveryTime = action.payload;
     },
   },
   extraReducers: (builder) => {
     builder
-      // 주문 생성
       .addCase(createOrder.pending, (state) => {
         state.status = "processing";
         state.error = null;
       })
       .addCase(
         createOrder.fulfilled,
-        (
-          state,
-          action: PayloadAction<{
-            orders: CreatedOrder[];
-            paymentMethod: PaymentMethod;
-            maskedCard?: string;
-          }>
-        ) => {
+        (state, action: PayloadAction<{ orders: CreatedOrder[]; paymentMethod: PaymentMethod; maskedCard?: string }>) => {
           state.status = "succeeded";
           state.lastOrders = action.payload.orders;
           state.lastPaymentMethod = action.payload.paymentMethod;
@@ -167,34 +149,16 @@ const orderSlice = createSlice({
         state.status = "failed";
         state.error = action.error?.message || "결제/주문 실패";
       })
-
-      // 주문 목록 조회
-      .addCase(fetchOrders.pending, (state) => {
-        state.status = "processing";
-      })
       .addCase(fetchOrders.fulfilled, (state, action: PayloadAction<UserOrder[]>) => {
         state.status = "succeeded";
         state.orders = action.payload;
       })
-      .addCase(fetchOrders.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.error?.message || "주문 조회 실패";
-      })
-
-      // 주문 상세 조회
-      .addCase(fetchOrderById.pending, (state) => {
-        state.status = "processing";
-      })
       .addCase(fetchOrderById.fulfilled, (state, action: PayloadAction<UserOrder>) => {
         state.status = "succeeded";
         state.selectedOrder = action.payload;
-      })
-      .addCase(fetchOrderById.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.error?.message || "주문 상세 조회 실패";
       });
   },
 });
 
-export const { resetOrderState } = orderSlice.actions;
+export const { resetOrderState, setReceiver, setPhone, setAddress, setDeliveryTime } = orderSlice.actions;
 export default orderSlice.reducer;

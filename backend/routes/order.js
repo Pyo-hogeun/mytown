@@ -2,18 +2,21 @@
 import express from "express";
 import Cart from "../models/cart.js";
 import Order from "../models/order.js";
-import Product from "../models/product.js";   // ✅ 이거 빠져있음
+import Product from "../models/product.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// 주문 생성
+// ✅ 주문 생성
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { items } = req.body;
+    const { items, receiver, phone, address, deliveryTime } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ message: "주문할 항목이 없습니다." });
+    }
+    if (!receiver || !phone || !address) {
+      return res.status(400).json({ message: "배송 정보가 누락되었습니다." });
     }
 
     // ✅ productId만 넘어왔다면 DB에서 populate
@@ -56,6 +59,12 @@ router.post("/", authMiddleware, async (req, res) => {
         })),
         totalPrice,
         status: "pending",
+
+        // ✅ 배송 필드 저장
+        receiver,
+        phone,
+        address,
+        deliveryTime,
       });
 
       await order.save();
@@ -77,8 +86,12 @@ router.post("/", authMiddleware, async (req, res) => {
         orderId: o._id,
         store: o.store,
         totalPrice: o.totalPrice,
+        receiver: o.receiver,
+        phone: o.phone,
+        address: o.address,
+        deliveryTime: o.deliveryTime,
       })),
-      cart, // 최신 cart 같이 내려줌
+      cart,
     });
   } catch (err) {
     console.error("주문 생성 오류:", err);
@@ -86,14 +99,14 @@ router.post("/", authMiddleware, async (req, res) => {
   }
 });
 
-// 주문 목록 조회 (로그인한 사용자)
+// ✅ 주문 목록 조회
 router.get("/", authMiddleware, async (req, res) => {
   try {
-    const userId = req.user._id; // 인증 미들웨어에서 넣어줌
+    const userId = req.user._id;
     const orders = await Order.find({ user: userId })
       .sort({ createdAt: -1 })
-      .populate("store") // 가게 정보 populate
-      .populate("orderItems.product") // ✅ 상품 정보까지 join
+      .populate("store")
+      .populate("orderItems.product")
       .lean();
 
     res.json({ orders });
@@ -101,12 +114,14 @@ router.get("/", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "주문 조회 실패", error: err });
   }
 });
-// 특정 주문 조회
+
+// ✅ 특정 주문 조회
 router.get("/:orderId", authMiddleware, async (req, res) => {
   try {
     const { orderId } = req.params;
     const order = await Order.findOne({ _id: orderId, user: req.user._id })
       .populate("store")
+      .populate("orderItems.product")
       .lean();
 
     if (!order) return res.status(404).json({ message: "주문을 찾을 수 없음" });
@@ -116,4 +131,5 @@ router.get("/:orderId", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "주문 상세 조회 실패", error: err });
   }
 });
+
 export default router;

@@ -1,7 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { setDeliveryTime } from '@/redux/slices/orderSlice';
 
 const days = ['월', '화', '수', '목', '금', '토', '일'];
 const timeSlots = Array.from({ length: 20 }, (_, i) => {
@@ -50,29 +53,23 @@ const SlotButton = styled.button<{ selected: boolean }>`
   }
 `;
 
-interface DeliveryTime {
-  day: string;
-  time: string;
-}
-
 const DeliveryTimeSelector: React.FC = () => {
-  const [selected, setSelected] = useState<DeliveryTime | null>(null);
+  const dispatch = useDispatch();
+  const selected = useSelector((state: RootState) => state.order.deliveryTime);
 
   const handleSelect = (day: string, time: string) => {
-    setSelected({ day, time });
+    dispatch(setDeliveryTime({ day, time }));
   };
 
   return (
     <div>
-      <h2>희망 배송 시간 선택</h2>
+      <h3>희망 배송 시간 선택</h3>
       <GridContainer>
-        {/* 첫 줄: 요일 */}
         <div></div>
         {days.map((day) => (
           <HeaderCell key={day}>{day}</HeaderCell>
         ))}
 
-        {/* 시간 × 요일 */}
         {timeSlots.map((time) => (
           <React.Fragment key={time}>
             <TimeCell>{time}</TimeCell>
@@ -80,7 +77,13 @@ const DeliveryTimeSelector: React.FC = () => {
               const isSelected =
                 selected?.day === day && selected?.time === time;
               return (
-                <div key={`${day}-${time}`} style={{ borderRight: '1px solid #ddd', borderBottom: '1px solid #ddd' }}>
+                <div
+                  key={`${day}-${time}`}
+                  style={{
+                    borderRight: '1px solid #ddd',
+                    borderBottom: '1px solid #ddd',
+                  }}
+                >
                   <SlotButton
                     selected={isSelected}
                     onClick={() => handleSelect(day, time)}

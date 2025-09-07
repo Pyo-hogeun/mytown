@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 
 const { Schema } = mongoose;
 
+// 주문 상품 단위 스키마
 const orderItemSchema = new mongoose.Schema({
   product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
   quantity: { type: Number, required: true },
@@ -20,6 +21,17 @@ const OrderSchema = new Schema({
     default: "pending",
   },
   orderItems: [orderItemSchema],
+  totalPrice: { type: Number, required: true },
+
+  // ✅ 배송 관련 필드 추가
+  receiver: { type: String, required: true },     // 수령인
+  phone: { type: String, required: true },        // 연락처
+  address: { type: String, required: true },      // 배송 주소
+  deliveryTime: {
+    day: { type: String },                        // 요일 (월~일)
+    time: { type: String },                       // 시각 (30분 단위)
+  },
+
   createdAt: { type: Date, default: Date.now },
 });
 

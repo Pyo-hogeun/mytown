@@ -16,7 +16,6 @@ const Container = styled.div`
   grid-template-columns:2fr 1fr;
   gap:24px;
 `;
-
 const Card = styled.div`
   background:#fff;
   border:1px solid #eee;
@@ -24,40 +23,25 @@ const Card = styled.div`
   padding:20px;
   box-shadow:0 6px 16px rgba(0,0,0,0.04);
 `;
-const SectionTitle = styled.h2`
-  font-size:18px;
-  margin-bottom:12px;
-`;
+const SectionTitle = styled.h2`font-size:18px;margin-bottom:12px;`;
 const Row = styled.div`
   display:flex;
-  ustify-content:space-between;
-  lign-items:center;
-  adding:10px 0;
-  order-bottom:1px solid #f2f2f2;
-  
-  &:last-child{
-    border-bottom:none;
-  }
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 0;
+  border-bottom:1px solid #f2f2f2;
+  &:last-child{border-bottom:none;}
 `;
-const Price = styled.div`
-  font-weight:600;
-`;
-const RadioRow = styled.div`
-  display:flex;
-  gap:12px;
-`;
+const Price = styled.div`font-weight:600;`;
+const RadioRow = styled.div`display:flex;gap:12px;`;
 const Input = styled.input`
   width:100%;
   padding:10px;
   border:1px solid #ddd;
   border-radius:8px;
-  box-sizing: border-box;
+  box-sizing:border-box;
 `;
-const Inline = styled.div`
-  display:flex;
-  margin-bottom: 10px;
-  gap:8px;
-`;
+const Inline = styled.div`display:flex;margin-bottom:10px;gap:8px;`;
 const Select = styled.select`
   padding:10px;
   border:1px solid #ddd;
@@ -86,15 +70,9 @@ const PayButton = styled.button<{ disabled?: boolean }>`
 
 type CartItem = {
   _id: string;
-  product: {
-    _id: string;
-    name: string;
-    price: number;
-    store: string | null;
-  };
+  product: { _id: string; name: string; price: number; store: string | null };
   quantity: number;
 };
-
 
 const CheckoutPage = () => {
   const searchParams = useSearchParams();
@@ -114,38 +92,23 @@ const CheckoutPage = () => {
     [items]
   );
 
-  // 결제 수단 & 카드 폼 상태
+  // 결제 수단 상태
   const [method, setMethod] = useState<PaymentMethod>('card');
   const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState(''); // MM/YY
+  const [expiry, setExpiry] = useState('');
   const [cvc, setCvc] = useState('');
   const [installment, setInstallment] = useState('0');
   const [cardBrand, setCardBrand] = useState('국민');
-
   const [agree, setAgree] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
-  // 클라이언트 마운트 후 최근 결제수단 기억/복원
-  useEffect(() => {
-    setMounted(true);
-    try {
-      const saved = localStorage.getItem('lastPaymentMethod');
-      if (saved === 'card' || saved === 'kakao' || saved === 'naver') setMethod(saved);
-    } catch { }
-  }, []);
+  // Redux에서 배송 정보 가져오기
+  const { receiver, phone, address, deliveryTime } = orderState;
 
-  useEffect(() => {
-    if (!mounted) return;
-    try { localStorage.setItem('lastPaymentMethod', method); } catch { }
-  }, [method, mounted]);
-
-  // 카드 입력 포맷 보조
   const onCardNumberChange = (v: string) => {
     const digits = v.replace(/\D/g, '').slice(0, 16);
     const grouped = digits.replace(/(\d{4})(?=\d)/g, '$1-');
     setCardNumber(grouped);
   };
-
   const onExpiryChange = (v: string) => {
     const digits = v.replace(/\D/g, '').slice(0, 4);
     let out = digits;
@@ -154,49 +117,52 @@ const CheckoutPage = () => {
   };
 
   const isCardFormValid = () => {
-    if (method !== 'card') return true; // 비카드 결제는 폼 불필요
+    if (method !== 'card') return true;
     const okNumber = /^\d{4}-\d{4}-\d{4}-\d{4}$/.test(cardNumber);
     const okExpiry = /^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry);
     const okCvc = /^\d{3,4}$/.test(cvc);
     return okNumber && okExpiry && okCvc;
   };
 
-  const canPay = items.length > 0 && agree && isCardFormValid() && orderState.status !== 'processing';
+  const canPay =
+    items.length > 0 &&
+    agree &&
+    receiver.trim() !== '' &&
+    phone.trim() !== '' &&
+    address.trim() !== '' &&
+    deliveryTime &&
+    isCardFormValid() &&
+    orderState.status !== 'processing';
 
-  const maskedCard = method === 'card'
-    ? cardNumber.replace(/^(\d{0,4})-(\d{0,4})-(\d{0,4})-(\d{0,4})$/, '****-****-****-$4')
-    : undefined;
+  const maskedCard =
+    method === 'card'
+      ? cardNumber.replace(/^(\d{0,4})-(\d{0,4})-(\d{0,4})-(\d{0,4})$/, '****-****-****-$4')
+      : undefined;
 
   const onPay = async () => {
     if (!canPay) return;
     try {
       const action = await dispatch(
-        createOrder({ items, paymentMethod: method, maskedCard })
+        createOrder({
+          items,
+          paymentMethod: method,
+          receiver,
+          phone,
+          address,
+          deliveryTime,
+          maskedCard,
+        })
       );
 
       if (createOrder.fulfilled.match(action)) {
-        // 서버 응답에서 orders 배열 꺼내기
-        const orders = action.payload.orders || [];
-
-        // ✅ 주문 완료 후 장바구니 최신화
         dispatch(fetchCart());
-
-        // orderId만 추출
-        const orderIds = orders.map((o: any) => o.orderId);
-
-        // 주문 완료 페이지 이동
         router.push(`/order-complete`);
       }
-    } catch (e) {
-      // 실패는 slice에서 처리
-    }
+    } catch {}
   };
-
-
 
   return (
     <Container>
-      {/* 좌측: 결제수단 & 폼 */}
       <Card>
         <SectionTitle>결제 수단</SectionTitle>
         <RadioRow>
@@ -241,12 +207,6 @@ const CheckoutPage = () => {
           </>
         )}
 
-        {method !== 'card' && (
-          <Card style={{ marginTop: 16, background: '#fafafa' }}>
-            <div>모의 결제입니다. <b>{method.toUpperCase()}</b> 창이 열렸다고 가정하고 진행합니다.</div>
-          </Card>
-        )}
-
         <Agree>
           <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
           결제 이용약관과 개인정보 제3자 제공에 동의합니다.
@@ -262,7 +222,6 @@ const CheckoutPage = () => {
         )}
       </Card>
 
-      {/* 우측: 주문 요약 */}
       <Card>
         <SectionTitle>주문 요약</SectionTitle>
         {items.map(i => (
@@ -291,5 +250,6 @@ const CheckoutPage = () => {
       </Card>
     </Container>
   );
-}
-export default CheckoutPage
+};
+
+export default CheckoutPage;

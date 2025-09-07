@@ -1,81 +1,53 @@
 'use client';
 
-import React, { useState } from 'react';
-import styled from 'styled-components';
+import { useDispatch, useSelector } from "react-redux";
+import styled from "styled-components";
+import { RootState } from "@/redux/store";
+import { setReceiver, setPhone, setAddress } from "@/redux/slices/orderSlice";
 
-// 📌 타입 정의
-interface ShippingInfo {
-  receiver: string;
-  phone: string;
-  address: string;
-}
-
-// 레이아웃
-const Container = styled.div`
-  max-width: 800px;
-  margin: 40px auto;
-`;
-
-const CartList = styled.div`
-  border: 1px solid #ddd;
-  padding: 20px;
-  margin-top: 20px;
+const FormContainer = styled.div`
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fafafa;
 `;
 
 const Input = styled.input`
-  display: block;
   width: 100%;
-  margin-bottom: 12px;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 6px;
+  margin-bottom: 12px;
 `;
 
-const SubmitButton = styled.button`
-  background: #28a745;
-  color: white;
-  padding: 10px 16px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  margin-top: 10px;
-`;
-
-const OrderButton = styled(SubmitButton)`
-  background: #0070f3;
-`;
-
-// 📌 배송지 입력 컴포넌트
-const ShippingForm: React.FC = () => {
-  const [receiver, setReceiver] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
+const ShippingForm = () => {
+  const dispatch = useDispatch();
+  const { receiver, phone, address } = useSelector((s: RootState) => s.order);
 
   return (
-    <div>
+    <FormContainer>
       <h3>배송지 입력</h3>
       <Input
         type="text"
-        placeholder="수령인"
+        placeholder="수령인 이름"
         value={receiver}
-        onChange={(e) => setReceiver(e.target.value)}
+        onChange={(e) => dispatch(setReceiver(e.target.value))}
       />
       <Input
         type="text"
         placeholder="연락처"
         value={phone}
-        onChange={(e) => setPhone(e.target.value)}
+        onChange={(e) => dispatch(setPhone(e.target.value))}
       />
       <Input
         type="text"
-        placeholder="주소"
+        placeholder="배송지 주소"
         value={address}
-        onChange={(e) => setAddress(e.target.value)}
+        onChange={(e) => dispatch(setAddress(e.target.value))}
       />
-    </div>
+    </FormContainer>
   );
 };
 
-
-
-export default ShippingForm
+export default ShippingForm;
