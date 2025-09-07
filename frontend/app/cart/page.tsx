@@ -8,6 +8,7 @@ import { AppDispatch, RootState } from '@/redux/store';
 import axios from '@/utils/axiosInstance';
 import { useRouter } from 'next/navigation';
 import ShippingForm from './ShippingForm';
+import DeliveryTimeSelector from './DeliveryTimeSelect';
 
 const Container = styled.div`max-width:800px;margin:60px auto;padding:20px;`;
 const CartItemRow = styled.div`display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #eee;padding:10px 0;`;
@@ -103,8 +104,9 @@ export default function CartPage() {
       ))}
       <Total>총 결제금액: {totalPrice.toLocaleString()}원</Total>
 
-      {shippingFormOpen?<ShippingForm />:false}
-      {shippingFormOpen?<CheckoutButton onClick={handleCheckout}>결제</CheckoutButton>:<CheckoutButton onClick={handleOrder}>주문하기</CheckoutButton>}
+      <ShippingForm />
+      <DeliveryTimeSelector />
+      <CheckoutButton onClick={handleCheckout}>결제</CheckoutButton>
       
       
     </Container>
