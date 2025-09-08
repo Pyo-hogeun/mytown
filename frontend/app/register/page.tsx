@@ -1,6 +1,6 @@
-'use client'; // 👈 필수!
+'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import axios from '@/utils/axiosInstance';
 import { useRouter } from 'next/navigation';
@@ -19,7 +19,6 @@ const Container = styled.div`
   z-index: -1;
 `;
 
-// 입력창
 const Input = styled.input`
   width: 100%;
   padding: 12px 14px;
@@ -45,7 +44,7 @@ const Button = styled.button`
   border: none;
   border-radius: 8px;
 `;
-// 카드 UI
+
 const Card = styled.div`
   background: #fff;
   padding: 40px 32px;
@@ -55,12 +54,24 @@ const Card = styled.div`
   max-width: 400px;
 `;
 
-// 🔄 로딩 스피너 애니메이션
 const spin = keyframes`
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 `;
-// 로딩 아이콘
+const Select = styled.select`
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  &:focus {
+    border-color: #0070f3;
+  }
+`
 const Spinner = styled.div`
   border: 2px solid #fff;
   border-top: 2px solid transparent;
@@ -72,19 +83,52 @@ const Spinner = styled.div`
   left: calc(50% - 8px);
   top: calc(50% - 8px);
 `;
+
+// 📌 마트 타입
+interface Store {
+  _id: string;
+  name: string;
+  address: string;
+  phone: string;
+  owner: string;
+}
+
 export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [roleTemp, setRoleTemp] = useState('');
+  const [stores, setStores] = useState<Store[]>([]);
+  const [selectedStore, setSelectedStore] = useState('');
   const router = useRouter();
+
+  // 📌 manager 선택 시 마트 목록 불러오기
+  useEffect(() => {
+    const fetchStores = async () => {
+      if (roleTemp === 'manager') {
+        try {
+          const res = await axios.get('/stores');
+          setStores(res.data);
+        } catch (err) {
+          console.error('마트 목록 불러오기 실패:', err);
+        }
+      }
+    };
+    fetchStores();
+  }, [roleTemp]);
 
   // 📌 회원가입 요청
   const handleRegister = async () => {
     try {
-      await axios.post('/auth/register', { name, email, password, roleTemp });
+      await axios.post('/auth/register', {
+        name,
+        email,
+        password,
+        roleTemp,
+        storeId: roleTemp === 'manager' ? selectedStore : undefined,
+      });
       alert('회원가입 성공');
-      router.push('/login'); // 로그인 페이지로 이동
+      router.push('/login');
     } catch (error: any) {
       alert(error.response?.data?.message || '회원가입 실패');
     }
@@ -97,22 +141,40 @@ export default function RegisterPage() {
         <Input placeholder="이름" value={name} onChange={(e) => setName(e.target.value)} />
         <Input placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)} />
         <Input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <Button onClick={handleRegister}>회원가입</Button>
-        {/* 임시 */}
-        <br />
-        <br />
-        <select
-          name=""
-          id=""
+
+        {/* role 선택 */}
+        <Select
+          name="roleSelect"
           value={roleTemp}
-          onChange={(e)=>setRoleTemp(e.target.value)}
+          onChange={(e) => setRoleTemp(e.target.value)}
         >
+          <option value="">-- 역할 선택 --</option>
           <option value="admin">admin</option>
           <option value="master">master</option>
           <option value="user">user</option>
           <option value="manager">manager</option>
           <option value="rider">rider</option>
-        </select>
+        </Select>
+
+        {/* manager일 경우에만 마트 선택 UI 노출 */}
+        {roleTemp === 'manager' && (
+          <div style={{ marginTop: '16px' }}>
+            <label>관리할 마트 선택</label>
+            <Select
+              value={selectedStore}
+              onChange={(e) => setSelectedStore(e.target.value)}
+            >
+              <option value="">-- 마트 선택 --</option>
+              {stores.map((store) => (
+                <option key={store._id} value={store._id}>
+                  {store.name} ({store.address})
+                </option>
+              ))}
+            </Select>
+          </div>
+        )}
+
+        <Button onClick={handleRegister}>회원가입</Button>
       </Card>
     </Container>
   );

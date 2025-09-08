@@ -23,6 +23,11 @@ const Role = styled.span`
   margin-left: 5px;
   color: #666;
   font-size: 12px;
+`;
+const Store = styled.span`
+  margin-right: 10px;
+  color: #666;
+  font-size: 11px;
 `
 const LogoutButton = styled.button`
   margin-left: 10px;
@@ -104,6 +109,8 @@ const Profile = () => {
       </CartButton>
       {user ? (
         <>
+        { user.store?<Store>{user.store?.name} 🛒</Store>:false}
+          
           <Name>{user.name}</Name>
           <Role>{user.role}</Role>
           <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>

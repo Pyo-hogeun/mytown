@@ -1,10 +1,12 @@
 // 🔐 인증 상태 (토큰 + 사용자 정보) 관리
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Store } from './storeSlice';
 
 export interface User {
   id: string;
   name: string;
   role: 'admin' | 'user' | 'manager' | 'master' | 'rider';
+  store?: Store;
 }
 
 interface AuthState {
