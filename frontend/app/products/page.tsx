@@ -114,7 +114,13 @@ const ProductListPage = () => {
   };
 
   useEffect(() => {
-    axios.get('/products')
+    let url = '/products';
+    if (user?.role === 'manager') {
+      // 매니저라면 첫 번째 store 기준으로 상품 목록 조회
+      url = `/products/store/${user?.store?._id}`;
+    }
+
+    axios.get(url)
       .then((res) => dispatch(setProducts(res.data)))
       .catch((err) => console.error(err));
   }, [dispatch]);

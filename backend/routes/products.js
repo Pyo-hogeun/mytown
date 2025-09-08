@@ -36,10 +36,11 @@ const router = express.Router();
  */
 router.post('/', async (req, res) => {
   try {
-    const { storeId, name, price, stockQty, imageUrl } = req.body;
+    const { storeId, storeName, name, price, stockQty, imageUrl } = req.body;
 
     const product = new Product({
       store: storeId,
+      storeName,     // ✅ storeName도 함께 저장
       name,
       price,
       stockQty,

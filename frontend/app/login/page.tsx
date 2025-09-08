@@ -6,6 +6,7 @@ import { login } from '@/services/authService';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styled, { keyframes } from 'styled-components';
+import Input from '../component/Input';
 
 // 🔄 로딩 스피너 애니메이션
 const spin = keyframes`
@@ -40,21 +41,6 @@ const Title = styled.h1`
   margin-bottom: 24px;
   text-align: center;
   color: #333;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 12px 14px;
-  margin-bottom: 16px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
-  &:focus {
-    border-color: #0070f3;
-  }
 `;
 
 const Button = styled.button<{ loading?: boolean }>`

@@ -7,27 +7,17 @@ import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { setStores } from '@/redux/slices/storeSlice';
+import Input from '@/app/component/Input';
+import Select from '@/app/component/Select';
 
 const Container = styled.div`
   padding: 2rem;
   max-width: 400px;
   margin: auto;
 `;
-const Label = styled.label`
-
+const Label = styled.div`
+  margin-bottom: 0.2rem;
 `
-const Input = styled.input`
-  width: 100%;
-  padding: 0.5rem;
-  margin-top: 1rem;
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: 0.5rem;
-  margin-top: 1rem;
-`;
-
 const Button = styled.button`
   margin-top: 1rem;
   padding: 0.6rem 1rem;
@@ -38,6 +28,7 @@ const Button = styled.button`
 `;
 const List = styled.ul`
   li{
+    list-style: none;
     margin-bottom: 10px;
   }
 `
@@ -47,6 +38,7 @@ const ProductForm = () => {
   const [imageUrl, setImageUrl] = useState<string>('');
   const [stockQty, setStockQty] = useState<number>(0);
   const [storeId, setStoreId] = useState('');
+  const [storeName, setStoreName] = useState('');
   const router = useRouter();
   const dispatch = useDispatch();
   const stores = useSelector((state: RootState) => state.store.items);
@@ -66,13 +58,21 @@ const ProductForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post('/products', { storeId, name, price, stockQty, imageUrl });
+      await axios.post('/products', {
+        storeId,
+        storeName,  // ✅ storeName도 전달
+        name,
+        price,
+        stockQty,
+        imageUrl
+      });
       router.push('/products');
     } catch (err) {
       console.error('등록 실패', err);
     }
   };
-  if( !user || !allowedRoles.includes(user.role)){
+
+  if (!user || !allowedRoles.includes(user.role)) {
     return (<p>권한이 없습니다.</p>)
   } else {
 
@@ -95,12 +95,23 @@ const ProductForm = () => {
             </li>
             <li>
               <Label>마트</Label>
-              <Select value={storeId} onChange={(e) => setStoreId(e.target.value)} required>
+              <Select
+                value={storeId}
+                onChange={(e) => {
+                  const selectedOption = e.target.selectedOptions[0];
+                  setStoreId(e.target.value);
+                  setStoreName(selectedOption.label); // ✅ storeName 저장
+                }}
+                required
+              >
                 <option value="">마트 선택</option>
                 {stores.map((store) => (
-                  <option key={store._id} value={store._id}>{store.name}</option>
+                  <option key={store._id} value={store._id} label={store.name}>
+                    {store.name}
+                  </option>
                 ))}
               </Select>
+
             </li>
             <li>
               <Label>상품이미지</Label>
@@ -108,10 +119,10 @@ const ProductForm = () => {
               <p>'https://...' 처럼 절대경로를 포함해야합니다.</p>
             </li>
           </List>
-  
+
           <Button type="submit">등록하기</Button>
         </form>
-      </Container>
+      </Container >
     );
   }
 }
