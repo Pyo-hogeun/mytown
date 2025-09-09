@@ -5,12 +5,6 @@ import { useState } from 'react';
 import axios from '@/utils/axiosInstance';
 import { useRouter } from 'next/navigation';
 
-const Container = styled.div`
-  padding: 2rem;
-  max-width: 400px;
-  margin: auto;
-`;
-
 const Input = styled.input`
   width: 100%;
   padding: 0.5rem;
@@ -43,18 +37,17 @@ const StoreForm = () => {
       alert(err.response?.data?.message || '마트 등록 실패');
     }
   };
-  
 
-  return (
-    <Container>
-      <h1>🏬 마트 등록 (관리자 전용)</h1>
-      <form onSubmit={handleSubmit}>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="마트 이름" required />
-        <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="주소" />
-        <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="전화번호" />
-        <Button type="submit">등록하기</Button>
-      </form>
-    </Container>
+
+  return (<>
+    <h1>🏬 마트 등록 (관리자 전용)</h1>
+    <form onSubmit={handleSubmit}>
+      <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="마트 이름" required />
+      <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="주소" />
+      <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="전화번호" />
+      <Button type="submit">등록하기</Button>
+    </form>
+  </>
   );
 }
 export default StoreForm

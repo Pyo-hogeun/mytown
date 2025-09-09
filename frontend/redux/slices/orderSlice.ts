@@ -36,6 +36,7 @@ export interface CreatedOrder {
 }
 
 export interface UserOrder {
+  paymentMethod: string;
   _id: string;
   user?: string;
   store?: string | { _id: string; name?: string };
@@ -77,6 +78,16 @@ export const fetchOrderById = createAsyncThunk(
     return res.data as UserOrder;
   }
 );
+
+// 주문 취소
+export const cancelOrder = createAsyncThunk(
+  "order/cancelOrder",
+  async (orderId: string) => {
+    const res = await axios.patch(`/order/${orderId}/cancel`);
+    return res.data; // { success: true, order: ... }
+  }
+);
+
 
 interface OrderState {
   status: "idle" | "processing" | "succeeded" | "failed";
@@ -156,6 +167,14 @@ const orderSlice = createSlice({
       .addCase(fetchOrderById.fulfilled, (state, action: PayloadAction<UserOrder>) => {
         state.status = "succeeded";
         state.selectedOrder = action.payload;
+      })
+      .addCase(cancelOrder.fulfilled, (state, action: PayloadAction<any>) => {
+        state.status = "succeeded";
+        // 해당 주문 상태를 cancelled 로 업데이트
+        const updated = action.payload.order;
+        state.orders = state.orders.map((o) =>
+          o._id === updated._id ? updated : o
+        );
       });
   },
 });

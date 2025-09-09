@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import axios from '@/utils/axiosInstance';
 import { useRouter } from 'next/navigation';
+import Input from '../component/Input';
 
 // 📌 스타일 정의
 const Container = styled.div`
@@ -13,25 +14,10 @@ const Container = styled.div`
   justify-content: center;
   top: 0;
   left: 0;
-  height: 100vh;
+  min-height: 100vh;
   width: 100vw;
   background: #f5f6f8;
   z-index: -1;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 12px 14px;
-  margin-bottom: 16px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
-  &:focus {
-    border-color: #0070f3;
-  }
 `;
 
 const Button = styled.button`
@@ -71,6 +57,10 @@ const Select = styled.select`
   &:focus {
     border-color: #0070f3;
   }
+`;
+const Label = styled.label`
+  display: block;
+  margin-bottom: 10px;
 `
 const Spinner = styled.div`
   border: 2px solid #fff;
@@ -159,7 +149,7 @@ export default function RegisterPage() {
         {/* manager일 경우에만 마트 선택 UI 노출 */}
         {roleTemp === 'manager' && (
           <div style={{ marginTop: '16px' }}>
-            <label>관리할 마트 선택</label>
+            <Label>관리할 마트 선택</Label>
             <Select
               value={selectedStore}
               onChange={(e) => setSelectedStore(e.target.value)}

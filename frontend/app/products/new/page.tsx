@@ -9,12 +9,8 @@ import { RootState } from '@/redux/store';
 import { setStores } from '@/redux/slices/storeSlice';
 import Input from '@/app/component/Input';
 import Select from '@/app/component/Select';
+import Container from '@/app/component/Container';
 
-const Container = styled.div`
-  padding: 2rem;
-  max-width: 400px;
-  margin: auto;
-`;
 const Label = styled.div`
   margin-bottom: 0.2rem;
 `
@@ -72,58 +68,58 @@ const ProductForm = () => {
     }
   };
 
-  if (!user || !allowedRoles.includes(user.role)) {
-    return (<p>권한이 없습니다.</p>)
-  } else {
+  return (
+    <Container>
+      {!user || !allowedRoles.includes(user.role) ?
+        (<p>권한이 없습니다.</p>) :
+        (<>
+          <h1>📝 상품 등록 {user.role}</h1>
+          <form onSubmit={handleSubmit}>
+            <List>
+              <li>
+                <Label>상품이름</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="상품 이름" required />
+              </li>
+              <li>
+                <Label>가격</Label>
+                <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} placeholder="가격" required />
+              </li>
+              <li>
+                <Label>수량</Label>
+                <Input type="number" value={stockQty} onChange={(e) => setStockQty(Number(e.target.value))} placeholder="수량" />
+              </li>
+              <li>
+                <Label>마트</Label>
+                <Select
+                  value={storeId}
+                  onChange={(e) => {
+                    const selectedOption = e.target.selectedOptions[0];
+                    setStoreId(e.target.value);
+                    setStoreName(selectedOption.label); // ✅ storeName 저장
+                  }}
+                  required
+                >
+                  <option value="">마트 선택</option>
+                  {stores.map((store) => (
+                    <option key={store._id} value={store._id} label={store.name}>
+                      {store.name}
+                    </option>
+                  ))}
+                </Select>
 
-    return (
-      <Container>
-        <h1>📝 상품 등록 {user.role}</h1>
-        <form onSubmit={handleSubmit}>
-          <List>
-            <li>
-              <Label>상품이름</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="상품 이름" required />
-            </li>
-            <li>
-              <Label>가격</Label>
-              <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} placeholder="가격" required />
-            </li>
-            <li>
-              <Label>수량</Label>
-              <Input type="number" value={stockQty} onChange={(e) => setStockQty(Number(e.target.value))} placeholder="수량" />
-            </li>
-            <li>
-              <Label>마트</Label>
-              <Select
-                value={storeId}
-                onChange={(e) => {
-                  const selectedOption = e.target.selectedOptions[0];
-                  setStoreId(e.target.value);
-                  setStoreName(selectedOption.label); // ✅ storeName 저장
-                }}
-                required
-              >
-                <option value="">마트 선택</option>
-                {stores.map((store) => (
-                  <option key={store._id} value={store._id} label={store.name}>
-                    {store.name}
-                  </option>
-                ))}
-              </Select>
+              </li>
+              <li>
+                <Label>상품이미지</Label>
+                <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="상품이미지" />
+                <p>'https://...' 처럼 절대경로를 포함해야합니다.</p>
+              </li>
+            </List>
 
-            </li>
-            <li>
-              <Label>상품이미지</Label>
-              <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="상품이미지" />
-              <p>'https://...' 처럼 절대경로를 포함해야합니다.</p>
-            </li>
-          </List>
-
-          <Button type="submit">등록하기</Button>
-        </form>
-      </Container >
-    );
-  }
+            <Button type="submit">등록하기</Button>
+          </form>
+        </>)
+      }
+    </Container >
+  );
 }
 export default ProductForm

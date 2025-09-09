@@ -2,13 +2,14 @@
 
 import React from 'react';
 import StoreList from '@/app/component/StoreList';
+import Container from '../component/Container';
 
 const StorePage = () => {
   return (
-    <main style={{ padding: '20px' }}>
+    <Container>
       <h1>매장 관리</h1>
       <StoreList />
-    </main>
+    </Container>
   );
 };
 

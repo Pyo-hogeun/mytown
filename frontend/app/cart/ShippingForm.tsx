@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { RootState } from "@/redux/store";
 import { setReceiver, setPhone, setAddress } from "@/redux/slices/orderSlice";
+import Input from "../component/Input";
 
 const FormContainer = styled.div`
   margin: 20px 0;
@@ -11,14 +12,6 @@ const FormContainer = styled.div`
   border: 1px solid #eee;
   border-radius: 8px;
   background: #fafafa;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  margin-bottom: 12px;
 `;
 
 const ShippingForm = () => {

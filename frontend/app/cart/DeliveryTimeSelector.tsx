@@ -16,8 +16,9 @@ const timeSlots = Array.from({ length: 20 }, (_, i) => {
 const GridContainer = styled.div`
   display: grid;
   grid-template-columns: 80px repeat(${days.length}, 1fr);
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border-left: 1px solid #ddd;
+  border-top: 1px solid #ddd;
+  // border-radius: 8px;
   overflow: hidden;
   margin-bottom: 20px;
 `;
@@ -41,6 +42,7 @@ const TimeCell = styled.div`
 
 const SlotButton = styled.button<{ selected: boolean }>`
   width: 100%;
+  height: 100%;
   padding: 6px;
   border: none;
   cursor: pointer;
@@ -52,7 +54,11 @@ const SlotButton = styled.button<{ selected: boolean }>`
     background-color: ${({ selected }) => (selected ? '#005bb5' : '#f0f0f0')};
   }
 `;
-
+const Cell = styled.div`
+  padding: 8px;
+  border-right: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+`
 const DeliveryTimeSelector: React.FC = () => {
   const dispatch = useDispatch();
   const selected = useSelector((state: RootState) => state.order.deliveryTime);
@@ -77,12 +83,8 @@ const DeliveryTimeSelector: React.FC = () => {
               const isSelected =
                 selected?.day === day && selected?.time === time;
               return (
-                <div
+                <Cell
                   key={`${day}-${time}`}
-                  style={{
-                    borderRight: '1px solid #ddd',
-                    borderBottom: '1px solid #ddd',
-                  }}
                 >
                   <SlotButton
                     selected={isSelected}
@@ -90,7 +92,7 @@ const DeliveryTimeSelector: React.FC = () => {
                   >
                     {isSelected ? '✓' : ''}
                   </SlotButton>
-                </div>
+                </Cell>
               );
             })}
           </React.Fragment>

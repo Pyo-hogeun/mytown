@@ -132,4 +132,103 @@ router.get("/:orderId", authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /order/{id}/cancel:
+ *   patch:
+ *     summary: 주문 취소
+ *     description: 로그인한 사용자가 본인의 주문을 취소합니다. 배송 중(`delivering`) 또는 완료(`completed`) 상태인 주문은 취소할 수 없습니다.
+ *     tags:
+ *       - Order
+ *     security:
+ *       - bearerAuth: []   # JWT 인증 필요
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 취소할 주문의 ID
+ *     responses:
+ *       200:
+ *         description: 주문 취소 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 order:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: 64d1234abc5678ef90123456
+ *                     status:
+ *                       type: string
+ *                       example: cancelled
+ *                     totalPrice:
+ *                       type: number
+ *                       example: 32000
+ *                     receiver:
+ *                       type: string
+ *                       example: 홍길동
+ *                     phone:
+ *                       type: string
+ *                       example: "010-1234-5678"
+ *                     address:
+ *                       type: string
+ *                       example: "서울특별시 강남구 테헤란로 123"
+ *                     deliveryTime:
+ *                       type: object
+ *                       properties:
+ *                         day:
+ *                           type: string
+ *                           example: "월요일"
+ *                         time:
+ *                           type: string
+ *                           example: "14:30"
+ *       400:
+ *         description: 취소 불가 (배송 중/완료된 주문)
+ *       403:
+ *         description: 다른 사용자의 주문
+ *       404:
+ *         description: 주문 없음
+ *       500:
+ *         description: 서버 오류
+ */
+// ✅ 주문 취소
+router.patch("/:id/cancel", authMiddleware, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) return res.status(404).json({ message: "주문을 찾을 수 없습니다." });
+
+
+    // ✅ 본인 주문만 취소 가능
+    if (order.user.toString() !== req.user._id.toString()) {
+
+      console.log("order.user:", order.user.toString());
+      console.log("req.user.id:", req.user._id.toString());
+      return res.status(403).json({ message: "자신의 주문만 취소할 수 있습니다." });
+    }
+
+    // ✅ 상태 검증: 배송 시작 이후는 취소 불가
+    if (["delivering", "completed"].includes(order.status)) {
+      return res.status(400).json({ message: "배송 중/완료된 주문은 취소할 수 없습니다." });
+    }
+
+    order.status = "cancelled";
+    await order.save();
+
+    res.json({ success: true, order });
+  } catch (err) {
+    console.error("주문 취소 오류:", err);
+    res.status(500).json({ message: "주문 취소 실패" });
+  }
+});
+
+
 export default router;

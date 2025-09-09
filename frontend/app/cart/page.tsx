@@ -9,6 +9,7 @@ import axios from '@/utils/axiosInstance';
 import { useRouter } from 'next/navigation';
 import ShippingForm from './ShippingForm';
 import DeliveryTimeSelector from './DeliveryTimeSelector';
+import Button from '../component/Button';
 
 const Container = styled.div`
   max-width:800px;
@@ -25,13 +26,7 @@ const CartItemRow = styled.div`
 const Checkbox = styled.input``;
 const ItemName = styled.div`flex:2;`;
 const QuantityControl = styled.div`display:flex;align-items:center;gap:8px;`;
-const Button = styled.button`
-  padding:4px 8px;
-  border:1px solid #ccc;
-  background:#fff;
-  cursor:pointer;
-  &:hover{background:#f5f5f5;}
-`;
+
 const Price = styled.div`flex:1;text-align:right;`;
 const Total = styled.div`margin-top:20px;font-weight:bold;text-align:right;`;
 const CheckoutButton = styled.button`

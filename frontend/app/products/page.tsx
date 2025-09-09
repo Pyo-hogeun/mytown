@@ -8,12 +8,7 @@ import { AppDispatch, RootState } from '@/redux/store';
 import { setProducts } from '@/redux/slices/productSlice';
 import { useRequireLogin } from '../hooks/useRequireLogin';
 import { addToCart } from '@/redux/slices/cartSlice';
-
-const Container = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-`;
+import Container from '../component/Container';
 
 const Title = styled.h1`
   font-size: 24px;
@@ -53,7 +48,8 @@ const ImageBox = styled.div`
   img {
     max-width: 100%;
     max-height: 100%;
-    object-fit: contain;
+    flex-basis: 100%;
+    object-fit: cover;
   }
 `;
 
