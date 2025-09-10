@@ -29,6 +29,7 @@ const Nav = () => {
         <Item><Link href="/stores/new">매장 등록</Link></Item>
         <Item><Link href="/stores">매장 목록</Link></Item>
         <Item><Link href="/users">사용자관리</Link></Item>
+        <Item><Link href="/orders/manage">주문관리</Link></Item>
         
         {
           !token ? (<>

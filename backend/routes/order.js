@@ -288,16 +288,19 @@ router.patch("/:id/status", authMiddleware, async (req, res) => {
     if (req.user.role !== "manager") {
       return res.status(403).json({ message: "매니저만 주문 상태를 변경할 수 있습니다." });
     }
-
+    
     const { id } = req.params;
     const { status } = req.body;
-
+    
     const order = await Order.findById(id).populate("store");
-
+    
     if (!order) return res.status(404).json({ message: "주문을 찾을 수 없습니다." });
+    
+    console.log('order.store.toString()', order.store._id.toString());
+    console.log('req.user.store.toString()', req.user.store.toString());
 
     // ✅ 매니저의 소속 매장만 변경 가능
-    if (order.store.toString() !== req.user.store.toString()) {
+    if (order.store._id.toString() !== req.user.store.toString()) {
       return res.status(403).json({ message: "본인 매장의 주문만 변경할 수 있습니다." });
     }
 

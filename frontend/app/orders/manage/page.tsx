@@ -100,6 +100,9 @@ const ManagerOrdersPage = () => {
               <Item><Label>수령자명:</Label> {order.user?.name}</Item>
               <Item><Label>연락처:</Label> {order.phone}</Item>
               <Item><Label>주소:</Label> {order.address}</Item>
+              <Item><Label>가게명:</Label> {typeof order.store === 'string'
+                ? order.store
+                : order.store?.name}</Item>
               <Item><Label>희망 배송시간:</Label> {order.deliveryTime?.day} ⏰{order.deliveryTime?.time} </Item>
               <Item><Label>총 결제금액:</Label> {order.totalPrice?.toLocaleString()}원</Item>
 
