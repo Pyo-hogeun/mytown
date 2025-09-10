@@ -3,7 +3,7 @@
 import styled from 'styled-components';
 import { useState, useEffect } from 'react';
 import axios from '@/utils/axiosInstance';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { setStores } from '@/redux/slices/storeSlice';
@@ -28,21 +28,24 @@ const List = styled.ul`
     margin-bottom: 10px;
   }
 `
-const ProductForm = () => {
+
+const ProductEditPage = () => {
   const [name, setName] = useState('');
   const [price, setPrice] = useState<number | ''>('');
   const [imageUrl, setImageUrl] = useState<string>('');
   const [stockQty, setStockQty] = useState<number>(0);
   const [storeId, setStoreId] = useState('');
   const [storeName, setStoreName] = useState('');
+
   const router = useRouter();
+  const params = useParams();
+  const productId = params?.id as string;
+
   const dispatch = useDispatch();
   const stores = useSelector((state: RootState) => state.store.items);
   const user = useSelector((state: RootState) => state.auth.user);
 
-  // ✅ 권한이 있는 역할들을 배열로 정의
   const allowedRoles = ['admin', 'manager'];
-
 
   // 마트 목록 불러오기
   useEffect(() => {
@@ -51,12 +54,29 @@ const ProductForm = () => {
       .catch(err => console.error(err));
   }, [dispatch]);
 
+  // 기존 상품 데이터 불러오기
+  useEffect(() => {
+    if (productId) {
+      axios.get(`/products/${productId}`)
+        .then(res => {
+          const p = res.data;
+          setName(p.name);
+          setPrice(p.price);
+          setStockQty(p.stockQty);
+          setImageUrl(p.imageUrl);
+          setStoreId(p.store);
+          setStoreName(p.storeName);
+        })
+        .catch(err => console.error('상품 불러오기 실패', err));
+    }
+  }, [productId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post('/products', {
+      await axios.put(`/products/${productId}`, {
         storeId,
-        storeName,  // ✅ storeName도 전달
+        storeName,
         name,
         price,
         stockQty,
@@ -64,7 +84,7 @@ const ProductForm = () => {
       });
       router.push('/products');
     } catch (err) {
-      console.error('등록 실패', err);
+      console.error('수정 실패', err);
     }
   };
 
@@ -73,20 +93,20 @@ const ProductForm = () => {
       {!user || !user.role || !allowedRoles.includes(user.role) ?
         (<p>권한이 없습니다.</p>) :
         (<>
-          <h1>📝 상품 등록 {user.role}</h1>
+          <h1>✏️ 상품 편집</h1>
           <form onSubmit={handleSubmit}>
             <List>
               <li>
                 <Label>상품이름</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="상품 이름" required />
+                <Input value={name} onChange={(e) => setName(e.target.value)} required />
               </li>
               <li>
                 <Label>가격</Label>
-                <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} placeholder="가격" required />
+                <Input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} required />
               </li>
               <li>
                 <Label>수량</Label>
-                <Input type="number" value={stockQty} onChange={(e) => setStockQty(Number(e.target.value))} placeholder="수량" />
+                <Input type="number" value={stockQty} onChange={(e) => setStockQty(Number(e.target.value))} />
               </li>
               <li>
                 <Label>마트</Label>
@@ -95,7 +115,7 @@ const ProductForm = () => {
                   onChange={(e) => {
                     const selectedOption = e.target.selectedOptions[0];
                     setStoreId(e.target.value);
-                    setStoreName(selectedOption.label); // ✅ storeName 저장
+                    setStoreName(selectedOption.label);
                   }}
                   required
                 >
@@ -106,20 +126,19 @@ const ProductForm = () => {
                     </option>
                   ))}
                 </Select>
-
               </li>
               <li>
                 <Label>상품이미지</Label>
-                <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="상품이미지" />
-                <p>'https://...' 처럼 절대경로를 포함해야합니다.</p>
+                <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
               </li>
             </List>
 
-            <Button type="submit">등록하기</Button>
+            <Button type="submit">수정하기</Button>
           </form>
         </>)
       }
     </Container >
   );
 }
-export default ProductForm
+
+export default ProductEditPage;

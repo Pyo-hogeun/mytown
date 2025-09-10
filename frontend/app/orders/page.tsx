@@ -39,6 +39,12 @@ const ItemList = styled.div`
   >li{
     margin-bottom: 5px;
   }
+`;
+const DeliveryInfo = styled.div`
+  margin-top: 12px;
+  border: 1px solid #f3f3f3;
+  border-radius: 10px;
+  padding: 12px;
 `
 const OrdersPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -172,6 +178,13 @@ const OrdersPage = () => {
                       })}
                     </ItemList>
                   </OrderItem>
+                  <DeliveryInfo>
+                    <h3>배송정보</h3>
+                    <div>수령자명: {order.receiver}</div>
+                    <div>연락처: {order.phone}</div>
+                    <div>배송받을주소: {order.address}</div>
+
+                  </DeliveryInfo>
 
                   {/* 합계 */}
                   <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end", fontWeight: 700 }}>

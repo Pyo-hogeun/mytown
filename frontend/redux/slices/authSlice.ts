@@ -5,7 +5,7 @@ import { Store } from './storeSlice';
 export interface User {
   id: string;
   name: string;
-  role: 'admin' | 'user' | 'manager' | 'master' | 'rider';
+  role: 'admin' | 'user' | 'manager' | 'master' | 'rider' | null;
   store?: Store;
 }
 

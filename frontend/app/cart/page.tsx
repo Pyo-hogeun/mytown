@@ -40,11 +40,11 @@ const CheckoutButton = styled.button`
 
 interface CartItem {
   _id: string;
-  product: { 
-    _id: string; 
-    name: string; 
-    price: number; 
-    store?: { _id: string; name: string }; 
+  product: {
+    _id: string;
+    name: string;
+    price: number;
+    store?: { _id: string; name: string };
   };
   quantity: number;
 }
@@ -83,7 +83,7 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     if (selectedIds.length === 0) return alert('결제할 항목을 선택하세요.');
-    
+
     const selectedItems = cart
       .filter(item => selectedIds.includes(item._id))
       .map(i => ({
@@ -99,8 +99,13 @@ export default function CartPage() {
 
   return (
     <Container>
-      <ShippingForm />
-      <DeliveryTimeSelector />
+      {cart.length > 0 ?
+        (<>
+          <ShippingForm />
+          <DeliveryTimeSelector />
+        </>
+        ) : ('장바구니가 비어있습니다.')
+      }
 
       {cart.map(item => (
         <CartItemRow key={item._id}>

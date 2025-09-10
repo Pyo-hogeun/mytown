@@ -102,5 +102,33 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: '전체 상품 조회 실패', error: err.message });
   }
 });
+// 특정 상품 조회
+router.get('/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: '상품을 찾을 수 없습니다.' });
+    res.status(200).json(product);
+  } catch (err) {
+    res.status(500).json({ message: '상품 조회 실패', error: err.message });
+  }
+});
+
+// 특정 상품 수정
+router.put('/:id', async (req, res) => {
+  try {
+    const { storeId, storeName, name, price, stockQty, imageUrl } = req.body;
+
+    const updated = await Product.findByIdAndUpdate(
+      req.params.id,
+      { store: storeId, storeName, name, price, stockQty, imageUrl },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ message: '상품을 찾을 수 없습니다.' });
+    res.status(200).json(updated);
+  } catch (err) {
+    res.status(500).json({ message: '상품 수정 실패', error: err.message });
+  }
+});
 
 export default router;
