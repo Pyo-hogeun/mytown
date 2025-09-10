@@ -79,49 +79,66 @@ const ManagerOrdersPage = () => {
     <div style={{ padding: 20 }}>
       <h1>매장 주문 관리</h1>
       <List>
-        {orders.map((order) => (
-          <li key={order._id} style={{  }}>
-            <h3>주문번호: {order._id}</h3>
-            <Item><Label>고객명:</Label> {order.receiver}</Item>
-            <Item><Label>연락처:</Label> {order.phone}</Item>
-            <Item><Label>주소:</Label> {order.address}</Item>
-            <Item><Label>총 결제금액:</Label> {order.totalPrice?.toLocaleString()}원</Item>
+        {orders.map((order) => {
+          // string -> Date -> formatted string
+          const createdDate = order.createdAt ? new Date(order.createdAt) : null;
+          const formattedDate = createdDate
+            ? createdDate.toLocaleString('ko-KR', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+            })
+            : '';
+          return (
+            <li key={order._id} style={{}}>
+              <h3>주문번호: {order._id}</h3>
+              <Item><Label>주문시간: </Label>{formattedDate}</Item>
+              <Item><Label>주문자명:</Label> {order.receiver}</Item>
+              <Item><Label>수령자명:</Label> {order.user?.name}</Item>
+              <Item><Label>연락처:</Label> {order.phone}</Item>
+              <Item><Label>주소:</Label> {order.address}</Item>
+              <Item><Label>희망 배송시간:</Label> {order.deliveryTime?.day} ⏰{order.deliveryTime?.time} </Item>
+              <Item><Label>총 결제금액:</Label> {order.totalPrice?.toLocaleString()}원</Item>
 
-            <Item>
-              <Label>상품목록:</Label>
-              <ItemList>
-                {order.orderItems.map((item, idx) => (
-                  <div key={idx}>
-                    {typeof item.product === "object" ? item.product?.name : item.product} × {item.quantity}
-                  </div>
+              <Item>
+                <Label>상품목록:</Label>
+                <ItemList>
+                  {order.orderItems.map((item, idx) => (
+                    <div key={idx}>
+                      {typeof item.product === "object" ? item.product?.name : item.product} × {item.quantity}
+                    </div>
+                  ))}
+                </ItemList>
+              </Item>
+
+              {/* 🔽 드롭다운 상태 변경 */}
+              <label>
+                상태:
+              </label>
+              <Select
+                value={order.status ?? "pending"} // fallback 추가
+                onChange={(e) =>
+                  handleStatusChange(order._id, e.target.value as OrderStatus)
+                }
+                disabled={order.status === "completed" || order.status === "cancelled"}
+              >
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {/* UI 표시용은 한글 매핑 */}
+                    {status === "pending" && "대기중"}
+                    {status === "accepted" && "승인됨"}
+                    {status === "delivering" && "배송중"}
+                    {status === "completed" && "완료"}
+                    {status === "cancelled" && "취소됨"}
+                  </option>
                 ))}
-              </ItemList>
-            </Item>
-
-            {/* 🔽 드롭다운 상태 변경 */}
-            <label>
-              상태:
-            </label>
-            <Select
-              value={order.status ?? "pending"} // fallback 추가
-              onChange={(e) =>
-                handleStatusChange(order._id, e.target.value as OrderStatus)
-              }
-              disabled={order.status === "completed" || order.status === "cancelled"}
-            >
-              {statuses.map((status) => (
-                <option key={status} value={status}>
-                  {/* UI 표시용은 한글 매핑 */}
-                  {status === "pending" && "대기중"}
-                  {status === "accepted" && "승인됨"}
-                  {status === "delivering" && "배송중"}
-                  {status === "completed" && "완료"}
-                  {status === "cancelled" && "취소됨"}
-                </option>
-              ))}
-            </Select>
-          </li>
-        ))}
+              </Select>
+            </li>
+          )
+        })}
       </List>
     </div>
   );

@@ -45,7 +45,7 @@ export interface CreatedOrder {
 export interface UserOrder {
   paymentMethod: string;
   _id: string;
-  user?: string;
+  user?: { _id: string; name?: string; email?:string };
   store?: string | { _id: string; name?: string };
   orderItems: {
     product: string | { _id: string; name?: string; price?: number };
