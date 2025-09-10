@@ -114,7 +114,24 @@ router.get("/", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "주문 조회 실패", error: err });
   }
 });
+// ✅ 매니저 전용 주문 조회
+router.get("/manager", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "manager") {
+      return res.status(403).json({ message: "접근 권한이 없습니다." });
+    }
 
+    const orders = await Order.find({ store: req.user.store })
+      .sort({ createdAt: -1 })
+      .populate("user", "name email")
+      .populate("orderItems.product", "name price")
+      .lean();
+
+    res.json({ orders });
+  } catch (err) {
+    res.status(500).json({ message: "주문 조회 실패", error: err.message });
+  }
+});
 // ✅ 특정 주문 조회
 router.get("/:orderId", authMiddleware, async (req, res) => {
   try {
@@ -227,6 +244,76 @@ router.patch("/:id/cancel", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("주문 취소 오류:", err);
     res.status(500).json({ message: "주문 취소 실패" });
+  }
+});
+
+
+/**
+ * @openapi
+ * /order/{id}/status:
+ *   patch:
+ *     summary: 주문 상태 변경 (매니저 전용)
+ *     description: 매니저가 해당 매장의 주문 상태를 변경합니다.
+ *     tags:
+ *       - Order
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 상태를 변경할 주문 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [pending, accepted, delivering, completed]
+ *     responses:
+ *       200:
+ *         description: 상태 변경 성공
+ *       403:
+ *         description: 권한 없음
+ *       404:
+ *         description: 주문 없음
+ */
+router.patch("/:id/status", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "manager") {
+      return res.status(403).json({ message: "매니저만 주문 상태를 변경할 수 있습니다." });
+    }
+
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findById(id).populate("store");
+
+    if (!order) return res.status(404).json({ message: "주문을 찾을 수 없습니다." });
+
+    // ✅ 매니저의 소속 매장만 변경 가능
+    if (order.store.toString() !== req.user.store.toString()) {
+      return res.status(403).json({ message: "본인 매장의 주문만 변경할 수 있습니다." });
+    }
+
+    // ✅ 상태 검증
+    const validStatuses = ["pending", "accepted", "delivering", "completed"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: "잘못된 상태 값입니다." });
+    }
+
+    order.status = status;
+    await order.save();
+
+    res.json({ success: true, order });
+  } catch (err) {
+    console.error("주문 상태 변경 오류:", err);
+    res.status(500).json({ message: "상태 변경 실패" });
   }
 });
 

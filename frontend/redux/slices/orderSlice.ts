@@ -9,7 +9,14 @@ export interface OrderItemPayload {
 
 export type PaymentMethod = "card" | "kakao" | "naver";
 export type OrderStatus = "pending" | "accepted" | "delivering" | "completed" | "cancelled";
-
+// ✅ 모든 주문 상태값 배열 (드롭다운 등에서 사용)
+export const validStatuses: OrderStatus[] = [
+  "pending",
+  "accepted",
+  "delivering",
+  "completed",
+  "cancelled",
+];
 export interface DeliveryTime {
   day: string;
   time: string;
@@ -88,6 +95,23 @@ export const cancelOrder = createAsyncThunk(
   }
 );
 
+// 매니저 주문 조회
+export const fetchManagerOrders = createAsyncThunk(
+  "order/fetchManagerOrders",
+  async () => {
+    const res = await axios.get("/order/manager");
+    return res.data.orders as UserOrder[];
+  }
+);
+
+// 주문 상태 변경
+export const updateOrderStatus = createAsyncThunk(
+  "order/updateOrderStatus",
+  async ({ orderId, status }: { orderId: string; status: OrderStatus }) => {
+    const res = await axios.patch(`/order/${orderId}/status`, { status });
+    return res.data.order as UserOrder;
+  }
+);
 
 interface OrderState {
   status: "idle" | "processing" | "succeeded" | "failed";
@@ -175,6 +199,20 @@ const orderSlice = createSlice({
         state.orders = state.orders.map((o) =>
           o._id === updated._id ? updated : o
         );
+      })
+      .addCase(fetchManagerOrders.fulfilled, (state, action: PayloadAction<UserOrder[]>) => {
+        state.status = "succeeded";
+        state.orders = action.payload;
+      })
+      .addCase(updateOrderStatus.fulfilled, (state, action: PayloadAction<UserOrder>) => {
+        // ✅ 변경된 주문을 state.orders에 반영
+        const idx = state.orders.findIndex((o) => o._id === action.payload._id);
+        if (idx !== -1) {
+          state.orders[idx] = action.payload;
+        }
+        if (state.selectedOrder?._id === action.payload._id) {
+          state.selectedOrder = action.payload;
+        }
       });
   },
 });
