@@ -5,6 +5,8 @@ const Button = styled.button`
   border:1px solid #ccc;
   background:#fff;
   cursor:pointer;
-  &:hover{background:#f5f5f5;}
+  &:not(:disabled):hover{
+    background:#f5f5f5;
+  }
 `;
 export default Button
