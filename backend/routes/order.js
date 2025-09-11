@@ -13,7 +13,7 @@ const router = express.Router();
  * /order:
  *   post:
  *     summary: 주문 생성
- *     tags: [Orders]
+ *     tags: [Order]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -186,7 +186,7 @@ router.post("/", authMiddleware, async (req, res) => {
  * /order:
  *   get:
  *     summary: 내 주문 목록 조회
- *     tags: [Orders]
+ *     tags: [Order]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -225,34 +225,46 @@ router.get("/", authMiddleware, async (req, res) => {
  * /order/manager:
  *   get:
  *     summary: 매니저 전용 주문 목록 조회
- *     tags: [Orders]
+ *     tags: [Order]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: user
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: 특정 사용자 ID로 필터링
  *     responses:
  *       200:
  *         description: 매니저가 자신의 매장 주문 목록 반환
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 orders:
- *                   type: array
- *                   items:
- *                     type: object
  *       403:
  *         description: 접근 권한 없음 (매니저 전용)
  *       500:
  *         description: 주문 조회 실패
  */
-// ✅ 매니저 전용 주문 조회
 router.get("/manager", authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== "manager") {
       return res.status(403).json({ message: "접근 권한이 없습니다." });
     }
 
-    const orders = await Order.find({ store: req.user.store })
+    const { user, userName } = req.query;
+
+    const filter = { store: req.user.store };
+
+    if (user) {
+      filter.user = user; // 특정 userId
+    } else if (userName) {
+      // 이름으로 검색
+      const matchedUsers = await User.find({
+        name: new RegExp(userName, "i"), // 대소문자 무시 부분일치 검색
+      }).select("_id");
+      const userIds = matchedUsers.map((u) => u._id);
+      filter.user = { $in: userIds };
+    }
+
+    const orders = await Order.find(filter)
       .sort({ createdAt: -1 })
       .populate("user", "name email")
       .populate("orderItems.product", "name price")
@@ -264,12 +276,15 @@ router.get("/manager", authMiddleware, async (req, res) => {
   }
 });
 
+
+
+
 /**
  * @openapi
  * /order/{orderId}:
  *   get:
  *     summary: 특정 주문 상세 조회
- *     tags: [Orders]
+ *     tags: [Order]
  *     security:
  *       - bearerAuth: []
  *     parameters:

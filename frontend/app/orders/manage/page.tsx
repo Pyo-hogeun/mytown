@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
 import { fetchManagerOrders, OrderStatus, updateOrderStatus, validStatuses } from "@/redux/slices/orderSlice";
@@ -40,6 +40,7 @@ const ManagerOrdersPage = () => {
   const router = useRouter();
   const { user } = useSelector((s: RootState) => s.auth);
   const { orders, status, error } = useSelector((s: RootState) => s.order);
+  const [searchName, setSearchName] = useState(""); // 🔎 검색어 상태
   const statuses: OrderStatus[] = [...validStatuses]; // ✅ 안전하게 복사
 
   useEffect(() => {
@@ -66,18 +67,41 @@ const ManagerOrdersPage = () => {
     }
   };
 
+  const handleSearch = () => {
+    console.log('searchName', searchName);
+    dispatch(fetchManagerOrders({ userName: searchName }));
+  };
+
   if (!user || user.role !== "manager") {
     return <p>접근 권한이 없습니다.</p>;
   }
 
-  if (status === "processing") return <p>주문 목록을 불러오는 중...</p>;
   if (error) return <p>에러 발생: {error}</p>;
-  if (!orders || orders.length === 0) return <p>주문이 없습니다.</p>;
 
 
   return (
     <div style={{ padding: 20 }}>
       <h1>매장 주문 관리</h1>
+
+      {/* 🔎 검색 UI */}
+      <div style={{ marginBottom: "1em" }}>
+        <input
+          type="text"
+          placeholder="주문자 이름 검색"
+          value={searchName}
+          onChange={(e) => setSearchName(e.target.value)}
+          style={{ padding: "6px 10px", marginRight: "8px" }}
+        />
+        <button onClick={handleSearch}>검색</button>
+      </div>
+      {
+        status === "idle" && <p>주문 목록을 불러오는 중...</p>
+      }
+
+      {
+        !orders || orders.length === 0 && <p>주문이 없습니다.</p>
+      }
+
       <List>
         {orders.map((order) => {
           // string -> Date -> formatted string

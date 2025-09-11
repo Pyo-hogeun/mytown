@@ -45,7 +45,7 @@ export interface CreatedOrder {
 export interface UserOrder {
   paymentMethod: string;
   _id: string;
-  user?: { _id: string; name?: string; email?:string };
+  user?: { _id: string; name?: string; email?: string };
   store?: string | { _id: string; name?: string };
   orderItems: {
     product: string | { _id: string; name?: string; price?: number };
@@ -95,14 +95,24 @@ export const cancelOrder = createAsyncThunk(
   }
 );
 
-// 매니저 주문 조회
-export const fetchManagerOrders = createAsyncThunk(
-  "order/fetchManagerOrders",
-  async () => {
-    const res = await axios.get("/order/manager");
+// 매니저 주문 조회 (이름 검색 지원)
+export const fetchManagerOrders = createAsyncThunk<
+  UserOrder[],
+  { userName?: string } | void
+>("order/fetchManagerOrders", async (params, thunkAPI) => {
+  try {
+    let url = "/order/manager"; // ✅ "/api" 프리픽스 제거 (axiosInstance에 baseURL 있음)
+    if (params?.userName) {
+      url += `?userName=${encodeURIComponent(params.userName)}`;
+    }
+    const res = await axios.get(url);
     return res.data.orders as UserOrder[];
+  } catch (err: any) {
+    return thunkAPI.rejectWithValue(
+      err.response?.data?.message || "주문 조회 실패"
+    );
   }
-);
+});
 
 // 주문 상태 변경
 export const updateOrderStatus = createAsyncThunk(
