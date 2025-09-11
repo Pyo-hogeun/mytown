@@ -41,7 +41,7 @@ const ProductForm = () => {
   const user = useSelector((state: RootState) => state.auth.user);
 
   // ✅ 권한이 있는 역할들을 배열로 정의
-  const allowedRoles = ['admin', 'manager'];
+  const allowedRoles = ['master', 'admin', 'manager'];
 
 
   // 마트 목록 불러오기

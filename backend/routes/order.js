@@ -3,10 +3,92 @@ import express from "express";
 import Cart from "../models/cart.js";
 import Order from "../models/order.js";
 import Product from "../models/product.js";
+import User from "../models/user.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
+import { faker } from "@faker-js/faker";
 
 const router = express.Router();
-
+/**
+ * @openapi
+ * /order:
+ *   post:
+ *     summary: 주문 생성
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - items
+ *               - receiver
+ *               - phone
+ *               - address
+ *             properties:
+ *               items:
+ *                 type: array
+ *                 description: 주문할 상품 목록
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     product:
+ *                       type: string
+ *                       description: 상품 ID
+ *                     quantity:
+ *                       type: integer
+ *                       description: 수량
+ *               receiver:
+ *                 type: string
+ *                 description: 수령인 이름
+ *               phone:
+ *                 type: string
+ *                 description: 수령인 연락처
+ *               address:
+ *                 type: string
+ *                 description: 배송지 주소
+ *               deliveryTime:
+ *                 type: string
+ *                 format: date-time
+ *                 description: 요청 배송 시간 (선택)
+ *     responses:
+ *       200:
+ *         description: 스토어별 주문 생성 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 orders:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       orderId:
+ *                         type: string
+ *                       store:
+ *                         type: string
+ *                       totalPrice:
+ *                         type: number
+ *                       receiver:
+ *                         type: string
+ *                       phone:
+ *                         type: string
+ *                       address:
+ *                         type: string
+ *                       deliveryTime:
+ *                         type: string
+ *                 cart:
+ *                   type: object
+ *       400:
+ *         description: 요청 데이터 오류 (상품이나 배송정보 누락 등)
+ *       500:
+ *         description: 서버 오류
+ */
 // ✅ 주문 생성
 router.post("/", authMiddleware, async (req, res) => {
   try {
@@ -99,6 +181,29 @@ router.post("/", authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /order:
+ *   get:
+ *     summary: 내 주문 목록 조회
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 주문 목록 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 orders:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       500:
+ *         description: 주문 조회 실패
+ */
 // ✅ 주문 목록 조회
 router.get("/", authMiddleware, async (req, res) => {
   try {
@@ -114,6 +219,32 @@ router.get("/", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "주문 조회 실패", error: err });
   }
 });
+
+/**
+ * @openapi
+ * /order/manager:
+ *   get:
+ *     summary: 매니저 전용 주문 목록 조회
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 매니저가 자신의 매장 주문 목록 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 orders:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       403:
+ *         description: 접근 권한 없음 (매니저 전용)
+ *       500:
+ *         description: 주문 조회 실패
+ */
 // ✅ 매니저 전용 주문 조회
 router.get("/manager", authMiddleware, async (req, res) => {
   try {
@@ -132,6 +263,34 @@ router.get("/manager", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "주문 조회 실패", error: err.message });
   }
 });
+
+/**
+ * @openapi
+ * /order/{orderId}:
+ *   get:
+ *     summary: 특정 주문 상세 조회
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: 주문 ID
+ *     responses:
+ *       200:
+ *         description: 주문 상세 정보 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       404:
+ *         description: 주문을 찾을 수 없음
+ *       500:
+ *         description: 주문 상세 조회 실패
+ */
 // ✅ 특정 주문 조회
 router.get("/:orderId", authMiddleware, async (req, res) => {
   try {
@@ -288,14 +447,14 @@ router.patch("/:id/status", authMiddleware, async (req, res) => {
     if (req.user.role !== "manager") {
       return res.status(403).json({ message: "매니저만 주문 상태를 변경할 수 있습니다." });
     }
-    
+
     const { id } = req.params;
     const { status } = req.body;
-    
+
     const order = await Order.findById(id).populate("store");
-    
+
     if (!order) return res.status(404).json({ message: "주문을 찾을 수 없습니다." });
-    
+
     console.log('order.store.toString()', order.store._id.toString());
     console.log('req.user.store.toString()', req.user.store.toString());
 
@@ -320,5 +479,59 @@ router.patch("/:id/status", authMiddleware, async (req, res) => {
   }
 });
 
+// ✅ 개발용 - 랜덤 주문 100개 생성 (1회 실행 후 제거 권장)
+router.post("/seed", async (req, res) => {
+  try {
+    const users = await User.find();
+    const products = await Product.find().populate("store");
 
+    if (users.length === 0 || products.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "유저 또는 상품 데이터가 없습니다. 먼저 생성해주세요." });
+    }
+
+    const orders = [];
+
+    for (let i = 0; i < 100; i++) {
+      const user = users[Math.floor(Math.random() * users.length)];
+      const product = products[Math.floor(Math.random() * products.length)];
+      const quantity = Math.floor(Math.random() * 5) + 1;
+
+      console.log('product.store', product.store.name);
+
+      const order = new Order({
+        user: user._id,
+        store: product.store._id,  // ✅ ObjectId 저장
+        orderItems: [
+          {
+            product: product._id,
+            quantity,
+            unitPrice: product.price,
+          },
+        ],
+        totalPrice: quantity * product.price,
+        status: faker.helpers.arrayElement([
+          "pending",
+          "accepted",
+          "delivering",
+          "completed",
+          "cancelled",
+        ]),
+        receiver: faker.person.fullName(),
+        phone: faker.phone.number("010-####-####"),
+        address: faker.location.streetAddress(),
+        deliveryTime: faker.date.soon({ days: 7 }),
+      });
+      
+      orders.push(order);
+    }
+
+    await Order.insertMany(orders);
+    res.json({ message: "랜덤 주문 100개 생성 완료 ✅" });
+  } catch (err) {
+    console.error("❌ 시드 데이터 생성 오류:", err);
+    res.status(500).json({ message: "시드 데이터 생성 오류", error: err.message });
+  }
+});
 export default router;
