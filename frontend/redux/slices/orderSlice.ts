@@ -98,13 +98,21 @@ export const cancelOrder = createAsyncThunk(
 // 매니저 주문 조회 (이름 검색 지원)
 export const fetchManagerOrders = createAsyncThunk<
   UserOrder[],
-  { userName?: string } | void
+  { userName?: string; phone?: string } | void
 >("order/fetchManagerOrders", async (params, thunkAPI) => {
   try {
     let url = "/order/manager"; // ✅ "/api" 프리픽스 제거 (axiosInstance에 baseURL 있음)
+    const query = new URLSearchParams();
     if (params?.userName) {
-      url += `?userName=${encodeURIComponent(params.userName)}`;
+      query.append("userName", params.userName);
     }
+    if (params?.phone) {
+      query.append("phone", params.phone);
+    }
+    if ([...query].length > 0) {
+      url += `?${query.toString()}`;
+    }
+    
     const res = await axios.get(url);
     return res.data.orders as UserOrder[];
   } catch (err: any) {

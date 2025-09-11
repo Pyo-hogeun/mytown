@@ -249,7 +249,7 @@ router.get("/manager", authMiddleware, async (req, res) => {
       return res.status(403).json({ message: "접근 권한이 없습니다." });
     }
 
-    const { user, userName } = req.query;
+    const { user, userName, phone } = req.query;
 
     const filter = { store: req.user.store };
 
@@ -262,6 +262,10 @@ router.get("/manager", authMiddleware, async (req, res) => {
       }).select("_id");
       const userIds = matchedUsers.map((u) => u._id);
       filter.user = { $in: userIds };
+    }
+
+    if (phone) {
+      filter.phone = new RegExp(phone, "i"); // 연락처 부분 일치 검색
     }
 
     const orders = await Order.find(filter)

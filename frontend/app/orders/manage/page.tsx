@@ -1,12 +1,15 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
 import { fetchManagerOrders, OrderStatus, updateOrderStatus, validStatuses } from "@/redux/slices/orderSlice";
 import { useRouter } from "next/navigation";
 import Select from "@/app/component/Select";
 import styled from "styled-components";
+import Input from "@/app/component/Input";
+import Button from "@/app/component/Button";
+import OrderItem from "./OrderItem";
 const List = styled.ul`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -21,19 +24,17 @@ const List = styled.ul`
     background-color: #fff;
   }
 `;
-const Item = styled.div`
-  margin-bottom: 0.4em;
-`;
-const Label = styled.span`
-  display: inline-block;
-  margin-right: 10px;
-`;
-const ItemList = styled.div`
-  font-size: 0.9em;
-  margin: 10px;
-  > div{
-    margin-bottom: 0.4em;
+const SearchItem = styled.div`
+  display: flex;
+  margin-bottom: 1rem;
+  gap: 1em;
+  input{
+    margin-bottom: 0;
   }
+`;
+const SearchButton = styled(Button)`
+  width: 100%;
+  margin-bottom: 1em;
 `
 const ManagerOrdersPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -41,7 +42,7 @@ const ManagerOrdersPage = () => {
   const { user } = useSelector((s: RootState) => s.auth);
   const { orders, status, error } = useSelector((s: RootState) => s.order);
   const [searchName, setSearchName] = useState(""); // 🔎 검색어 상태
-  const statuses: OrderStatus[] = [...validStatuses]; // ✅ 안전하게 복사
+  const [searchPhone, setSearchPhone] = useState(""); // 🔎 전화번호 검색 상태
 
   useEffect(() => {
     if (!user) {
@@ -68,9 +69,17 @@ const ManagerOrdersPage = () => {
   };
 
   const handleSearch = () => {
-    console.log('searchName', searchName);
-    dispatch(fetchManagerOrders({ userName: searchName }));
+    dispatch(fetchManagerOrders({ userName: searchName, phone: searchPhone }));
   };
+
+  // ✅ useMemo로 검색 결과 최적화
+  const filteredOrders = useMemo(() => {
+    if (!searchName && !searchPhone) return orders;
+    return orders.filter((o) =>{
+      o.user?.name?.toLowerCase().includes(searchName.toLowerCase())
+      o.phone?.toLowerCase().includes(searchPhone.toLowerCase())
+    });
+  }, [orders, searchName, searchPhone]);
 
   if (!user || user.role !== "manager") {
     return <p>접근 권한이 없습니다.</p>;
@@ -84,16 +93,23 @@ const ManagerOrdersPage = () => {
       <h1>매장 주문 관리</h1>
 
       {/* 🔎 검색 UI */}
-      <div style={{ marginBottom: "1em" }}>
-        <input
+      <SearchItem>
+        <Input
           type="text"
           placeholder="주문자 이름 검색"
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
-          style={{ padding: "6px 10px", marginRight: "8px" }}
         />
-        <button onClick={handleSearch}>검색</button>
-      </div>
+      </SearchItem>
+      <SearchItem>
+        <Input
+          type="text"
+          placeholder="연락처 검색"
+          value={searchPhone}
+          onChange={(e) => setSearchPhone(e.target.value)}
+        />
+      </SearchItem>
+      <SearchButton onClick={handleSearch}>검색</SearchButton>
       {
         status === "idle" && <p>주문 목록을 불러오는 중...</p>
       }
@@ -103,69 +119,9 @@ const ManagerOrdersPage = () => {
       }
 
       <List>
-        {orders.map((order) => {
-          // string -> Date -> formatted string
-          const createdDate = order.createdAt ? new Date(order.createdAt) : null;
-          const formattedDate = createdDate
-            ? createdDate.toLocaleString('ko-KR', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-            })
-            : '';
-          return (
-            <li key={order._id} style={{}}>
-              <h3>주문번호: {order._id}</h3>
-              <Item><Label>주문시간: </Label>{formattedDate}</Item>
-              <Item><Label>주문자명:</Label> {order.receiver}</Item>
-              <Item><Label>수령자명:</Label> {order.user?.name}</Item>
-              <Item><Label>연락처:</Label> {order.phone}</Item>
-              <Item><Label>주소:</Label> {order.address}</Item>
-              <Item><Label>가게명:</Label> {typeof order.store === 'string'
-                ? order.store
-                : order.store?.name}</Item>
-              <Item><Label>희망 배송시간:</Label> {order.deliveryTime?.day} ⏰{order.deliveryTime?.time} </Item>
-              <Item><Label>총 결제금액:</Label> {order.totalPrice?.toLocaleString()}원</Item>
-
-              <Item>
-                <Label>상품목록:</Label>
-                <ItemList>
-                  {order.orderItems.map((item, idx) => (
-                    <div key={idx}>
-                      {typeof item.product === "object" ? item.product?.name : item.product} × {item.quantity}
-                    </div>
-                  ))}
-                </ItemList>
-              </Item>
-
-              {/* 🔽 드롭다운 상태 변경 */}
-              <label>
-                상태:
-              </label>
-              <Select
-                value={order.status ?? "pending"} // fallback 추가
-                onChange={(e) =>
-                  handleStatusChange(order._id, e.target.value as OrderStatus)
-                }
-                disabled={order.status === "completed" || order.status === "cancelled"}
-              >
-                {statuses.map((status) => (
-                  <option key={status} value={status}>
-                    {/* UI 표시용은 한글 매핑 */}
-                    {status === "pending" && "대기중"}
-                    {status === "accepted" && "승인됨"}
-                    {status === "delivering" && "배송중"}
-                    {status === "completed" && "완료"}
-                    {status === "cancelled" && "취소됨"}
-                  </option>
-                ))}
-              </Select>
-            </li>
-          )
-        })}
+        {filteredOrders.map((order) => (
+          <OrderItem key={order._id} order={order} onStatusChange={handleStatusChange} />
+        ))}
       </List>
     </div>
   );

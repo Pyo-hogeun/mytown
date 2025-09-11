@@ -53,6 +53,7 @@ const Button = styled.button<{ loading?: boolean }>`
   font-size: 15px;
   cursor: ${({ loading }) => (loading ? 'not-allowed' : 'pointer')};
   position: relative;
+  height: 43px;
 
   &:hover {
     background: ${({ loading }) => (loading ? '#ccc' : '#005bb5')};
