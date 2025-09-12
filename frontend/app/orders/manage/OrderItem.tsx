@@ -37,6 +37,7 @@ const OrderItem = ({ order, onStatusChange }: OrderItemProps) => {
       <Item><Label>주문시간: </Label>{formattedDate}</Item>
       <Item><Label>수령자명:</Label> {order.receiver}</Item>
       <Item><Label>주문자명:</Label> {order.user?.name}</Item>
+      <Item><Label>결제수단:</Label> {order.paymentMethod}</Item>
       <Item><Label>연락처:</Label> {order.phone}</Item>
       <Item><Label>주소:</Label> {order.address}</Item>
       <Item><Label>가게명:</Label> {typeof order.store === "string" ? order.store : order.store?.name}</Item>

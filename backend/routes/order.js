@@ -27,6 +27,7 @@ const router = express.Router();
  *               - receiver
  *               - phone
  *               - address
+ *               - paymentMethod
  *             properties:
  *               items:
  *                 type: array
@@ -53,6 +54,11 @@ const router = express.Router();
  *                 type: string
  *                 format: date-time
  *                 description: 요청 배송 시간 (선택)
+ *               paymentMethod:
+ *                 type: string
+ *                 enum: [pending, accepted, delivering, completed, cancelled]
+ *                 description: 결제 수단
+ *                 
  *     responses:
  *       200:
  *         description: 스토어별 주문 생성 성공
@@ -92,7 +98,7 @@ const router = express.Router();
 // ✅ 주문 생성
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { items, receiver, phone, address, deliveryTime } = req.body;
+    const { items, receiver, phone, address, deliveryTime, paymentMethod } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ message: "주문할 항목이 없습니다." });
@@ -147,6 +153,7 @@ router.post("/", authMiddleware, async (req, res) => {
         phone,
         address,
         deliveryTime,
+        paymentMethod
       });
 
       await order.save();

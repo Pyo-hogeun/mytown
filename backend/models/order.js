@@ -31,6 +31,12 @@ const OrderSchema = new Schema({
     day: { type: String },                        // 요일 (월~일)
     time: { type: String },                       // 시각 (30분 단위)
   },
+  // ✅ 결제 관련 필드 추가
+  paymentMethod: {
+    type: String,
+    enum: ["card", "kakao", "naver"],
+    required: true,
+  },
 
   createdAt: { type: Date, default: Date.now },
 });
