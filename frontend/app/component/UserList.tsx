@@ -50,6 +50,7 @@ const UserList: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const token = useSelector((state: RootState) => state.auth.token);
   const currentUser = useSelector((state: RootState) => state.auth.user);
+  const { list } = useSelector((state:RootState)=>state.users);
   const [loadingIds, setLoadingIds] = useState<string[]>([]); // 로딩 중인 userId 저장
 
 
@@ -61,7 +62,7 @@ const UserList: React.FC = () => {
 
 
   useEffect(() => {
-    if (token) fetchUsers();
+    if (token) dispatch(fetchUsers());
   }, [token]);
 
   // role 수정 요청
@@ -118,7 +119,7 @@ const UserList: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {users.map(user => (
+          {list.map(user => (
             <tr key={user._id}>
               <td>{user._id}</td>
               <td>{user.name}</td>
