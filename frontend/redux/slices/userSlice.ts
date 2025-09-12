@@ -1,4 +1,5 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+// redux/slices/userSlice.ts
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "@/utils/axiosInstance";
 
 export interface User {
@@ -23,8 +24,14 @@ const initialState: UserState = {
   error: null,
 };
 
-export const fetchUsers = createAsyncThunk("users/fetchUsers", async () => {
-  const res = await axios.get<User[]>("/users");
+// 🔎 필터링 가능한 thunk
+export const fetchUsers = createAsyncThunk<
+  User[], // 성공 시 반환 타입
+  { name?: string; email?: string; role?: string; phone?: string; address?: string } | undefined
+>("users/fetchUsers", async (filters) => {
+  const res = await axios.get<User[]>("/users", {
+    params: filters, // ✅ 쿼리 파라미터 전달
+  });
   return res.data;
 });
 
@@ -38,7 +45,7 @@ const userSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchUsers.fulfilled, (state, action) => {
+      .addCase(fetchUsers.fulfilled, (state, action: PayloadAction<User[]>) => {
         state.loading = false;
         state.list = action.payload;
       })

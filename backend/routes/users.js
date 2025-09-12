@@ -45,7 +45,16 @@ const router = express.Router();
  */
 router.get("/", async (req, res) => {
   try {
-    const users = await User.find().select("-password");
+    const { name, email, role, phone, address } = req.query;
+    const filter = {};
+
+    if (name) filter.name = new RegExp(name, "i"); // 부분일치 검색
+    if (email) filter.email = new RegExp(email, "i");
+    if (role) filter.role = role;
+    if (phone) filter.phone = new RegExp(phone, "i");
+    if (address) filter.address = new RegExp(address, "i");
+
+    const users = await User.find(filter).select("-password");
     res.json(users);
   } catch (error) {
     console.error("사용자 목록 조회 실패:", error);

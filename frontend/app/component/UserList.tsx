@@ -3,9 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from '@/utils/axiosInstance';
 import styled from 'styled-components';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/redux/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/redux/store';
 import Spinner from './Spinner';
+import Button from './Button';
+import Input from './Input';
+import { fetchUsers } from '@/redux/slices/userSlice';
 
 const Table = styled.table`
   width: 100%;
@@ -15,10 +18,21 @@ const Table = styled.table`
   th, td {
     border: 1px solid #ddd;
     padding: 8px;
-    text-align: center;
+    // text-align: center;
   }
 `;
-
+const SearchItem = styled.div`
+  display: flex;
+  margin-bottom: 1rem;
+  gap: 1em;
+  input{
+    margin-bottom: 0;
+  }
+`;
+const SearchButton = styled(Button)`
+  width: 100%;
+  margin-bottom: 1em;
+`
 const Select = styled.select`
   padding: 4px;
 `;
@@ -32,22 +46,19 @@ interface User {
 }
 
 const UserList: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const [users, setUsers] = useState<User[]>([]);
   const token = useSelector((state: RootState) => state.auth.token);
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const [loadingIds, setLoadingIds] = useState<string[]>([]); // 로딩 중인 userId 저장
 
-  // 사용자 목록 조회
-  const fetchUsers = async () => {
-    try {
-      const res = await axios.get('/users', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUsers(res.data);
-    } catch (error) {
-      console.error('사용자 목록 조회 실패:', error);
-    }
-  };
+
+  const [searchName, setSearchName] = useState("");
+  const [searchEmail, setSearchEmail] = useState("");
+  const [searchRole, setSearchRole] = useState("");
+  const [searchPhone, setSearchPhone] = useState("");
+  const [searchAddress, setSearchAddress] = useState("");
+
 
   useEffect(() => {
     if (token) fetchUsers();
@@ -70,12 +81,36 @@ const UserList: React.FC = () => {
     }
   };
 
+  // 검색 버튼에서
+  const handleSearch = () => {
+    console.log('click');
+    dispatch(fetchUsers({
+      name: searchName || undefined,
+      email: searchEmail || undefined,
+      role: searchRole || undefined,
+      phone: searchPhone || undefined,
+      address: searchAddress || undefined,
+    }));
+  };
+
   return (
     <div>
       <h2>사용자 목록</h2>
+
+      {/* 🔎 검색 UI */}
+      <SearchItem>
+        <Input
+          type="text"
+          placeholder="사용자 이름 검색"
+          value={searchName}
+          onChange={(e) => setSearchName(e.target.value)}
+        />
+      </SearchItem>
+      <SearchButton onClick={handleSearch}>검색</SearchButton>
       <Table>
         <thead>
           <tr>
+            <th>아이디</th>
             <th>이름</th>
             <th>이메일</th>
             <th>권한</th>
@@ -85,6 +120,7 @@ const UserList: React.FC = () => {
         <tbody>
           {users.map(user => (
             <tr key={user._id}>
+              <td>{user._id}</td>
               <td>{user.name}</td>
               <td>{user.email}</td>
               <td>
