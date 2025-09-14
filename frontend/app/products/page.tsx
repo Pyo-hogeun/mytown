@@ -135,27 +135,32 @@ const ProductListPage = () => {
         {products.length > 0 ?
           products.map((product) => (
             <CardItem key={product._id}>
-              <ImageBox>
-                {/* 상품 이미지 API에 따라 다르게 처리 */}
-                <img src={product.imageUrl || '/no-image.png'} alt={product.name} />
-              </ImageBox>
-              <Info>
-                <Name>{product.name}</Name>
-                <Price>{product.price.toLocaleString()}원</Price>
-                {user?.role && user.role !== "user" && (
-                  <StockQty>수량 : {product.stockQty}개</StockQty>
-                )}
+              <Link href={`/products/${product._id}`}>
+                <ImageBox>
+                  {/* 상품 이미지 API에 따라 다르게 처리 */}
+                  <img src={product.imageUrl || '/no-image.png'} alt={product.name} />
+                </ImageBox>
+                <Info>
+                  <Name>{product.name}</Name>
+                  <Price>{product.price.toLocaleString()}원</Price>
+                  {user?.role && user.role !== "user" && (
+                    <StockQty>수량 : {product.stockQty}개</StockQty>
+                  )}
 
-                <Store>{product.storeName}</Store>
-              </Info>
-              {user?.role && allowedRoles.includes(user.role) ?
-                <Link href={`/products/${product._id}/edit`}>
-                  <Button>편집</Button>
-                </Link>: false
-              }
-              {user?.role === 'user' ? <Button onClick={() => handleAddToCart(product._id)}>장바구니 담기</Button> : undefined}
+                  <Store>{product.storeName}</Store>
+                </Info>
+                {user?.role && allowedRoles.includes(user.role) ?
+                  <Link href={`/products/${product._id}/edit`}>
+                    <Button>편집</Button>
+                  </Link>: false
+                }
+                {user?.role === 'user' ? <Button onClick={() => handleAddToCart(product._id)}>장바구니 담기</Button> : undefined}
+              </Link>
 
             </CardItem>
+
+
+
           )) : '상품이 없습니다'}
       </Grid>
     </Container>

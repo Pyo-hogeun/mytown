@@ -1,10 +1,10 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
+import Container from "./component/Container";
 
 export default function Home() {
   return (
-    <div>
+    <Container>
       HOME
-    </div>
+    </Container>
   );
 }

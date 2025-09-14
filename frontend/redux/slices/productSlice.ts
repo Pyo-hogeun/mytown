@@ -6,8 +6,28 @@ type Product = {
   price: number;
   storeName: string;
   stockQty: number;
-  imageUrl: string;
+  imageUrl?: string;
+  images?: string[];
+  options?: Option[];
+  description?: string;
+  reviews?: Review[]
 };
+
+export type Option = {
+  _id?: string;
+  name: string;
+  extraPrice?: number;
+  stock?: number
+};
+
+export type Review = {
+  _id?: string;
+  userName?: string;
+  rating: number;
+  comment: string;
+  createdAt?: string
+};
+
 
 interface ProductState {
   items: Product[];
