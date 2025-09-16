@@ -166,16 +166,25 @@ router.post("/add", authMiddleware, async (req, res) => {
  *       404:
  *         description: 장바구니 없음
  */
-// ✅ 장바구니 항목 제거
+
+// ✅ routes/cart.js (삭제 후 응답을 populate한 형태로 반환)
 router.delete("/remove/:itemId", authMiddleware, async (req, res) => {
   try {
     const cart = await Cart.findOne({ user: req.user._id });
     if (!cart) return res.status(404).json({ message: "장바구니가 없습니다." });
 
+    // 해당 아이템 제거
     cart.items = cart.items.filter((item) => item._id.toString() !== req.params.itemId);
     await cart.save();
 
-    res.json({ items: cart.items });
+    // 제거 후 최신 장바구니 populate해서 반환 (GET /cart 과 동일한 형태)
+    const updatedCart = await Cart.findOne({ user: req.user._id })
+      .populate({
+        path: "items.product",
+        populate: { path: "store" }
+      });
+
+    res.json(updatedCart || { items: [] });
   } catch (err) {
     res.status(500).json({ message: "장바구니 삭제 실패", error: err.message });
   }

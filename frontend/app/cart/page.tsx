@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchCart } from '@/redux/slices/cartSlice';
+import { deleteFromCart, fetchCart } from '@/redux/slices/cartSlice';
 import styled from 'styled-components';
 import { AppDispatch, RootState } from '@/redux/store';
 import axios from '@/utils/axiosInstance';
@@ -46,8 +46,14 @@ interface CartItem {
     price: number;
     store?: { _id: string; name: string };
   };
+  option?: {
+    _id: string;
+    name: string;
+    additionalPrice: number;
+  } | null;
   quantity: number;
 }
+
 
 export default function CartPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -68,8 +74,7 @@ export default function CartPage() {
   };
 
   const handleRemove = async (itemId: string) => {
-    await axios.post('/cart/remove', { itemId });
-    dispatch(fetchCart());
+    dispatch(deleteFromCart(itemId))
     setSelectedIds(selectedIds.filter(id => id !== itemId));
   };
 

@@ -103,18 +103,18 @@ const ProductListPage = () => {
   const { requireLogin } = useRequireLogin();
   const products = useSelector((state: RootState) => state.product.items);
   const user = useSelector((state: RootState) => state.auth.user);
-  const handleAddToCart = (productId: string) => {
-    requireLogin(() => {
-      if (user?.role === "user") {
-        dispatch(addToCart({ productId }));
-      } else {
-        alert("관리자는 장바구니를 사용할 수 없습니다.");
-      }
-    });
-  };
+  // const handleAddToCart = (productId: string) => {
+  //   requireLogin(() => {
+  //     if (user?.role === "user") {
+  //       dispatch(addToCart({ productId }));
+  //     } else {
+  //       alert("관리자는 장바구니를 사용할 수 없습니다.");
+  //     }
+  //   });
+  // };
 
-    // ✅ 권한이 있는 역할들을 배열로 정의
-    const allowedRoles = ['master', 'admin', 'manager'];
+  // ✅ 권한이 있는 역할들을 배열로 정의
+  const allowedRoles = ['master', 'admin', 'manager'];
 
   useEffect(() => {
     let url = '/products';
@@ -149,13 +149,13 @@ const ProductListPage = () => {
 
                   <Store>{product.storeName}</Store>
                 </Info>
-                {user?.role && allowedRoles.includes(user.role) ?
-                  <Link href={`/products/${product._id}/edit`}>
-                    <Button>편집</Button>
-                  </Link>: false
-                }
-                {user?.role === 'user' ? <Button onClick={() => handleAddToCart(product._id)}>장바구니 담기</Button> : undefined}
               </Link>
+              {user?.role && allowedRoles.includes(user.role) ?
+                <Link href={`/products/${product._id}/edit`}>
+                  <Button>편집</Button>
+                </Link> : false
+              }
+              {/* {user?.role === 'user' ? <Button onClick={() => handleAddToCart(product._id)}>장바구니 담기</Button> : undefined} */}
 
             </CardItem>
 

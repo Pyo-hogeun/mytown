@@ -27,7 +27,12 @@ const List = styled.ul`
     list-style: none;
     margin-bottom: 10px;
   }
-`
+`;
+const OptionContainer = styled.div`
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-top: 10px;
+`;
 const ProductForm = () => {
   const [name, setName] = useState('');
   const [price, setPrice] = useState<number | ''>('');
@@ -35,6 +40,7 @@ const ProductForm = () => {
   const [stockQty, setStockQty] = useState<number>(0);
   const [storeId, setStoreId] = useState('');
   const [storeName, setStoreName] = useState('');
+  const [options, setOptions] = useState<{ name: string; additionalPrice: number }[]>([]);
   const router = useRouter();
   const dispatch = useDispatch();
   const stores = useSelector((state: RootState) => state.store.items);
@@ -60,12 +66,22 @@ const ProductForm = () => {
         name,
         price,
         stockQty,
-        imageUrl
+        imageUrl,
+        options, // ✅ 옵션도 함께 전송
       });
       router.push('/products');
     } catch (err) {
       console.error('등록 실패', err);
     }
+  };
+  const addOption = () => {
+    setOptions([...options, { name: '', additionalPrice: 0 }]);
+  };
+
+  const updateOption = (index: number, field: string, value: string | number) => {
+    const newOptions = [...options];
+    (newOptions[index] as any)[field] = value;
+    setOptions(newOptions);
   };
 
   return (
@@ -112,6 +128,25 @@ const ProductForm = () => {
                 <Label>상품이미지</Label>
                 <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="상품이미지" />
                 <p>'https://...' 처럼 절대경로를 포함해야합니다.</p>
+              </li>
+              <li>
+                <Label>옵션</Label>
+                {options.map((opt, idx) => (
+                  <OptionContainer key={idx}>
+                    <Input
+                      value={opt.name}
+                      onChange={(e) => updateOption(idx, 'name', e.target.value)}
+                      placeholder="옵션명"
+                    />
+                    <Input
+                      type="number"
+                      value={opt.additionalPrice}
+                      onChange={(e) => updateOption(idx, 'additionalPrice', Number(e.target.value))}
+                      placeholder="추가금액"
+                    />
+                  </OptionContainer>
+                ))}
+                <Button type="button" onClick={addOption}>+ 옵션 추가</Button>
               </li>
             </List>
 

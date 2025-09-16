@@ -44,7 +44,7 @@ const Thumbs = styled.div`
   gap: 8px;
   overflow-x: auto;
 `;
-const Thumb = styled.img<{active?: boolean}>`
+const Thumb = styled.img<{ active?: boolean }>`
   width: 70px;
   height: 70px;
   object-fit: cover;
@@ -154,6 +154,7 @@ type Product = {
 
 // --------------------------- 컴포넌트 ---------------------------
 const ProductDetailPage = () => {
+  const router = useRouter();
   const params = useParams();
   const id = (params && (params as any).id) || null; // next/navigation useParams 타입이 널 수 있음
 
@@ -214,8 +215,11 @@ const ProductDetailPage = () => {
 
   const handleAddToCart = () => {
     if (!product) return;
+    if (!user) {
+      router.push('/login')
+    }
     if (user?.role !== 'user') {
-      alert('관리자는 장바구니를 사용할 수 없습니다.');
+      alert('로그인 후 장바구니를 사용할 수 있습니다.');
       return;
     }
     if (quantity > remaining) {
@@ -223,27 +227,18 @@ const ProductDetailPage = () => {
       return;
     }
     // ADD TO CART 액션: productId, optionId (있으면), quantity 포함
-    dispatch(addToCart({ productId: product._id, optionId: selectedOption?._id, quantity, price: finalPrice, name: product.name, imageUrl: images[0], storeName: product.storeName }));
+    dispatch(addToCart({
+      productId: product._id,
+      optionId: selectedOption?._id,
+      quantity,
+      price: finalPrice,
+      name: product.name,
+      imageUrl: images[0],
+      storeName: product.storeName
+    }));
     alert('장바구니에 추가되었습니다.');
   };
 
-  const handleSubmitReview = () => {
-    if (!user) return alert('로그인이 필요합니다.');
-    if (!newComment.trim()) return alert('후기 내용을 입력해 주세요.');
-
-    axios.post(`/products/${product._id}/reviews`, { rating: newRating, comment: newComment })
-      .then((res) => {
-        // 서버에서 최신 리뷰 배열을 반환하면 교체, 아니면 클라이언트에서 push
-        setProduct(prev => prev ? { ...prev, reviews: res.data.reviews || ([...(prev.reviews || []), res.data.review]) } : prev);
-        setNewComment('');
-        setNewRating(5);
-        alert('후기가 등록되었습니다.');
-      })
-      .catch(err => {
-        console.error(err);
-        alert('후기 등록 실패');
-      });
-  };
 
   return (
     <Container>
@@ -279,7 +274,7 @@ const ProductDetailPage = () => {
             <QtyButton onClick={decrement}>-</QtyButton>
             <div>{quantity}</div>
             <QtyButton onClick={increment}>+</QtyButton>
-            <div style={{marginLeft: 'auto', fontSize: 14, color:'#888'}}>재고: {remaining}</div>
+            <div style={{ marginLeft: 'auto', fontSize: 14, color: '#888' }}>재고: {remaining}</div>
           </QtyWrap>
 
           <AddButton onClick={handleAddToCart}>장바구니 담기</AddButton>
@@ -297,36 +292,16 @@ const ProductDetailPage = () => {
         {(product.reviews && product.reviews.length > 0) ? (
           product.reviews.map(rv => (
             <ReviewItem key={rv._id || Math.random()}>
-              <div style={{fontWeight:700}}>{rv.userName || '익명'}</div>
+              <div style={{ fontWeight: 700 }}>{rv.userName || '익명'}</div>
               <div>별점: {rv.rating} / 5</div>
-              <div style={{marginTop:8}}>{rv.comment}</div>
-              <div style={{fontSize:12, color:'#999', marginTop:6}}>{new Date(rv.createdAt || Date.now()).toLocaleString()}</div>
+              <div style={{ marginTop: 8 }}>{rv.comment}</div>
+              <div style={{ fontSize: 12, color: '#999', marginTop: 6 }}>{new Date(rv.createdAt || Date.now()).toLocaleString()}</div>
             </ReviewItem>
           ))
         ) : (
           <div>후기가 없습니다.</div>
         )}
 
-        {/* 후기 작성 폼: 로그인한 사용자만 */}
-        {user ? (
-          <div style={{marginTop:16}}>
-            <h4>후기 작성</h4>
-            <div>
-              <label>별점: </label>
-              <select value={newRating} onChange={(e) => setNewRating(Number(e.target.value))}>
-                {[5,4,3,2,1].map(n => <option key={n} value={n}>{n}</option>)}
-              </select>
-            </div>
-            <div style={{marginTop:8}}>
-              <textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} rows={4} style={{width:'100%'}} />
-            </div>
-            <div style={{marginTop:8}}>
-              <button onClick={handleSubmitReview}>등록</button>
-            </div>
-          </div>
-        ) : (
-          <div style={{marginTop:12}}>후기를 작성하려면 로그인 해주세요.</div>
-        )}
       </Reviews>
     </Container>
   );

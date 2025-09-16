@@ -7,14 +7,20 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "@/utils/axiosInstance";
 
 export interface CartItem {
-  productId: string;
-  optionId?: string | null;
+  _id: string; // cart item id
+  product: {
+    _id: string;
+    name: string;
+    price: number;
+    imageUrl?: string;
+    store?: { _id: string; name: string };
+  };
+  option?: {
+    _id: string;
+    name: string;
+    additionalPrice: number;
+  } | null;
   quantity: number;
-  price: number;
-  name: string;
-  imageUrl?: string;
-  storeName?: string;
-  maxStock?: number;
 }
 
 interface CartState {
@@ -27,20 +33,43 @@ const initialState: CartState = {
   loading: false,
 };
 
+// 서버 응답을 CartItem 형태로 매핑하는 유틸
+const mapCartItems = (items: any[]): CartItem[] => {
+  return items.map((i) => ({
+    _id: i._id,
+    quantity: i.quantity,
+    product: typeof i.product === "string" ? { _id: i.product, name: "", price: 0 } : i.product,
+    option: i.optionId
+      ? typeof i.optionId === "string"
+        ? { _id: i.optionId, name: "", additionalPrice: 0 }
+        : i.optionId
+      : null,
+  }));
+};
+
 // 장바구니 불러오기
 export const fetchCart = createAsyncThunk("cart/fetchCart", async () => {
   const res = await axios.get("/cart");
-  return res.data;
+  return res.data; // { items: CartItem[] }
 });
 
 // 장바구니에 상품 추가
 export const addToCart = createAsyncThunk(
   "cart/addToCart",
-  async ({ productId, optionId, quantity }: CartItem) => {
-    const res = await axios.post("/cart/add", { productId, optionId, quantity: quantity || 1 });
-    return res.data;
+  async ({ productId, optionId, quantity }: { productId: string; optionId?: string; quantity: number }) => {
+    const res = await axios.post("/cart/add", { productId, optionId, quantity });
+    return res.data; // { items: CartItem[] }
   }
 );
+// 장바구니에서 상품 제거
+export const deleteFromCart = createAsyncThunk(
+  "cart/deleteFromCart",
+  async (itemId: string) => {
+    const res = await axios.delete(`/cart/remove/${itemId}`);
+    return { items: mapCartItems(res.data.items) }; // { items: CartItem[] }
+  }
+);
+
 
 // ✅ 주문 생성 & 장바구니 비우기
 export const checkout = createAsyncThunk(
@@ -61,7 +90,7 @@ const cartSlice = createSlice({
     },
     removeFromCart: (state, action: PayloadAction<{ productId: string; optionId?: string | null }>) => {
       state.items = state.items.filter(
-        (i) => !(i.productId === action.payload.productId && i.optionId === action.payload.optionId)
+        (i) => !(i.product._id === action.payload.productId && (i.option?._id ?? null) === (action.payload.optionId ?? null))
       );
     },
     clearCart: (state) => {
@@ -78,6 +107,9 @@ const cartSlice = createSlice({
         state.loading = false;
       })
       .addCase(addToCart.fulfilled, (state, action) => {
+        state.items = action.payload.items;
+      })
+      .addCase(deleteFromCart.fulfilled, (state, action) => {
         state.items = action.payload.items;
       });
   },

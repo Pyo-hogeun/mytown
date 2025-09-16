@@ -19,15 +19,36 @@ const router = express.Router();
  *               storeId:
  *                 type: string
  *                 description: 마트 ID
+ *               storeName:
+ *                 type: string
+ *                 description: 마트 이름
  *               name:
  *                 type: string
  *                 description: 상품명
  *               price:
  *                 type: number
+ *                 description: 기본 가격
  *               stockQty:
  *                 type: number
+ *                 description: 기본 재고 수량
  *               imageUrl:
  *                 type: string
+ *                 description: 상품 이미지 URL
+ *               options:
+ *                 type: array
+ *                 description: 상품 옵션 목록
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       description: 옵션 이름
+ *                     additionalPrice:
+ *                       type: number
+ *                       description: 옵션 추가금액
+ *                     stockQty:
+ *                       type: number
+ *                       description: 옵션 재고 수량
  *     responses:
  *       201:
  *         description: 등록 성공
@@ -36,7 +57,7 @@ const router = express.Router();
  */
 router.post('/', async (req, res) => {
   try {
-    const { storeId, storeName, name, price, stockQty, imageUrl } = req.body;
+    const { storeId, storeName, name, price, stockQty, imageUrl, options } = req.body;
 
     const product = new Product({
       store: storeId,
@@ -44,7 +65,8 @@ router.post('/', async (req, res) => {
       name,
       price,
       stockQty,
-      imageUrl
+      imageUrl,
+      options
     });
 
     await product.save();
