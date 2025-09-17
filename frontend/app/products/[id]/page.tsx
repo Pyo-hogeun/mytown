@@ -180,9 +180,9 @@ const ProductDetailPage = () => {
       .then((res) => {
         setProduct(res.data);
         // 초기 옵션 선택: 있으면 첫번째 옵션 선택
-        if (res.data.options && res.data.options.length > 0) {
-          setSelectedOptionId(res.data.options[0]._id || null);
-        }
+        // if (res.data.options && res.data.options.length > 0) {
+        //   setSelectedOptionId(res.data.options[0]._id || null);
+        // }
       })
       .catch((err) => {
         console.error(err);
@@ -262,6 +262,7 @@ const ProductDetailPage = () => {
             <OptionBox>
               <div>옵션</div>
               <select value={selectedOptionId || ''} onChange={(e) => setSelectedOptionId(e.target.value || null)}>
+                <option>옵션을 선택해주세요</option>
                 {product.options.map((opt) => (
                   <option key={opt._id || opt.name} value={opt._id}>{opt.name}{opt.extraPrice ? ` (+${opt.extraPrice.toLocaleString()}원)` : ''}{opt.stock !== undefined ? ` - 재고 ${opt.stock}` : ''}</option>
                 ))}

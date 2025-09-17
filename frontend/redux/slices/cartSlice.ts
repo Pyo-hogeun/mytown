@@ -21,6 +21,7 @@ export interface CartItem {
     additionalPrice: number;
   } | null;
   quantity: number;
+  optionId?: string;
 }
 
 interface CartState {
@@ -53,14 +54,22 @@ export const fetchCart = createAsyncThunk("cart/fetchCart", async () => {
   return res.data; // { items: CartItem[] }
 });
 
-// 장바구니에 상품 추가
-export const addToCart = createAsyncThunk(
-  "cart/addToCart",
-  async ({ productId, optionId, quantity }: { productId: string; optionId?: string; quantity: number }) => {
-    const res = await axios.post("/cart/add", { productId, optionId, quantity });
-    return res.data; // { items: CartItem[] }
+// ✅ 장바구니에 상품 추가
+export const addToCart = createAsyncThunk<
+  CartItem[],
+  {
+    productId: string;
+    optionId?: string;
+    quantity: number;
+    price: number;
+    name: string;
+    imageUrl: string;
+    storeName: string;
   }
-);
+>("cart/addToCart", async ({ productId, optionId, quantity }) => {
+  const res = await axios.post("/cart/add", { productId, optionId, quantity });
+  return res.data.items as CartItem[];
+});
 // 장바구니에서 상품 제거
 export const deleteFromCart = createAsyncThunk(
   "cart/deleteFromCart",
@@ -107,7 +116,7 @@ const cartSlice = createSlice({
         state.loading = false;
       })
       .addCase(addToCart.fulfilled, (state, action) => {
-        state.items = action.payload.items;
+        state.items = action.payload;
       })
       .addCase(deleteFromCart.fulfilled, (state, action) => {
         state.items = action.payload.items;
