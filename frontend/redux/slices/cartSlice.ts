@@ -40,11 +40,7 @@ const mapCartItems = (items: any[]): CartItem[] => {
     _id: i._id,
     quantity: i.quantity,
     product: typeof i.product === "string" ? { _id: i.product, name: "", price: 0 } : i.product,
-    option: i.optionId
-      ? typeof i.optionId === "string"
-        ? { _id: i.optionId, name: "", additionalPrice: 0 }
-        : i.optionId
-      : null,
+    optionId: i.optionId? i.optionId: null,
   }));
 };
 

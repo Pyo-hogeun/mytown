@@ -83,7 +83,7 @@ export default function CartPage() {
   };
 
   const handleRemove = async (itemId: string) => {
-    dispatch(deleteFromCart(itemId))
+    dispatch(deleteFromCart(itemId));
     setSelectedIds(selectedIds.filter(id => id !== itemId));
   };
 
