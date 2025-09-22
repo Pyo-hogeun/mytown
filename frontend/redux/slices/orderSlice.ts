@@ -3,8 +3,12 @@ import axios from "@/utils/axiosInstance";
 
 export interface OrderItemPayload {
   _id: string;
-  product: { _id: string; name: string; price: number };
+  product: string;
+  name: string;
   quantity: number;
+  unitPrice: number;
+  optionName? : string;
+  optionExtraPrice? : number;
 }
 
 export type PaymentMethod = "card" | "kakao" | "naver";
@@ -30,6 +34,7 @@ export interface CreateOrderPayload {
   address: string;
   deliveryTime?: DeliveryTime;
   maskedCard?: string;
+  totalPrice: number;
 }
 
 export interface CreatedOrder {
@@ -40,6 +45,7 @@ export interface CreatedOrder {
   phone?: string;
   address?: string;
   deliveryTime?: DeliveryTime;
+  optionId?:string;
 }
 
 export interface UserOrder {
@@ -52,6 +58,7 @@ export interface UserOrder {
     quantity: number;
     unitPrice: number;
   }[];
+  optionId?: string;
   status?: OrderStatus;
   createdAt: string;
   totalPrice?: number;
@@ -64,6 +71,7 @@ export interface UserOrder {
 export const createOrder = createAsyncThunk(
   "order/createOrder",
   async (payload: CreateOrderPayload) => {
+    console.log('payload', payload);
     const res = await axios.post("/order", payload);
     return {
       orders: res.data.orders as CreatedOrder[],

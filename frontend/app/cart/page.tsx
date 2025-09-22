@@ -47,7 +47,7 @@ const CheckoutButton = styled.button`
 interface ProductOption {
   _id: string;
   name: string;
-  additionalPrice: number;
+  extraPrice: number;
 }
 
 interface CartItem {
@@ -96,7 +96,7 @@ export default function CartPage() {
     const option = item.optionId
       ? item.product.options?.find(o => o._id === item.optionId)
       : null;
-    return item.product.price + (option?.additionalPrice ?? 0);
+    return item.product.price + (option?.extraPrice ?? 0);
   };
 
   const totalPrice = cart
@@ -108,16 +108,26 @@ export default function CartPage() {
 
     const selectedItems = cart
       .filter(item => selectedIds.includes(item._id))
-      .map(i => ({
-        ...i,
-        product: {
-          ...i.product,
-          store: i.product.store?._id ?? null,
-        }
-      }));
+      .map(item => {
+        const option = item.optionId
+          ? item.product.options?.find(o => o._id === item.optionId)
+          : null;
+
+        return {
+          product: item.product._id,         // 주문 API로 전달할 productId
+          name: item.product.name,            // 주문확인 페이지용
+          imageUrl: item.product.imageUrl,
+          store: item.product.store?._id ?? null,
+          quantity: item.quantity,
+          unitPrice: item.product.price,      // 기본가
+          optionName: option?.name ?? null,   // 옵션명 스냅샷
+          optionExtraPrice: option?.extraPrice ?? 0 // 옵션가 스냅샷
+        };
+      });
 
     router.push(`/checkout?items=${encodeURIComponent(JSON.stringify(selectedItems))}`);
   };
+
 
   return (
     <Container>
@@ -142,7 +152,7 @@ export default function CartPage() {
                 {item.product.name}
                 {option && (
                   <div style={{ fontSize: '0.8em', color: '#666' }}>
-                    옵션: {option.name} (+{option.additionalPrice.toLocaleString()}원)
+                    옵션: {option.name} (+{option.extraPrice.toLocaleString()}원)
                   </div>
                 )}
               </ItemName>

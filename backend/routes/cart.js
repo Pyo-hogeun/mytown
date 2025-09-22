@@ -53,6 +53,9 @@ const router = express.Router();
  *                       quantity:
  *                         type: integer
  *                         example: 2
+ *                       optionId:
+ *                         type: string
+ *                         example: 650abcd1234ef567890abcd3
  *       403:
  *         description: 관리자 계정은 장바구니 사용 불가
  */

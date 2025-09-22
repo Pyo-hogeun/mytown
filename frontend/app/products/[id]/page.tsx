@@ -144,6 +144,7 @@ type Product = {
   name: string;
   price: number;
   storeName: string;
+  storeId: string;
   stockQty: number;
   imageUrl?: string; // 기존 데이터 호환성
   images?: string[]; // 권장 필드
@@ -230,6 +231,7 @@ const ProductDetailPage = () => {
     dispatch(addToCart({
       productId: product._id,
       optionId: selectedOption?._id,
+      storeId: product.storeId,
       quantity,
       price: finalPrice,
       name: product.name,

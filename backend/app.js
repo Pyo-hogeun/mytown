@@ -20,7 +20,7 @@ const app = express();
 
 // 미들웨어
 app.use(cors({
-  origin: 'http://localhost:3000', // 프론트엔드 주소
+  origin: 'http://localhost:3001', // 프론트엔드 주소
   credentials: true,               // 쿠키 등 인증이 필요한 경우
 }));
 

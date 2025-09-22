@@ -25,8 +25,10 @@ const Card = styled.div`
 `;
 const SectionTitle = styled.h2`font-size:18px;margin-bottom:12px;`;
 const Row = styled.div`
-  display:flex;
-  justify-content:space-between;
+  > div{
+    display:flex;
+    justify-content:space-between;
+  }
   align-items:center;
   padding:10px 0;
   border-bottom:1px solid #f2f2f2;
@@ -68,10 +70,16 @@ const PayButton = styled.button<{ disabled?: boolean }>`
   display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;
 `;
 
-type CartItem = {
+type CheckoutItem = {
   _id: string;
-  product: { _id: string; name: string; price: number; store: string | null };
+  product: string;
+  name: string;
+  store: string;
+  imageUrl?: string;
   quantity: number;
+  unitPrice: number;
+  optionName?: string;
+  optionExtraPrice: number;
 };
 
 const CheckoutPage = () => {
@@ -81,16 +89,23 @@ const CheckoutPage = () => {
   const orderState = useSelector((s: RootState) => s.order);
 
   // 선택 항목 파싱
-  const items: CartItem[] = useMemo(() => {
+  const items: CheckoutItem[] = useMemo(() => {
     const param = searchParams.get('items');
+    console.log('param', param);
     if (!param) return [];
     try { return JSON.parse(decodeURIComponent(param)); } catch { return []; }
   }, [searchParams]);
 
   const totalPrice = useMemo(
-    () => items.reduce((sum, i) => sum + i.quantity * i.product.price, 0),
+    () =>
+      items.reduce((sum, i) => {
+        const base = i.unitPrice ?? 0;
+        const add = i.optionExtraPrice ?? 0;
+        return sum + (base + add) * i.quantity;
+      }, 0),
     [items]
   );
+
 
   // 결제 수단 상태
   const [method, setMethod] = useState<PaymentMethod>('card');
@@ -142,15 +157,27 @@ const CheckoutPage = () => {
   const onPay = async () => {
     if (!canPay) return;
     try {
+      const payloadItems = items.map(i => ({
+        _id: i._id,
+        product: i.product,
+        name: i.name,
+        store: i.store,
+        quantity: i.quantity,
+        unitPrice: i.unitPrice,
+        optionName: i.optionName,
+        optionExtraPrice: i.optionExtraPrice,
+      }));
+
       const action = await dispatch(
         createOrder({
-          items,
+          items: payloadItems,
           paymentMethod: method,
           receiver,
           phone,
           address,
           deliveryTime,
           maskedCard,
+          totalPrice
         })
       );
 
@@ -158,7 +185,7 @@ const CheckoutPage = () => {
         dispatch(fetchCart());
         router.push(`/order-complete`);
       }
-    } catch {}
+    } catch { }
   };
 
   return (
@@ -226,8 +253,19 @@ const CheckoutPage = () => {
         <SectionTitle>주문 요약</SectionTitle>
         {items.map(i => (
           <Row key={i._id}>
-            <div>{i.product.name} x {i.quantity}</div>
-            <Price>{(i.product.price * i.quantity).toLocaleString()}원</Price>
+            <div>
+              {i.name}
+              <Price>{(i.unitPrice).toLocaleString()}원</Price>
+            </div>
+            <div>
+              {i.optionName}
+              <Price>{(i.optionExtraPrice).toLocaleString()}원 </Price>
+            </div>
+            <div>
+              <span>총수량</span>
+              X {i.quantity}
+            </div>
+
           </Row>
         ))}
         <Row>

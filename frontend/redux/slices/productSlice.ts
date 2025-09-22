@@ -5,6 +5,7 @@ type Product = {
   name: string;
   price: number;
   storeName: string;
+  storeId : string;
   stockQty: number;
   imageUrl?: string;
   images?: string[];

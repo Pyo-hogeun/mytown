@@ -18,7 +18,7 @@ export interface CartItem {
   option?: {
     _id: string;
     name: string;
-    additionalPrice: number;
+    extraPrice: number;
   } | null;
   quantity: number;
   optionId?: string;
@@ -56,6 +56,7 @@ export const addToCart = createAsyncThunk<
   {
     productId: string;
     optionId?: string;
+    storeId?: string;
     quantity: number;
     price: number;
     name: string;

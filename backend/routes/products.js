@@ -43,7 +43,7 @@ const router = express.Router();
  *                     name:
  *                       type: string
  *                       description: 옵션 이름
- *                     additionalPrice:
+ *                     extraPrice:
  *                       type: number
  *                       description: 옵션 추가금액
  *                     stockQty:

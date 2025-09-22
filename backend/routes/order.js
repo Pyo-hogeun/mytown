@@ -95,10 +95,10 @@ const router = express.Router();
  *       500:
  *         description: 서버 오류
  */
-// ✅ 주문 생성
+// ✅ 주문 생성 (프론트에서 전달된 합산값 그대로 사용)
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { items, receiver, phone, address, deliveryTime, paymentMethod } = req.body;
+    const { items, receiver, phone, address, deliveryTime, paymentMethod, totalPrice } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ message: "주문할 항목이 없습니다." });
@@ -107,23 +107,10 @@ router.post("/", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "배송 정보가 누락되었습니다." });
     }
 
-    // ✅ productId만 넘어왔다면 DB에서 populate
-    const populatedItems = await Promise.all(
-      items.map(async (i) => {
-        const product = await Product.findById(i.product).populate("store");
-        if (!product || !product.store) {
-          throw new Error(`상품 ${i.product}에 스토어 정보가 없습니다.`);
-        }
-        return {
-          product,
-          quantity: i.quantity,
-        };
-      })
-    );
-
-    // ✅ 스토어별 그룹화
-    const storeGrouped = populatedItems.reduce((acc, item) => {
-      const storeId = item.product.store._id.toString();
+    // ✅ 스토어별 그룹화 (프론트에서 storeId를 같이 보내야 함)
+    const storeGrouped = items.reduce((acc, item) => {
+      if (!item.store) throw new Error(`상품 ${item.product}에 storeId가 없습니다.`);
+      const storeId = item.store;
       if (!acc[storeId]) acc[storeId] = [];
       acc[storeId].push(item);
       return acc;
@@ -132,23 +119,19 @@ router.post("/", authMiddleware, async (req, res) => {
     const createdOrders = [];
 
     for (const [storeId, storeItems] of Object.entries(storeGrouped)) {
-      const totalPrice = storeItems.reduce(
-        (sum, item) => sum + item.quantity * item.product.price,
-        0
-      );
 
       const order = new Order({
         user: req.user._id,
         store: storeId,
         orderItems: storeItems.map((i) => ({
-          product: i.product._id,
+          product: i.product,
           quantity: i.quantity,
-          unitPrice: i.product.price,
+          unitPrice: i.unitPrice,       // 프론트에서 계산된 가격
+          optionName: i.optionName,     // 프론트 전달
+          optionExtraPrice: i.optionExtraPrice ?? 0,
         })),
-        totalPrice,
+        totalPrice: totalPrice,
         status: "pending",
-
-        // ✅ 배송 필드 저장
         receiver,
         phone,
         address,
@@ -187,6 +170,7 @@ router.post("/", authMiddleware, async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 });
+
 
 /**
  * @openapi
@@ -549,7 +533,7 @@ router.post("/seed", async (req, res) => {
         address: faker.location.streetAddress(),
         deliveryTime: faker.date.soon({ days: 7 }),
       });
-      
+
       orders.push(order);
     }
 

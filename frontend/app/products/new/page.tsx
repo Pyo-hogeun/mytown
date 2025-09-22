@@ -40,7 +40,7 @@ const ProductForm = () => {
   const [stockQty, setStockQty] = useState<number>(0);
   const [storeId, setStoreId] = useState('');
   const [storeName, setStoreName] = useState('');
-  const [options, setOptions] = useState<{ name: string; additionalPrice: number }[]>([]);
+  const [options, setOptions] = useState<{ name: string; extraPrice: number }[]>([]);
   const router = useRouter();
   const dispatch = useDispatch();
   const stores = useSelector((state: RootState) => state.store.items);
@@ -75,7 +75,7 @@ const ProductForm = () => {
     }
   };
   const addOption = () => {
-    setOptions([...options, { name: '', additionalPrice: 0 }]);
+    setOptions([...options, { name: '', extraPrice: 0 }]);
   };
 
   const updateOption = (index: number, field: string, value: string | number) => {
@@ -140,8 +140,8 @@ const ProductForm = () => {
                     />
                     <Input
                       type="number"
-                      value={opt.additionalPrice}
-                      onChange={(e) => updateOption(idx, 'additionalPrice', Number(e.target.value))}
+                      value={opt.extraPrice}
+                      onChange={(e) => updateOption(idx, 'extraPrice', Number(e.target.value))}
                       placeholder="추가금액"
                     />
                   </OptionContainer>

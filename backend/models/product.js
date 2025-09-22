@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 const optionSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  additionalPrice: { type: Number, default: 0 },
+  extraPrice: { type: Number, default: 0 },
   stockQty: { type: Number, default: 0 }
 });
 
