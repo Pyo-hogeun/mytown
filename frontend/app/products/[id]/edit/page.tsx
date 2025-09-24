@@ -36,6 +36,7 @@ const ProductEditPage = () => {
   const [stockQty, setStockQty] = useState<number>(0);
   const [storeId, setStoreId] = useState('');
   const [storeName, setStoreName] = useState('');
+  const [status, setStatus] = useState<'draft' | 'published' | 'hidden'>('draft'); // ✅ status 필드 추가
 
   const router = useRouter();
   const params = useParams();
@@ -66,6 +67,7 @@ const ProductEditPage = () => {
           setImageUrl(p.imageUrl);
           setStoreId(p.store);
           setStoreName(p.storeName);
+          setStatus(p.status ?? true); // ✅ DB 값 반영
         })
         .catch(err => console.error('상품 불러오기 실패', err));
     }
@@ -80,7 +82,8 @@ const ProductEditPage = () => {
         name,
         price,
         stockQty,
-        imageUrl
+        imageUrl,
+        status, // ✅ 함께 전송
       });
       router.push('/products');
     } catch (err) {
@@ -130,6 +133,18 @@ const ProductEditPage = () => {
               <li>
                 <Label>상품이미지</Label>
                 <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+              </li>
+              <li>
+                <Label>노출여부</Label>
+                <Select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as 'draft' | 'published' | 'hidden')}
+                  required
+                >
+                  <option value="draft">초안 (임시저장)</option>
+                  <option value="published">노출중 (판매중)</option>
+                  <option value="hidden">숨김</option>
+                </Select>
               </li>
             </List>
 

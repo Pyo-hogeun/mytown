@@ -57,6 +57,8 @@ export interface UserOrder {
     product: string | { _id: string; name?: string; price?: number };
     quantity: number;
     unitPrice: number;
+    optionName: string;
+    optionExtraPrice: number;
   }[];
   optionId?: string;
   status?: OrderStatus;

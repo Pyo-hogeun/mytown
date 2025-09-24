@@ -1,5 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+export type ProductStatus = 'draft' | 'published' | 'hidden';
+
 type Product = {
   _id: string;
   name: string;
@@ -11,7 +13,8 @@ type Product = {
   images?: string[];
   options?: Option[];
   description?: string;
-  reviews?: Review[]
+  reviews?: Review[];
+  status: ProductStatus; // ✅ 상품 노출 상태 필드 추가
 };
 
 export type Option = {
@@ -43,10 +46,30 @@ const productSlice = createSlice({
   initialState,
   reducers: {
     setProducts(state, action: PayloadAction<Product[]>) {
-      state.items = action.payload;
+      // ✅ 서버에서 안넘겨줄 경우 draft 기본값 강제
+      state.items = action.payload.map((p) => ({
+        ...p,
+        status: p.status ?? 'draft',
+      }));
+    },
+    addProduct(state, action: PayloadAction<Product>) {
+      // ✅ 신규 추가 시 항상 draft 상태로 저장
+      state.items.push({
+        ...action.payload,
+        status: 'draft',
+      });
+    },
+    updateProduct(state, action: PayloadAction<Product>) {
+      const index = state.items.findIndex((p) => p._id === action.payload._id);
+      if (index !== -1) {
+        state.items[index] = {
+          ...action.payload,
+          status: action.payload.status ?? 'draft',
+        };
+      }
     },
   },
 });
 
-export const { setProducts } = productSlice.actions;
+export const { setProducts, addProduct, updateProduct } = productSlice.actions;
 export default productSlice.reducer;

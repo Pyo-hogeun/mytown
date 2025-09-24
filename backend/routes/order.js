@@ -99,6 +99,7 @@ const router = express.Router();
 router.post("/", authMiddleware, async (req, res) => {
   try {
     const { items, receiver, phone, address, deliveryTime, paymentMethod, totalPrice } = req.body;
+    
 
     if (!items || items.length === 0) {
       return res.status(400).json({ message: "주문할 항목이 없습니다." });
@@ -140,6 +141,25 @@ router.post("/", authMiddleware, async (req, res) => {
       });
 
       await order.save();
+
+      // ✅ 주문 성공 시 재고 차감
+      for (const i of storeItems) {
+        const product = await Product.findById(i.product);
+        if (!product) continue;
+
+        if (i.optionId) {
+          // 옵션이 있는 경우 해당 옵션 재고 감소
+          const option = product.options.id(i.optionId);
+          if (option) {
+            option.stockQty = Math.max(0, option.stockQty - i.quantity);
+          }
+        } else {
+          // 옵션 없는 상품은 전체 재고 감소
+          product.stockQty = Math.max(0, product.stockQty - i.quantity);
+        }
+
+        await product.save();
+      }
       createdOrders.push(order);
     }
 
@@ -147,7 +167,7 @@ router.post("/", authMiddleware, async (req, res) => {
     const cart = await Cart.findOne({ user: req.user._id });
     if (cart) {
       cart.items = cart.items.filter(
-        (ci) => !items.find((i) => i.product._id === ci.product.toString())
+        (ci) => !items.find((i) => i.product === ci.product.toString())
       );
       await cart.save();
     }

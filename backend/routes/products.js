@@ -49,6 +49,29 @@ const router = express.Router();
  *                     stockQty:
  *                       type: number
  *                       description: 옵션 재고 수량
+ *               status:
+ *                 type: string
+ *                 enum: [draft, published, hidden]
+ *                 description: 상품 노출 상태
+ *               featured:
+ *                 type: boolean
+ *                 description: 추천 상품 여부
+ *               priority:
+ *                 type: number
+ *                 description: 정렬 우선순위 (클수록 먼저 노출)
+ *               visibleFrom:
+ *                 type: string
+ *                 format: date-time
+ *                 description: 노출 시작 시각
+ *               visibleTo:
+ *                 type: string
+ *                 format: date-time
+ *                 description: 노출 종료 시각
+ *               channels:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: 노출 채널 (예: web, mobile)
  *     responses:
  *       201:
  *         description: 등록 성공
@@ -57,16 +80,25 @@ const router = express.Router();
  */
 router.post('/', async (req, res) => {
   try {
-    const { storeId, storeName, name, price, stockQty, imageUrl, options } = req.body;
+    const {
+      storeId, storeName, name, price, stockQty, imageUrl, options,
+      status, featured, priority, visibleFrom, visibleTo, channels
+    } = req.body;
 
     const product = new Product({
       store: storeId,
-      storeName,     // ✅ storeName도 함께 저장
+      storeName,
       name,
       price,
       stockQty,
       imageUrl,
-      options
+      options,
+      status,
+      featured,
+      priority,
+      visibleFrom,
+      visibleTo,
+      channels,
     });
 
     await product.save();
@@ -118,7 +150,7 @@ router.get('/store/:storeId', async (req, res) => {
  */
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find({status: 'published'});
     res.status(200).json(products);
   } catch (err) {
     res.status(500).json({ message: '전체 상품 조회 실패', error: err.message });
@@ -136,13 +168,98 @@ router.get('/:id', async (req, res) => {
 });
 
 // 특정 상품 수정
+/**
+ * @openapi
+ * /products/{id}:
+ *   put:
+ *     summary: (관리자용) 상품 수정
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: 상품 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               storeId:
+ *                 type: string
+ *               storeName:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               stockQty:
+ *                 type: number
+ *               imageUrl:
+ *                 type: string
+ *               options:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                     extraPrice:
+ *                       type: number
+ *                     stockQty:
+ *                       type: number
+ *               status:
+ *                 type: string
+ *                 enum: [draft, published, hidden]
+ *               featured:
+ *                 type: boolean
+ *               priority:
+ *                 type: number
+ *               visibleFrom:
+ *                 type: string
+ *                 format: date-time
+ *               visibleTo:
+ *                 type: string
+ *                 format: date-time
+ *               channels:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: 수정 성공
+ *       404:
+ *         description: 상품을 찾을 수 없음
+ *       500:
+ *         description: 상품 수정 실패
+ */
 router.put('/:id', async (req, res) => {
   try {
-    const { storeId, storeName, name, price, stockQty, imageUrl } = req.body;
+    const {
+      storeId, storeName, name, price, stockQty, imageUrl, options,
+      status, featured, priority, visibleFrom, visibleTo, channels
+    } = req.body;
 
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
-      { store: storeId, storeName, name, price, stockQty, imageUrl },
+      {
+        store: storeId,
+        storeName,
+        name,
+        price,
+        stockQty,
+        imageUrl,
+        options,
+        status,
+        featured,
+        priority,
+        visibleFrom,
+        visibleTo,
+        channels,
+      },
       { new: true }
     );
 

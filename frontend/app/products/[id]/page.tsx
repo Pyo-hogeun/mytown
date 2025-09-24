@@ -7,6 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/redux/store';
 import { addToCart } from '@/redux/slices/cartSlice';
+import Select from '@/app/component/Select';
 
 // --------------------------- 스타일 (styled-components) ---------------------------
 const Container = styled.div`
@@ -263,12 +264,12 @@ const ProductDetailPage = () => {
           {product.options && product.options.length > 0 && (
             <OptionBox>
               <div>옵션</div>
-              <select value={selectedOptionId || ''} onChange={(e) => setSelectedOptionId(e.target.value || null)}>
+              <Select value={selectedOptionId || ''} onChange={(e) => setSelectedOptionId(e.target.value || null)}>
                 <option>옵션을 선택해주세요</option>
                 {product.options.map((opt) => (
                   <option key={opt._id || opt.name} value={opt._id}>{opt.name}{opt.extraPrice ? ` (+${opt.extraPrice.toLocaleString()}원)` : ''}{opt.stock !== undefined ? ` - 재고 ${opt.stock}` : ''}</option>
                 ))}
-              </select>
+              </Select>
             </OptionBox>
           )}
 

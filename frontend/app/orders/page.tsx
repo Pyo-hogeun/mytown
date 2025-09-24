@@ -137,7 +137,6 @@ const OrdersPage = () => {
           <List>
             {orders.map((order) => {
               const createdAt = order.createdAt ? new Date(order.createdAt) : undefined;
-              const total = calcOrderTotal(order);
 
               // 취소 버튼 비활성화 조건:
               // - 상태가 취소 가능 상태가 아니면 비활성화 (delivering/completed 등)
@@ -167,12 +166,14 @@ const OrdersPage = () => {
 
                     <ItemList>
                       {(order.orderItems || []).map((it, iidx) => {
-                        const name = typeof it.product === "object" ? it.product?.name || it.product?._id : String(it.product ?? "상품");
+                        const name = typeof it.product === "object" ? it.product?.name || it.product?._id : String(it.product ?? "상품명없음");
                         const line = (it.unitPrice || 0) * (it.quantity || 0);
                         // NOTE: ItemList가 <ul>이라면 내부는 <li>가 되어야 함. 기존 구조에 맞춰 렌더링하세요.
                         return (
                           <div key={iidx}>
-                            {name} × {it.quantity} = {formatKrw(line)}
+                            상품: {name} {formatKrw(line)}<br />
+                            {it.optionName?`옵션: ${it.optionName}(+${it.optionExtraPrice})`:false}<br/>
+                            수량: {it.quantity}
                           </div>
                         );
                       })}
@@ -188,7 +189,7 @@ const OrdersPage = () => {
 
                   {/* 합계 */}
                   <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end", fontWeight: 700 }}>
-                    총 결제금액&nbsp; {formatKrw(total)}
+                    총 결제금액&nbsp; {formatKrw(order.totalPrice??0)}
                   </div>
 
                   {/* 주문취소 버튼 */}

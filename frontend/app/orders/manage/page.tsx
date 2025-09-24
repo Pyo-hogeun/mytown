@@ -35,6 +35,7 @@ const SearchItem = styled.div`
 const SearchButton = styled(Button)`
   width: 100%;
   margin-bottom: 1em;
+  height: 43px;
 `
 const ManagerOrdersPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -71,15 +72,28 @@ const ManagerOrdersPage = () => {
   const handleSearch = () => {
     dispatch(fetchManagerOrders({ userName: searchName, phone: searchPhone }));
   };
+  const handleReset = () => {
+    setSearchName('');
+    setSearchPhone('');
+    dispatch(fetchManagerOrders());
+  }
 
   // ✅ useMemo로 검색 결과 최적화
   const filteredOrders = useMemo(() => {
     if (!searchName && !searchPhone) return orders;
-    return orders.filter((o) =>{
-      o.user?.name?.toLowerCase().includes(searchName.toLowerCase())
-      o.phone?.toLowerCase().includes(searchPhone.toLowerCase())
+  
+    return orders.filter((o) => {
+      const nameMatch = searchName
+        ? o.user?.name?.toLowerCase().includes(searchName.toLowerCase())
+        : true;
+      const phoneMatch = searchPhone
+        ? o.phone?.toLowerCase().includes(searchPhone.toLowerCase())
+        : true;
+  
+      return nameMatch && phoneMatch; // ✅ 반드시 true/false 반환
     });
   }, [orders, searchName, searchPhone]);
+  
 
   if (!user || user.role !== "manager") {
     return <p>접근 권한이 없습니다.</p>;
@@ -110,6 +124,7 @@ const ManagerOrdersPage = () => {
         />
       </SearchItem>
       <SearchButton onClick={handleSearch}>검색</SearchButton>
+      <SearchButton onClick={handleReset}>초기화</SearchButton>
       {
         status === "idle" && <p>주문 목록을 불러오는 중...</p>
       }
@@ -119,7 +134,7 @@ const ManagerOrdersPage = () => {
       }
 
       <List>
-        {filteredOrders.map((order) => (
+        {orders.map((order) => (
           <OrderItem key={order._id} order={order} onStatusChange={handleStatusChange} />
         ))}
       </List>

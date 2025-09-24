@@ -102,7 +102,6 @@ const Profile = () => {
 
   return (
     <ProfileWrapper>
-      <Link href="/orders">주문조회</Link>
       <CartButton>
         <Link href="/cart">장바구니</Link>
         {cartCount > 0 ? <CartBadge animate={animate}>{cartCount}</CartBadge> : false}

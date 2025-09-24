@@ -24,6 +24,13 @@ const orderItemSchema = new Schema({
     required: true,
     min: 0,
   },
+  optionName: {
+    type: String,
+  },
+  optionExtraPrice: {
+    type: Number,
+    min: 0,
+  },
 }, { _id: false });
 
 // ✅ 주문 스키마 정의
