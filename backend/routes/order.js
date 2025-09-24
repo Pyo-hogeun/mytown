@@ -117,6 +117,34 @@ router.post("/", authMiddleware, async (req, res) => {
       return acc;
     }, {});
 
+    // ✅ 1) 주문 전 재고 검증
+    for (const i of items) {
+      const product = await Product.findById(i.product);
+      if (!product) {
+        return res.status(400).json({ message: `상품을 찾을 수 없습니다: ${i.product}` });
+      }
+
+      if (i.optionId) {
+        // 옵션 재고 체크
+        const option = product.options.id(i.optionId);
+        if (!option) {
+          return res.status(400).json({ message: `옵션을 찾을 수 없습니다: ${i.optionId}` });
+        }
+        if (option.stockQty < i.quantity) {
+          return res.status(400).json({
+            message: `재고 부족: ${product.name} (${option.name}), 남은 수량: ${option.stockQty}`,
+          });
+        }
+      } else {
+        // 상품 재고 체크
+        if (product.stockQty < i.quantity) {
+          return res.status(400).json({
+            message: `재고 부족: ${product.name}, 남은 수량: ${product.stockQty}`,
+          });
+        }
+      }
+    }
+
     const createdOrders = [];
 
     for (const [storeId, storeItems] of Object.entries(storeGrouped)) {

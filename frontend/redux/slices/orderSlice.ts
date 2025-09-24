@@ -7,8 +7,8 @@ export interface OrderItemPayload {
   name: string;
   quantity: number;
   unitPrice: number;
-  optionName? : string;
-  optionExtraPrice? : number;
+  optionName?: string;
+  optionExtraPrice?: number;
 }
 
 export type PaymentMethod = "card" | "kakao" | "naver";
@@ -45,7 +45,7 @@ export interface CreatedOrder {
   phone?: string;
   address?: string;
   deliveryTime?: DeliveryTime;
-  optionId?:string;
+  optionId?: string;
 }
 
 export interface UserOrder {
@@ -72,14 +72,20 @@ export interface UserOrder {
 
 export const createOrder = createAsyncThunk(
   "order/createOrder",
-  async (payload: CreateOrderPayload) => {
-    console.log('payload', payload);
-    const res = await axios.post("/order", payload);
-    return {
-      orders: res.data.orders as CreatedOrder[],
-      paymentMethod: payload.paymentMethod,
-      maskedCard: payload.maskedCard,
-    };
+  async (payload: CreateOrderPayload, thunkAPI) => {
+    try {
+      const res = await axios.post("/order", payload);
+      return {
+        orders: res.data.orders as CreatedOrder[],
+        paymentMethod: payload.paymentMethod,
+        maskedCard: payload.maskedCard,
+      };
+    } catch (err: any) {
+      const message = err.response?.data?.message || "주문 생성 실패";
+      // ✅ 에러를 alert으로 표시
+      alert(message);
+      return thunkAPI.rejectWithValue(message);
+    }
   }
 );
 
@@ -99,9 +105,15 @@ export const fetchOrderById = createAsyncThunk(
 // 주문 취소
 export const cancelOrder = createAsyncThunk(
   "order/cancelOrder",
-  async (orderId: string) => {
-    const res = await axios.patch(`/order/${orderId}/cancel`);
-    return res.data; // { success: true, order: ... }
+  async (orderId: string, thunkAPI) => {
+    try {
+      const res = await axios.patch(`/order/${orderId}/cancel`);
+      return res.data; // { success: true, order: ... }
+    } catch (err: any) {
+      const message = err.response?.data?.message || "주문 취소 실패";
+      alert(message);
+      return thunkAPI.rejectWithValue(message);
+    }
   }
 );
 
@@ -122,7 +134,7 @@ export const fetchManagerOrders = createAsyncThunk<
     if ([...query].length > 0) {
       url += `?${query.toString()}`;
     }
-    
+
     const res = await axios.get(url);
     return res.data.orders as UserOrder[];
   } catch (err: any) {
@@ -135,9 +147,15 @@ export const fetchManagerOrders = createAsyncThunk<
 // 주문 상태 변경
 export const updateOrderStatus = createAsyncThunk(
   "order/updateOrderStatus",
-  async ({ orderId, status }: { orderId: string; status: OrderStatus }) => {
-    const res = await axios.patch(`/order/${orderId}/status`, { status });
-    return res.data.order as UserOrder;
+  async ({ orderId, status }: { orderId: string; status: OrderStatus }, thunkAPI) => {
+    try{
+      const res = await axios.patch(`/order/${orderId}/status`, { status });
+      return res.data.order as UserOrder;
+    } catch(err: any){
+      const message = err.response?.data?.message || "주문 상태 변경 실패";
+      alert(message);
+      return thunkAPI.rejectWithValue(message);
+    }
   }
 );
 

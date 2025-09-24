@@ -39,6 +39,12 @@ const ShippingForm = () => {
         value={address}
         onChange={(e) => dispatch(setAddress(e.target.value))}
       />
+      <div className="save-delievery-info">
+        <label htmlFor="save">
+          <input type="checkbox" name="save" id="save" />
+          배송지 기억하기
+        </label>
+      </div>
     </FormContainer>
   );
 };
