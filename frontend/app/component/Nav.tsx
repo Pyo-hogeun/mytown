@@ -48,7 +48,7 @@ const Nav = () => {
             </Item>
           ))}
       </ul>
-      <Profile />
+      <Profile role={role}/>
     </Container>
   );
 };

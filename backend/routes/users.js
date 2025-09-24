@@ -136,5 +136,26 @@ router.patch('/:id/role', authMiddleware, adminOnly, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+// ✅ 저장된 배송지 자동 불러오기
+router.get("/saved-delivery", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("savedDeliveryInfo");
+
+    if (!user || !user.savedDeliveryInfo) {
+      return res.status(200).json({
+        message: "저장된 배송지가 없습니다.",
+        savedDeliveryInfo: null,
+      });
+    }
+
+    return res.json({
+      message: "저장된 배송지 불러오기 성공",
+      savedDeliveryInfo: user.savedDeliveryInfo,
+    });
+  } catch (err) {
+    console.error("배송지 불러오기 오류:", err);
+    return res.status(500).json({ message: err.message });
+  }
+});
 
 export default router;

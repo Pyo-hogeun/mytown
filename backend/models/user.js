@@ -21,6 +21,13 @@ const UserSchema = new mongoose.Schema({
       return this.role === "manager"; // manager일 때는 반드시 store 필요
     },
   }, // 📌 manager 소속 마트
+  // ✅ 배송지 자동입력용 저장 필드
+  savedDeliveryInfo: {
+    receiver: { type: String },
+    phone: { type: String },
+    address: { type: String },
+    updatedAt: { type: Date },
+  },
   createdAt: { type: Date, default: Date.now }, // 생성일시
 });
 

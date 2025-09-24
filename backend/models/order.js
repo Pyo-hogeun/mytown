@@ -51,7 +51,7 @@ const OrderSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ["pending", "accepted", "delivering", "completed", "cancelled"],
+    enum: ["pending", "accepted", "assigned", "delivering", "completed", "canceled"],
     default: "pending",
   },
   orderItems: {
@@ -93,6 +93,13 @@ const OrderSchema = new Schema({
     type: String,
     enum: ["card", "kakao", "naver"],
     required: true,
+  },
+
+  // ✅ 라이더 배정 관련
+  assignedRider: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User", // role: "rider"
+    default: null,
   },
 
   createdAt: {

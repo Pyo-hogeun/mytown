@@ -98,8 +98,17 @@ const router = express.Router();
 // ✅ 주문 생성 (프론트에서 전달된 합산값 그대로 사용)
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { items, receiver, phone, address, deliveryTime, paymentMethod, totalPrice } = req.body;
-    
+    const {
+      items,
+      receiver,
+      phone,
+      address,
+      deliveryTime,
+      paymentMethod,
+      totalPrice,
+      rememberDelivery, // ✅ 프론트에서 체크 여부 전달
+    } = req.body;
+
 
     if (!items || items.length === 0) {
       return res.status(400).json({ message: "주문할 항목이 없습니다." });
@@ -198,6 +207,18 @@ router.post("/", authMiddleware, async (req, res) => {
         (ci) => !items.find((i) => i.product === ci.product.toString())
       );
       await cart.save();
+    }
+
+    // ✅ 배송지 기억하기 체크 시 User 모델 업데이트
+    if (rememberDelivery) {
+      await User.findByIdAndUpdate(req.user._id, {
+        savedDeliveryInfo: {
+          receiver,
+          phone,
+          address,
+          updatedAt: new Date(),
+        },
+      });
     }
 
     return res.json({
@@ -536,6 +557,73 @@ router.patch("/:id/status", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "상태 변경 실패" });
   }
 });
+
+// GET /api/orders/rider/available
+router.get("/rider/available", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "rider") {
+      return res.status(403).json({ message: "라이더만 접근 가능합니다." });
+    }
+
+    const orders = await Order.find({
+      status: "accepted",
+      assignedRider: null,
+    }).populate("store", "name address");
+
+    return res.json({ orders });
+  } catch (err) {
+    console.error("라이더 주문 조회 오류:", err);
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /api/orders/rider/assign/:orderId
+router.post("/rider/assign/:orderId", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "rider") {
+      return res.status(403).json({ message: "라이더만 접근 가능합니다." });
+    }
+
+    const order = await Order.findOneAndUpdate(
+      { _id: req.params.orderId, status: "accepted", assignedRider: null },
+      { status: "assigned", assignedRider: req.user._id },
+      { new: true }
+    ).populate("store", "name address");
+
+    if (!order) {
+      return res.status(400).json({ message: "이미 다른 라이더에게 배정되었거나 주문을 찾을 수 없습니다." });
+    }
+
+    return res.json({
+      message: "주문 배정 완료",
+      order,
+    });
+  } catch (err) {
+    console.error("주문 배정 오류:", err);
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/orders/rider/assigned
+router.get("/rider/assigned", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "rider") {
+      return res.status(403).json({ message: "라이더만 접근 가능합니다." });
+    }
+
+    const orders = await Order.find({
+      assignedRider: req.user._id,
+      status: { $in: ["assigned", "delivering"] },
+    }).populate("store", "name address");
+
+    return res.json({ orders });
+  } catch (err) {
+    console.error("배정된 주문 조회 오류:", err);
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+
 
 // ✅ 개발용 - 랜덤 주문 100개 생성 (1회 실행 후 제거 권장)
 router.post("/seed", async (req, res) => {

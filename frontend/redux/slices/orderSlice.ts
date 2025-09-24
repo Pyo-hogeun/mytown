@@ -148,10 +148,10 @@ export const fetchManagerOrders = createAsyncThunk<
 export const updateOrderStatus = createAsyncThunk(
   "order/updateOrderStatus",
   async ({ orderId, status }: { orderId: string; status: OrderStatus }, thunkAPI) => {
-    try{
+    try {
       const res = await axios.patch(`/order/${orderId}/status`, { status });
       return res.data.order as UserOrder;
-    } catch(err: any){
+    } catch (err: any) {
       const message = err.response?.data?.message || "주문 상태 변경 실패";
       alert(message);
       return thunkAPI.rejectWithValue(message);
@@ -210,6 +210,15 @@ const orderSlice = createSlice({
     setDeliveryTime: (state, action: PayloadAction<DeliveryTime>) => {
       state.deliveryTime = action.payload;
     },
+    // ✅ 저장된 배송지 한번에 세팅
+    setDeliveryInfo: (
+      state,
+      action: PayloadAction<{ receiver: string; phone: string; address: string }>
+    ) => {
+      state.receiver = action.payload.receiver;
+      state.phone = action.payload.phone;
+      state.address = action.payload.address;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -228,7 +237,7 @@ const orderSlice = createSlice({
       )
       .addCase(createOrder.rejected, (state, action) => {
         state.status = "failed";
-        state.error = action.error?.message || "결제/주문 실패";
+        state.error = (action.payload as string) || "결제/주문 실패";
       })
       .addCase(fetchOrders.fulfilled, (state, action: PayloadAction<UserOrder[]>) => {
         state.status = "succeeded";
@@ -263,5 +272,5 @@ const orderSlice = createSlice({
   },
 });
 
-export const { resetOrderState, setReceiver, setPhone, setAddress, setDeliveryTime } = orderSlice.actions;
+export const { resetOrderState, setReceiver, setPhone, setAddress, setDeliveryTime, setDeliveryInfo } = orderSlice.actions;
 export default orderSlice.reducer;

@@ -18,6 +18,7 @@ const ShippingForm = () => {
   const dispatch = useDispatch();
   const { receiver, phone, address } = useSelector((s: RootState) => s.order);
 
+
   return (
     <FormContainer>
       <h3>배송지 입력</h3>
@@ -41,7 +42,7 @@ const ShippingForm = () => {
       />
       <div className="save-delievery-info">
         <label htmlFor="save">
-          <input type="checkbox" name="save" id="save" />
+          <input type="checkbox" name="save" id="save" checked/>
           배송지 기억하기
         </label>
       </div>
