@@ -5,7 +5,7 @@ export interface LoginResponse {
   user: {
     id: string;
     email: string;
-    role: 'admin' | 'user';
+    role: 'admin' | 'user' | 'manager' | 'master' | 'rider';
     name: string;
     // 필요한 필드 더 추가
   };
