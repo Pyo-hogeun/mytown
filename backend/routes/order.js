@@ -374,6 +374,23 @@ router.get("/manager", authMiddleware, async (req, res) => {
 router.get("/:orderId", authMiddleware, async (req, res) => {
   try {
     const { orderId } = req.params;
+
+    // 라이더는 본인에게 배정된 주문만 조회 가능
+    if (req.user.role === "rider") {
+      const order = await Order.findOne({
+        _id: id,
+        assignedRider: req.user._id,
+      })
+        .populate("store", "name address")
+        .populate("orderItems.product", "name price");
+
+      if (!order) {
+        return res.status(404).json({ message: "주문을 찾을 수 없습니다." });
+      }
+
+      return res.json({ order });
+    }
+    
     const order = await Order.findOne({ _id: orderId, user: req.user._id })
       .populate("store")
       .populate("orderItems.product")
@@ -577,8 +594,8 @@ router.get("/rider/available", authMiddleware, async (req, res) => {
   }
 });
 
-// POST /api/orders/rider/assign/:orderId
-router.post("/rider/assign/:orderId", authMiddleware, async (req, res) => {
+// POST /api/orders/rider/:orderId/assign
+router.post("/rider/:orderId/assign", authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== "rider") {
       return res.status(403).json({ message: "라이더만 접근 가능합니다." });

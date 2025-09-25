@@ -71,7 +71,7 @@ const router = express.Router();
  *                 type: array
  *                 items:
  *                   type: string
- *                 description: 노출 채널 (예: web, mobile)
+ *                 description: 노출 채널
  *     responses:
  *       201:
  *         description: 등록 성공
