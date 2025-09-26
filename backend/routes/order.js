@@ -390,7 +390,7 @@ router.get("/:orderId", authMiddleware, async (req, res) => {
 
       return res.json({ order });
     }
-    
+
     const order = await Order.findOne({ _id: orderId, user: req.user._id })
       .populate("store")
       .populate("orderItems.product")
@@ -551,16 +551,13 @@ router.patch("/:id/status", authMiddleware, async (req, res) => {
 
     if (!order) return res.status(404).json({ message: "주문을 찾을 수 없습니다." });
 
-    console.log('order.store.toString()', order.store._id.toString());
-    console.log('req.user.store.toString()', req.user.store.toString());
-
     // ✅ 매니저의 소속 매장만 변경 가능
     if (order.store._id.toString() !== req.user.store.toString()) {
       return res.status(403).json({ message: "본인 매장의 주문만 변경할 수 있습니다." });
     }
 
     // ✅ 상태 검증
-    const validStatuses = ["pending", "accepted", "delivering", "completed"];
+    const validStatuses = ["pending", "accepted", "assigned", "delivering", "completed", "cancelled"];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: "잘못된 상태 값입니다." });
     }
@@ -631,7 +628,9 @@ router.get("/rider/assigned", authMiddleware, async (req, res) => {
     const orders = await Order.find({
       assignedRider: req.user._id,
       status: { $in: ["assigned", "delivering"] },
-    }).populate("store", "name address");
+    })
+    .populate("store")
+    .populate("orderItems.product");
 
     return res.json({ orders });
   } catch (err) {
@@ -639,6 +638,38 @@ router.get("/rider/assigned", authMiddleware, async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 });
+
+// 라이더 전용 상태 변경
+router.patch("/rider/:id/status", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "rider") {
+      return res.status(403).json({ message: "라이더만 접근 가능합니다." });
+    }
+
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findOne({
+      _id: id,
+      assignedRider: req.user._id, // 본인 배정 주문만
+    });
+
+    if (!order) return res.status(404).json({ message: "주문 없음" });
+
+    const validStatuses = ["assigned", "delivering", "completed"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: "잘못된 상태 값" });
+    }
+
+    order.status = status;
+    await order.save();
+
+    res.json({ success: true, order });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 
 
 

@@ -55,6 +55,7 @@ const OrderItem = ({ order, onStatusChange }: OrderItemProps) => {
           <option key={status} value={status}>
             {status === "pending" && "대기중"}
             {status === "accepted" && "승인됨"}
+            {status === "assigned" && "라이더 배정됨"}
             {status === "delivering" && "배송중"}
             {status === "completed" && "완료"}
             {status === "cancelled" && "취소됨"}

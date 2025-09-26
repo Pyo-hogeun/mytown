@@ -96,7 +96,7 @@ const Button = styled.button`
     background: #219150;
   }
   `;
-  const Badge = styled.span`
+const Badge = styled.span`
   display: inline-block;
   font-size: 13px;
   border: 1px solid gray;
@@ -122,71 +122,71 @@ const ProductListPage = () => {
 
   // ✅ 권한이 있는 역할들을 배열로 정의
   const allowedRoles = ['master', 'admin', 'manager'];
-  const statusTransfer = (value:"draft" | "published" | "hidden") => {
-  switch (value) {
-    case "draft":
-      return "임시저장"
-    case "published":
-      return "노출"
-    case "hidden":
-      return "숨김"
+  const statusTransfer = (value: "draft" | "published" | "hidden") => {
+    switch (value) {
+      case "draft":
+        return "임시저장"
+      case "published":
+        return "노출"
+      case "hidden":
+        return "숨김"
+    }
   }
-}
-useEffect(() => {
-  let url = '/products';
-  if (user?.role === 'manager') {
-    // 매니저라면 첫 번째 store 기준으로 상품 목록 조회
-    url = `/products/store/${user?.store?._id}`;
-  }
+  useEffect(() => {
+    let url = '/products';
+    if (user?.role === 'manager') {
+      // 매니저라면 첫 번째 store 기준으로 상품 목록 조회
+      url = `/products/store/${user?.store?._id}`;
+    }
 
-  axios.get(url)
-    .then((res) => dispatch(setProducts(res.data)))
-    .catch((err) => console.error(err));
-}, [dispatch]);
+    axios.get(url)
+      .then((res) => dispatch(setProducts(res.data)))
+      .catch((err) => console.error(err));
+  }, [dispatch]);
 
-return (
-  <Container>
-    <Title>🛒 오늘의 상품</Title>
-    <Grid>
-      {products.length > 0 ?
-        products.map((product) => (
-          <CardItem key={product._id}>
-            <Link href={`/products/${product._id}`}>
-              <ImageBox>
-                {/* 상품 이미지 API에 따라 다르게 처리 */}
-                <img src={product.imageUrl || '/no-image.png'} alt={product.name} />
-              </ImageBox>
-              <Info>
-                <Name>{product.name}</Name>
-                <Price>{product.price.toLocaleString()}원</Price>
-                {user?.role && user.role !== "user" && (
-                  <StockQty>수량 : {product.stockQty}개</StockQty>
-                )}
+  return (
+    <Container>
+      <Title>🛒 오늘의 상품</Title>
+      <Grid>
+        {products.length > 0 ?
+          products.map((product) => (
+            <CardItem key={product._id}>
+              <Link href={`/products/${product._id}`}>
+                <ImageBox>
+                  {/* 상품 이미지 API에 따라 다르게 처리 */}
+                  <img src={product.imageUrl || '/no-image.png'} alt={product.name} />
+                </ImageBox>
+                <Info>
+                  <Name>{product.name}</Name>
+                  <Price>{product.price.toLocaleString()}원</Price>
+                  {user?.role && user.role !== "user" && (
+                    <StockQty>수량 : {product.stockQty}개</StockQty>
+                  )}
 
-                <Store>{product.storeName}</Store>
-              </Info>
-            </Link>
-            {user?.role && allowedRoles.includes(user.role) ?
-              (<div style={{padding: '1em'}}>
-                <Link href={`/products/${product._id}/edit`}>
-                  <Button>편집</Button>
-                  <Badge>{statusTransfer(product.status)}</Badge>
-                </Link>
-              </div>)
-              : false
-
-
-            }
-            {/* {user?.role === 'user' ? <Button onClick={() => handleAddToCart(product._id)}>장바구니 담기</Button> : undefined} */}
-
-          </CardItem>
+                  <Store>{product.storeName}</Store>
+                </Info>
+              </Link>
+              {user?.role && allowedRoles.includes(user.role) ?
+                (<div style={{ padding: '1em' }}>
+                  <Link href={`/products/${product._id}/edit`}>
+                    <Button>편집</Button>
+                    <Badge>{statusTransfer(product.status)}</Badge>
+                  </Link>
+                </div>)
+                : false
 
 
+              }
+              {/* {user?.role === 'user' ? <Button onClick={() => handleAddToCart(product._id)}>장바구니 담기</Button> : undefined} */}
 
-        )) : '상품이 없습니다'}
-    </Grid>
-  </Container>
-);
+            </CardItem>
+
+
+
+          )) : '상품이 없습니다'}
+      </Grid>
+    </Container>
+  );
 };
 
 export default ProductListPage;

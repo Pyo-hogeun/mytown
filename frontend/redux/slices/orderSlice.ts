@@ -12,11 +12,12 @@ export interface OrderItemPayload {
 }
 
 export type PaymentMethod = "card" | "kakao" | "naver";
-export type OrderStatus = "pending" | "accepted" | "delivering" | "completed" | "cancelled";
+export type OrderStatus = "pending" | "accepted" | "assigned" | "delivering" | "completed" | "cancelled";
 // ✅ 모든 주문 상태값 배열 (드롭다운 등에서 사용)
 export const validStatuses: OrderStatus[] = [
   "pending",
   "accepted",
+  "assigned",
   "delivering",
   "completed",
   "cancelled",

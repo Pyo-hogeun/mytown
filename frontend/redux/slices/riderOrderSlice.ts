@@ -1,6 +1,7 @@
 // redux/slices/riderOrderSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "@/utils/axiosInstance";
+import { OrderStatus } from "./orderSlice";
 
 export interface RiderOrder {
   _id: string;
@@ -11,14 +12,15 @@ export interface RiderOrder {
     day: string;
     time: string;
   };
-  status: string;
+  status: OrderStatus;
 }
 
 export interface OrderItem {
-  product: string;
+  product: { _id: string; name?: string; price?: number };
   quantity: number;
   unitPrice: number;
   optionName?: string;
+  optionExtraPrice?: string;
 }
 
 export interface OrderDetail {
@@ -31,8 +33,11 @@ export interface OrderDetail {
   phone: string;
   address: string;
   totalPrice: number;
-  status: string;
-  deliveryTime?: string;
+  status: OrderStatus;
+  deliveryTime: {
+    day: string;
+    time: string;
+  };
   orderItems: OrderItem[];
 }
 
@@ -105,6 +110,20 @@ export const assignOrder = createAsyncThunk(
   }
 );
 
+// ✅ 주문 상태 업데이트
+export const updateOrderStatus = createAsyncThunk(
+  "riderOrders/updateOrderStatus",
+  async ({ orderId, status }: { orderId: string; status: OrderStatus }, { rejectWithValue }) => {
+    try {
+      const res = await axios.patch(`/order/rider/${orderId}/status`, { status });
+      return res.data.order as OrderDetail;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "주문 상태 업데이트 실패");
+    }
+  }
+);
+
+
 const riderOrderSlice = createSlice({
   name: "riderOrders",
   initialState,
@@ -144,7 +163,31 @@ const riderOrderSlice = createSlice({
       .addCase(fetchAssignedOrders.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      });
+      })
+      // fetchOrderById
+      .addCase(fetchOrderById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchOrderById.fulfilled, (state, action: PayloadAction<OrderDetail>) => {
+        state.loading = false;
+        state.selectedOrder = action.payload;
+      })
+      .addCase(fetchOrderById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // updateOrderStatus
+      .addCase(updateOrderStatus.fulfilled, (state, action: PayloadAction<OrderDetail>) => {
+        state.currentOrders = state.currentOrders.map((order) =>
+          order._id === action.payload._id ? action.payload : order
+        );
+        if (state.selectedOrder?._id === action.payload._id) {
+          state.selectedOrder = action.payload;
+        }
+      })
+      
+
   },
 });
 

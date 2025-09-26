@@ -9,10 +9,6 @@ import Container from "@/app/component/Container";
 import Button from "@/app/component/Button";
 import { useRouter } from "next/navigation";
 
-const PageWrapper = styled.div`
-  padding: 16px;
-`;
-
 const OrderCard = styled.div`
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -21,10 +17,12 @@ const OrderCard = styled.div`
 `;
 
 const AssignButton = styled(Button)`
+width: 100%;
   background: #007bff;
   color: white;
+  height: 43px;
+  margin-top: 2em;
 `;
-
 const page = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
@@ -37,7 +35,7 @@ const page = () => {
   const handleAssign = async (orderId: string) => {
     try{
       const res = await dispatch(assignOrder(orderId));
-      router.push(`/rider/order/${orderId}`);
+      router.push(`/rider/order`);
     } catch( err: any){
       console.error("배정 실패:", err);
       alert(err.response?.data?.message || "배정에 실패했습니다.");
