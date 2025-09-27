@@ -14,7 +14,7 @@ const RiderHome = () => {
   useEffect(() => {
     const fetchAssignedOrders = async () => {
       try {
-        const res = await axios.get('/api/orders/rider/assigned');
+        const res = await axios.get('/order/rider/assigned');
         if (res.data.orders && res.data.orders.length > 0) {
           setActiveKey('assigned'); // 배정된 주문 있으면 바로 해당 탭 활성화
           setHasAssignedOrders(true);

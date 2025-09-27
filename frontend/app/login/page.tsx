@@ -109,7 +109,7 @@ const LoginPage = () => {
       console.log('user', user?.role);
 
       if (data.user.role === 'rider') {
-        router.push('/rider/availableOrders');
+        router.push('/rider');
       } else {
 
         router.push('/products');
