@@ -8,6 +8,7 @@ import { clearOrders, fetchAssignedOrders, updateOrderStatus } from "@/redux/sli
 import styled from "styled-components";
 import { OrderStatus } from "@/redux/slices/orderSlice";
 import Button from "@/app/component/Button";
+import CodeColorTransfer from "@/app/component/CodeColorTransfer";
 const OrderItem = styled.div`
   margin-top: 12px;
   border: 1px solid #999;
@@ -26,7 +27,7 @@ const Label = styled.span`
 const TotalPrice = styled.div`
   font-size: 16px;
 `;
-const RiderButton = styled(Button)<{$completed?: boolean}>`
+const RiderButton = styled(Button)<{$delivering?:boolean; $completed?: boolean}>`
   width: 100%;
   background-color: #0070f3;
   color: #fff;
@@ -35,10 +36,11 @@ const RiderButton = styled(Button)<{$completed?: boolean}>`
   &:hover{
     background-color: #187ef4;
   }
+  
   ${(props) => props.$completed ? `
     background-color: red;
   `: false}
-`
+`;
 const Page = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { currentOrders, loading, error } = useSelector(
@@ -74,9 +76,10 @@ const Page = () => {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h2>나에게 배정된 주문</h2>
+      <h2>나에게 배정된 주문 : {currentOrders.length}</h2>
       {currentOrders.map((order) => (
-        <OrderItem>
+        <OrderItem key={order._id}>
+          <List><Label>주문번호:</Label><CodeColorTransfer id={order._id} /></List>
           <List><Label>가게:</Label> {order.store.name}</List>
           <List><Label>가게주소:</Label> {order.store.address}</List>
           <List><Label>수령인:</Label> {order.receiver}</List>
@@ -107,6 +110,7 @@ const Page = () => {
           )}
           {order.status === "delivering" && (
             <RiderButton
+              $delivering={true}
               onClick={() => dispatch(updateOrderStatus({ orderId: order._id, status: "completed" }))}
             >
               배달 완료

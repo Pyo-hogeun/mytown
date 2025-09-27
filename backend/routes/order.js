@@ -652,7 +652,8 @@ router.patch("/rider/:id/status", authMiddleware, async (req, res) => {
     const order = await Order.findOne({
       _id: id,
       assignedRider: req.user._id, // 본인 배정 주문만
-    });
+    })
+    .populate("store");
 
     if (!order) return res.status(404).json({ message: "주문 없음" });
 

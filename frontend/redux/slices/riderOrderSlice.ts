@@ -178,14 +178,26 @@ const riderOrderSlice = createSlice({
         state.error = action.payload as string;
       })
       // updateOrderStatus
+      .addCase(updateOrderStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(updateOrderStatus.fulfilled, (state, action: PayloadAction<OrderDetail>) => {
+        state.loading = false;
+        // 1) 목록(currentOrders)에서 동일한 id를 가진 주문을 새 응답으로 교체
         state.currentOrders = state.currentOrders.map((order) =>
           order._id === action.payload._id ? action.payload : order
         );
+      
+        // 2) 상세(selectedOrder)을 보고 있다면 동일한 주문이면 교체
         if (state.selectedOrder?._id === action.payload._id) {
           state.selectedOrder = action.payload;
         }
       })
+      .addCase(updateOrderStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
       
 
   },
