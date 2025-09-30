@@ -23,6 +23,10 @@ width: 100%;
   height: 43px;
   margin-top: 2em;
 `;
+const Charge = styled.span`
+  font-size: 1.5em;
+  color: #007bff;
+`
 const page = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
@@ -35,7 +39,11 @@ const page = () => {
   const handleAssign = async (orderId: string) => {
     try{
       const res = await dispatch(assignOrder(orderId));
-      router.push(`/rider/order`);
+      if(res){
+        dispatch(fetchAvailableOrders());
+      }
+      
+      router.push(`/rider`);
     } catch( err: any){
       console.error("배정 실패:", err);
       alert(err.response?.data?.message || "배정에 실패했습니다.");
@@ -51,6 +59,7 @@ const page = () => {
       {items.length === 0 && !loading && <p>현재 배정 가능한 주문이 없습니다.</p>}
       {items.map((order) => (
         <OrderCard key={order._id}>
+          <div><strong>수수료:</strong> <Charge>{order.deliveryCharge}</Charge></div>
           <div><strong>수령인:</strong> {order.receiver}</div>
           <div><strong>주소:</strong> {order.address}</div>
           <div><strong>연락처:</strong> {order.phone}</div>

@@ -12,6 +12,7 @@ export interface RiderOrder {
     day: string;
     time: string;
   };
+  deliveryCharge: number;
   status: OrderStatus;
 }
 
@@ -38,6 +39,7 @@ export interface OrderDetail {
     day: string;
     time: string;
   };
+  deliveryCharge: number;
   orderItems: OrderItem[];
 }
 
@@ -79,6 +81,18 @@ export const fetchAssignedOrders = createAsyncThunk(
       return res.data.orders as OrderDetail[];
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "배정 주문 조회 실패");
+    }
+  }
+);
+// ✅ 배달완료된 주문 조회 (로그인된 rider 기준)
+export const fetchCompletedOrders = createAsyncThunk(
+  "riderOrders/fetchCompleted",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await axios.get("/order/rider/completed");
+      return res.data.orders as OrderDetail[];
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "배달완료된 주문 조회 실패");
     }
   }
 );

@@ -15,6 +15,14 @@ const OrderItem = styled.div`
   border-radius: 10px;
   padding: 12px;
 `;
+const SubTitle = styled.div`
+  font-size: 13px;
+  font-weight: 700;
+  `;
+const DeliveryCharge = styled.div`
+  font-size: 16px;
+  font-weight: 700;
+`
 const List = styled.div`
   display: flex;
   font-size: 13px;
@@ -25,9 +33,8 @@ const Label = styled.span`
   font-weight: 700;
 `;
 const TotalPrice = styled.div`
-  font-size: 16px;
 `;
-const RiderButton = styled(Button)<{$delivering?:boolean; $completed?: boolean}>`
+const RiderButton = styled(Button) <{ $delivering?: boolean; $completed?: boolean }>`
   width: 100%;
   background-color: #0070f3;
   color: #fff;
@@ -87,18 +94,18 @@ const Page = () => {
           <List><Label>주소:</Label> {order.address}</List>
           <List><Label>배달 시간:</Label> {order.deliveryTime.day ? order.deliveryTime.day + ' ' + order.deliveryTime.time : "지정 없음"}</List>
           <List><Label>상태:</Label> {statusTransfer(order.status)}</List>
-          <h3>주문 항목</h3>
-          <ul>
+          <SubTitle>주문 항목</SubTitle>
+          <div>
             {order.orderItems.map((item, idx) => (
-              <li key={idx}>
+              <List key={idx}>
                 {item.product?.name} {item.unitPrice}원
                 ({item.optionName || "옵션 없음"} {item.optionExtraPrice ? `+${item.optionExtraPrice.toLocaleString()}` : false})
                 x {item.quantity}개
-              </li>
+              </List>
             ))}
-          </ul>
-          <h3>총 금액:</h3>
-          <TotalPrice>{order.totalPrice.toLocaleString()}원</TotalPrice>
+          </div>
+          <TotalPrice>주문 금액: {order.totalPrice.toLocaleString()}원</TotalPrice>
+          <DeliveryCharge>수수료: {order.deliveryCharge}원</DeliveryCharge>
 
           {/* ✅ 상태 변경 버튼 */}
           {order.status === "assigned" && (

@@ -5,9 +5,10 @@ import Tabs from '@/app/component/Tabs';
 import AvailableOrdersPage from '@/app/rider/availableOrders/page';
 import RiderOrdersPage from '@/app/rider/order/page';
 import axios from '@/utils/axiosInstance';
+import Adjustment from './adjustment/page';
 
 const RiderHome = () => {
-  const [activeKey, setActiveKey] = useState<'available' | 'assigned'>('available');
+  const [activeKey, setActiveKey] = useState<'available' | 'assigned' | 'adjustment'>('available');
   const [hasAssignedOrders, setHasAssignedOrders] = useState(false);
 
   // 🚀 최초 로딩 시 배정된 주문 여부 확인
@@ -29,14 +30,16 @@ const RiderHome = () => {
   const tabs = [
     { key: 'available', label: '배정 전 주문' },
     { key: 'assigned', label: '배정된 주문' },
+    { key: 'adjustment', label: '정산내역' },
   ];
 
   return (
     <div>
-      <Tabs tabs={tabs} activeKey={activeKey} onChange={(key) => setActiveKey(key as 'available' | 'assigned')} />
+      <Tabs tabs={tabs} activeKey={activeKey} onChange={(key) => setActiveKey(key as 'available' | 'assigned' | 'adjustment')} />
       <div>
         {activeKey === 'available' && <AvailableOrdersPage />}
         {activeKey === 'assigned' && <RiderOrdersPage />}
+        {activeKey === 'adjustment' && <Adjustment />}
       </div>
     </div>
   );

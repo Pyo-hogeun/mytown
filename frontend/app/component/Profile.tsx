@@ -73,6 +73,7 @@ const CartButton = styled.div`
   display: inline-block;
   padding: 0 40px 0 10px;
 `;
+
 const Profile = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
@@ -103,16 +104,20 @@ const Profile = () => {
   return (
     <ProfileWrapper>
       <CartButton>
-      {user?.role !== 'rider'?
-        <Link href="/cart">장바구니</Link>:
-        false
-      }
-        {cartCount > 0 ? <CartBadge animate={animate}>{cartCount}</CartBadge> : false}
+        {user?.role !== 'rider' ?
+          <Link href="/cart">장바구니</Link> :
+          false
+        }
+        {cartCount > 0 ?
+          <CartBadge animate={animate}>{cartCount}</CartBadge> :
+          false}
       </CartButton>
       {user ? (
         <>
-        { user.store?<Store>{user.store?.name} 🛒</Store>:false}
-          
+          {user.store ?
+            <Store>{user.store?.name} 🛒</Store> :
+            false}
+
           <Name>{user.name}</Name>
           <Role>{user.role}</Role>
           <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>

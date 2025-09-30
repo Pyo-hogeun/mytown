@@ -49,6 +49,11 @@ const OrderSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Rider",
   },
+  //배달수수료
+  deliveryCharge: {
+    type: Number,
+    min: 0,
+  },
   status: {
     type: String,
     enum: ["pending", "accepted", "assigned", "delivering", "completed", "canceled"],
@@ -82,6 +87,9 @@ const OrderSchema = new Schema({
     type: String,
     required: true,
     trim: true,
+  },
+  rememberDelivery :{
+    type: Boolean,
   },
   deliveryTime: {
     day: { type: String, trim: true },

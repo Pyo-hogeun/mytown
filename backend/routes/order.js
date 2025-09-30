@@ -174,7 +174,9 @@ router.post("/", authMiddleware, async (req, res) => {
         phone,
         address,
         deliveryTime,
-        paymentMethod
+        paymentMethod,
+        rememberDelivery,
+        deliveryCharge: 3000 //임시 수수료 3000원
       });
 
       await order.save();
@@ -635,6 +637,27 @@ router.get("/rider/assigned", authMiddleware, async (req, res) => {
     return res.json({ orders });
   } catch (err) {
     console.error("배정된 주문 조회 오류:", err);
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/orders/rider/completed
+router.get("/rider/completed", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "rider") {
+      return res.status(403).json({ message: "라이더만 접근 가능합니다." });
+    }
+
+    const orders = await Order.find({
+      assignedRider: req.user._id,
+      status: { $in: ["completed"] },
+    })
+    .populate("store")
+    .populate("orderItems.product");
+
+    return res.json({ orders });
+  } catch (err) {
+    console.error("배달완료된 주문 조회 오류:", err);
     return res.status(500).json({ message: err.message });
   }
 });
