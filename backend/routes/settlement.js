@@ -6,7 +6,7 @@ import { authMiddleware } from "../middlewares/authMiddleware.js";
 import dayjs from "dayjs";
 
 const router = express.Router();
-// GET /api/settlement/rider
+
 /**
  * @swagger
  * /api/settlement/rider:
@@ -62,8 +62,93 @@ router.get("/rider", authMiddleware, async (req, res) => {
   }
 });
 
-//정산내역 상세조회
-// GET /api/settlement/:id
+// 관리자 정산 목록 조회
+router.get("/manage", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "관리자만 접근 가능합니다." });
+    }
+
+    const settlements = await Settlement.find({})
+      .sort({ weekStart: -1 });
+
+    res.json({ settlements });
+  } catch (err) {
+    console.error("정산 조회 오류:", err);
+    res.status(500).json({ message: "정산 조회 실패" });
+  }
+});
+
+/**
+ * @swagger
+ * /api/settlement/{id}:
+ *   get:
+ *     summary: 특정 정산 상세 조회 (라이더 전용)
+ *     tags: [Settlement]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Settlement ID
+ *     responses:
+ *       200:
+ *         description: 정산 상세 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 settlement:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     rider:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                     weekStart:
+ *                       type: string
+ *                       format: date
+ *                     weekEnd:
+ *                       type: string
+ *                       format: date
+ *                     totalLength:
+ *                       type: number
+ *                     commission:
+ *                       type: number
+ *                     status:
+ *                       type: string
+ *                       enum: [pending, paid]
+ *                     orders:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           totalPrice:
+ *                             type: number
+ *                           store:
+ *                             type: object
+ *                             properties:
+ *                               name:
+ *                                 type: string
+ *                           completedAt:
+ *                             type: string
+ *                             format: date-time
+ *       403:
+ *         description: 라이더만 접근 가능
+ *       404:
+ *         description: 정산 내역 없음
+ */
 router.get("/:id", authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== "rider") {
@@ -92,8 +177,6 @@ router.get("/:id", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "정산 상세 조회 실패" });
   }
 });
-
-
 
 /**
  * @swagger
@@ -156,6 +239,9 @@ router.patch("/:id/pay", authMiddleware, async (req, res) => {
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - weekStart
+ *               - weekEnd
  *             properties:
  *               weekStart:
  *                 type: string
@@ -168,6 +254,8 @@ router.patch("/:id/pay", authMiddleware, async (req, res) => {
  *     responses:
  *       200:
  *         description: 수동 정산 생성 성공
+ *       400:
+ *         description: 필수 값 누락
  *       403:
  *         description: 관리자만 접근 가능
  */
@@ -186,7 +274,6 @@ router.post("/manual", authMiddleware, async (req, res) => {
     await Settlement.deleteMany({ weekStart, weekEnd });
     
     // ✅ 완료된 주문 조회
-    console.log('주 시작 : ',dayjs(weekStart).startOf("day").toDate());
     const completedOrders = await Order.find({
       status: "completed",
       completedAt: {
@@ -196,7 +283,7 @@ router.post("/manual", authMiddleware, async (req, res) => {
     });
     
     if (completedOrders.length === 0) {
-      return res.json({ message: "해당 기간에 완료된 주문이 없습니다.", weekstart: dayjs(weekStart).startOf("day").toDate() });
+      return res.json({ message: "해당 기간에 완료된 주문이 없습니다." });
     }
 
     // ✅ 라이더별 그룹핑

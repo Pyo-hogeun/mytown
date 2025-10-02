@@ -32,6 +32,7 @@ const menus: Menu[] = [
   { path: "/login", label: "로그인", roles: [null] },
   { path: "/register", label: "회원가입", roles: [null] },
   { path: "/orders", label: "주문조회", roles: ["user"] },
+  { path: "/settlement/manage", label: "정산관리", roles: ["admin", "master"] },
 ];
 
 const Nav = () => {

@@ -35,7 +35,18 @@ export const fetchRiderSettlements = createAsyncThunk(
     }
   }
 );
-
+// ✅ 라이더 정산 내역 불러오기
+export const fetchManageSettlements = createAsyncThunk(
+  "settlement/fetchManage",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await axios.get("/settlement/manage");
+      return res.data.settlements as Settlement[];
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "정산 내역 조회 실패");
+    }
+  }
+);
 const riderSettlementSlice = createSlice({
   name: "riderSettlement",
   initialState,
@@ -51,6 +62,18 @@ const riderSettlementSlice = createSlice({
         state.items = action.payload;
       })
       .addCase(fetchRiderSettlements.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchManageSettlements.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchManageSettlements.fulfilled, (state, action: PayloadAction<Settlement[]>) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
+      .addCase(fetchManageSettlements.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
