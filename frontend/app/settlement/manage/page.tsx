@@ -88,7 +88,7 @@ const Page = () => {
                   <Button onClick={()=>router.push(`/settlement/`)}>상세보기</Button>
                 </td>
                 <td>
-                  <Button onClick={()=>handlePay(s._id)} disabled={s.status}>지급완료</Button>
+                  <Button onClick={()=>handlePay(s._id)} disabled={s.status?true:false}>지급완료</Button>
                 </td>
               </tr>
             ))
