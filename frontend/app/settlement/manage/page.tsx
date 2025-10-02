@@ -3,10 +3,11 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { fetchManageSettlements, fetchRiderSettlements } from "@/redux/slices/riderSettlementSlice";
+import { fetchManageSettlements, fetchRiderSettlements, paySettlement } from "@/redux/slices/riderSettlementSlice";
 import styled from "styled-components";
 import Container from "@/app/component/Container";
 import { useRouter } from "next/navigation";
+import Button from "@/app/component/Button";
 // ✅ styled-components
 
 const Table = styled.table`
@@ -17,7 +18,6 @@ const Table = styled.table`
   th, td {
     border: 1px solid #ddd;
     padding: 8px;
-    text-align: center;
   }
 
   th {
@@ -36,6 +36,12 @@ const Page = () => {
     (state: RootState) => state.riderSettlement
   );
 
+  const handlePay = (id:string) => {
+    if (window.confirm("정말 지급완료 처리하시겠습니까?")) {
+      dispatch(paySettlement(id));
+    }
+  };
+
   useEffect(() => {
     dispatch(fetchManageSettlements());
   }, [dispatch]);
@@ -49,10 +55,13 @@ const Page = () => {
       <Table>
         <thead>
           <tr>
+            <th>라이더</th>
             <th>기간</th>
             <th>주문건수</th>
             <th>수수료</th>
             <th>상태</th>
+            <th>상세보기</th>
+            <th>처리</th>
           </tr>
         </thead>
         <tbody>
@@ -62,7 +71,8 @@ const Page = () => {
             </tr>
           ) : (
             items.map((s) => (
-              <tr key={s._id} onClick={() => router.push(`/rider/settlement/${s._id}`)}>
+              <tr key={s._id}>
+                <td>{s.rider.name} {s.rider._id}</td>
                 <td>
                   {new Date(s.weekStart).toLocaleDateString()} ~{" "}
                   {new Date(s.weekEnd).toLocaleDateString()}
@@ -73,6 +83,12 @@ const Page = () => {
                   <Status status={s.status}>
                     {s.status === "pending" ? "미지급" : "지급완료"}
                   </Status>
+                </td>
+                <td>
+                  <Button onClick={()=>router.push(`/settlement/`)}>상세보기</Button>
+                </td>
+                <td>
+                  <Button onClick={()=>handlePay(s._id)} disabled={s.status}>지급완료</Button>
                 </td>
               </tr>
             ))

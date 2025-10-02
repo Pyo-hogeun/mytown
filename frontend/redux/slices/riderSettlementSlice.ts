@@ -4,6 +4,10 @@ import axios from "@/utils/axiosInstance";
 
 export interface Settlement {
   _id: string;
+  rider: {
+    _id: string;
+    name: string;
+  };
   weekStart: string;
   weekEnd: string;
   totalLength: number;
@@ -35,7 +39,7 @@ export const fetchRiderSettlements = createAsyncThunk(
     }
   }
 );
-// ✅ 라이더 정산 내역 불러오기
+// ✅ 관리자용 정산내역 조회
 export const fetchManageSettlements = createAsyncThunk(
   "settlement/fetchManage",
   async (_, { rejectWithValue }) => {
@@ -47,6 +51,21 @@ export const fetchManageSettlements = createAsyncThunk(
     }
   }
 );
+
+// ✅ 특정 정산 지급 완료 처리 (관리자 전용)
+export const paySettlement = createAsyncThunk(
+  "settlement/pay",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await axios.patch(`/settlement/${id}/pay`);
+      return res.data.settlement as Settlement;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "정산 지급 처리 실패");
+    }
+  }
+);
+
+
 const riderSettlementSlice = createSlice({
   name: "riderSettlement",
   initialState,
@@ -75,6 +94,16 @@ const riderSettlementSlice = createSlice({
       })
       .addCase(fetchManageSettlements.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(paySettlement.fulfilled, (state, action: PayloadAction<Settlement>) => {
+        // settlement 상태 업데이트
+        const idx = state.items.findIndex((s) => s._id === action.payload._id);
+        if (idx !== -1) {
+          state.items[idx] = action.payload;
+        }
+      })
+      .addCase(paySettlement.rejected, (state, action) => {
         state.error = action.payload as string;
       });
   },

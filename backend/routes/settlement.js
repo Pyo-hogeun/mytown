@@ -69,7 +69,8 @@ router.get("/manage", authMiddleware, async (req, res) => {
       return res.status(403).json({ message: "관리자만 접근 가능합니다." });
     }
 
-    const settlements = await Settlement.find({})
+    const settlements = await Settlement.find()
+      .populate("rider", "name")
       .sort({ weekStart: -1 });
 
     res.json({ settlements });
