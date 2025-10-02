@@ -1,6 +1,6 @@
 // jobs/settlementJob.js
-import Order from "../models/Order.js";
-import Settlement from "../models/Settlement.js";
+import Order from "../models/order.js";
+import Settlement from "../models/settlement.js";
 import dayjs from "dayjs";
 
 export const generateWeeklySettlements = async () => {

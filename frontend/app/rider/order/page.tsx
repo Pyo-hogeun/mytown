@@ -9,6 +9,7 @@ import styled from "styled-components";
 import { OrderStatus } from "@/redux/slices/orderSlice";
 import Button from "@/app/component/Button";
 import CodeColorTransfer from "@/app/component/CodeColorTransfer";
+import Container from "@/app/component/Container";
 const OrderItem = styled.div`
   margin-top: 12px;
   border: 1px solid #999;
@@ -82,7 +83,7 @@ const Page = () => {
   if (!currentOrders) return <p>주문 정보를 찾을 수 없습니다.</p>;
 
   return (
-    <div style={{ padding: "20px" }}>
+    <Container>
       <h2>나에게 배정된 주문 : {currentOrders.length}</h2>
       {currentOrders.map((order) => (
         <OrderItem key={order._id}>
@@ -133,7 +134,7 @@ const Page = () => {
           )}
         </OrderItem>
       ))}
-    </div>
+    </Container>
   );
 }
 export default Page

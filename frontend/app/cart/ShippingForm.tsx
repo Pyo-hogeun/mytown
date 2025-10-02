@@ -2,9 +2,10 @@
 
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
-import { RootState } from "@/redux/store";
-import { setReceiver, setPhone, setAddress } from "@/redux/slices/orderSlice";
+import { AppDispatch, RootState } from "@/redux/store";
+import { setReceiver, setPhone, setAddress, fetchOrders } from "@/redux/slices/orderSlice";
 import Input from "../component/Input";
+import { useEffect } from "react";
 
 const FormContainer = styled.div`
   margin: 20px 0;
@@ -15,8 +16,12 @@ const FormContainer = styled.div`
 `;
 
 const ShippingForm = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { receiver, phone, address } = useSelector((s: RootState) => s.order);
+
+  useEffect(()=>{
+    dispatch(fetchOrders());
+  },[dispatch])
 
 
   return (

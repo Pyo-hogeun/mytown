@@ -7,6 +7,7 @@ import userReducer from './slices/userSlice';
 import cartReducer from './slices/cartSlice';
 import orderReducer from './slices/orderSlice';
 import riderOrderReducer from './slices/riderOrderSlice';
+import riderSettlementReducer from './slices/riderSettlementSlice';
 export const store = configureStore({
   reducer: {
     auth: authReducer, // 🔐 인증 관련 상태 슬라이스
@@ -16,6 +17,7 @@ export const store = configureStore({
     cart: cartReducer,
     order: orderReducer,
     riderOrders: riderOrderReducer,
+    riderSettlement: riderSettlementReducer,
   },
 });
 

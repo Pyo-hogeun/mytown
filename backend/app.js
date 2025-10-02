@@ -9,6 +9,7 @@ import storeRoutes from './routes/stores.js';
 import productRoutes from './routes/products.js';
 import cartRoutes from './routes/cart.js';
 import orderRoutes from './routes/order.js';
+import settlementRoutes from './routes/settlement.js';
 import { setupSwagger } from './swagger.js';
 // import riderRoutes from './routes/riders.js';
 // import reviewRoutes from './routes/reviews.js';
@@ -33,6 +34,7 @@ app.use('/api/stores', storeRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/order', orderRoutes);
+app.use('/api/settlement', settlementRoutes);
 // app.use('/api/riders', riderRoutes);
 // app.use('/api/reviews', reviewRoutes);
 

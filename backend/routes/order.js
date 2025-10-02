@@ -686,6 +686,12 @@ router.patch("/rider/:id/status", authMiddleware, async (req, res) => {
     }
 
     order.status = status;
+
+    // ✅ 완료 시 completedAt 기록
+    if (status === "completed") {
+      order.completedAt = new Date();
+    }
+    
     await order.save();
 
     res.json({ success: true, order });

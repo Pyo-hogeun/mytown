@@ -110,6 +110,12 @@ const OrderSchema = new Schema({
     default: null,
   },
 
+  // ✅ 주문 완료 시각
+  completedAt: {
+    type: Date,
+    default: null,
+  },
+
   createdAt: {
     type: Date,
     default: Date.now,
