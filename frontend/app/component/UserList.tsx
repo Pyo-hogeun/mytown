@@ -66,7 +66,7 @@ const UserList: React.FC = () => {
   }, [token]);
 
   // role 수정 요청
-  const handleRoleChange = async (userId: string, newRole: 'user' | 'admin') => {
+  const handleRoleChange = async (userId: string, newRole: 'user' | 'admin' | 'manager' | 'rider') => {
     setLoadingIds((prev) => [...prev, userId]); // 로딩 상태 추가
     try {
       await axios.patch(
@@ -132,11 +132,13 @@ const UserList: React.FC = () => {
                     <Select
                       value={user.role}
                       onChange={(e) =>
-                        handleRoleChange(user._id, e.target.value as 'user' | 'admin')
+                        handleRoleChange(user._id, e.target.value as 'user' | 'admin' | 'manager' | 'rider')
                       }
                     >
                       <option value="user">user</option>
                       <option value="admin">admin</option>
+                      <option value="manager">manager</option>
+                      <option value="rider">rider</option>
                     </Select>
                   ) : (
                     user.role
