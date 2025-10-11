@@ -45,6 +45,7 @@ const UserSchema = new mongoose.Schema({
   },
   snsProvider: { type: String }, // kakao, google, etc
   snsId: { type: String }, // ✅ 기존 필드 유지
+  profile_image: { type: String}, // 프로필 이미지
   createdAt: { type: Date, default: Date.now },
 });
 

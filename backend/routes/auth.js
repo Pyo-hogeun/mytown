@@ -224,10 +224,12 @@ router.get("/kakao/callback", async (req, res) => {
     });
 
     const kakaoUser = userRes.data;
+    console.log('카카오유저: ', userRes);
 
     const kakaoId = kakaoUser.id.toString();
     const email = kakaoUser.kakao_account?.email || `${kakaoId}@kakao-user.com`;
-    const name = kakaoUser.kakao_account?.profile?.nickname || '카카오사용자';
+    const name = kakaoUser.properties?.nickname || '카카오사용자';
+    const profile_image = kakaoUser.properties?.profile_image || '';
 
     // 3. DB 조회 및 생성
     let user = await User.findOne({ snsProvider: "kakao", snsId: kakaoId });
@@ -238,6 +240,7 @@ router.get("/kakao/callback", async (req, res) => {
         email,
         snsProvider: "kakao",
         snsId: kakaoId,
+        profile_image
       });
     }
 
@@ -251,9 +254,7 @@ router.get("/kakao/callback", async (req, res) => {
         id: user._id,
         email: user.email,
         name: user.name,
-        role: user.role,
-        // manager라면 store 전체 정보 응답
-        store: user.role === "manager" ? user.store : null,
+        role: 'user',
       }
     });
 
