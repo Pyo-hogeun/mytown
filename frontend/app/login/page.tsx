@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import styled, { keyframes } from 'styled-components';
 import Input from '../component/Input';
 import { RootState } from '@/redux/store';
+import KakaoLoginButton from '../component/KakaoLoginButton';
 
 // 🔄 로딩 스피너 애니메이션
 const spin = keyframes`
@@ -142,6 +143,13 @@ const LoginPage = () => {
         <Button onClick={handleLogin} loading={loading} disabled={loading}>
           {loading ? <Spinner /> : "로그인"}
         </Button>
+        <br />
+        <br />
+        <hr />
+        <br />
+        <br />
+
+        <KakaoLoginButton />
       </Card>
     </Container>
   );

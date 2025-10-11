@@ -2,6 +2,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import axios from "axios";
 import User from '../models/user.js';
 
 const router = express.Router();
@@ -192,6 +193,76 @@ router.post('/login', async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: '로그인 실패', error: err.message });
+  }
+});
+
+router.get("/kakao/callback", async (req, res) => {
+  console.log('key: ', process.env.KAKAO_REST_KEY, process.env.KAKAO_REDIRECT_URI)
+  const { code } = req.query;
+
+  try {
+    // 1. 토큰 요청
+    const tokenRes = await axios.post(
+      "https://kauth.kakao.com/oauth/token",
+      null,
+      {
+        params: {
+          grant_type: "authorization_code",
+          client_id: process.env.KAKAO_REST_KEY,
+          redirect_uri: process.env.KAKAO_REDIRECT_URI,
+          code: code,
+        },
+        headers: { "Content-type": "application/x-www-form-urlencoded;charset=utf-8" },
+      }
+    );
+
+    const { access_token } = tokenRes.data;
+
+    // 2. 사용자 정보 요청
+    const userRes = await axios.get("https://kapi.kakao.com/v2/user/me", {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+
+    const kakaoUser = userRes.data;
+
+    const kakaoId = kakaoUser.id.toString();
+    const email = kakaoUser.kakao_account?.email || `${kakaoId}@kakao-user.com`;
+    const name = kakaoUser.kakao_account?.profile?.nickname || '카카오사용자';
+
+    // 3. DB 조회 및 생성
+    let user = await User.findOne({ snsProvider: "kakao", snsId: kakaoId });
+
+    if (!user) {
+      user = await User.create({
+        name,
+        email,
+        snsProvider: "kakao",
+        snsId: kakaoId,
+      });
+    }
+
+    // 4. JWT 발급
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+    // 프론트로 토큰 전달 (redirect or json)
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        // manager라면 store 전체 정보 응답
+        store: user.role === "manager" ? user.store : null,
+      }
+    });
+
+  } catch (err) {
+    console.error('❌ 카카오 로그인 실패:', err.response?.data || err.message);
+    res.status(500).json({
+      message: '카카오 로그인 실패',
+      error: err.response?.data || err,
+    });
   }
 });
 

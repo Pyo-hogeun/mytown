@@ -3,38 +3,56 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 const UserSchema = new mongoose.Schema({
-  name: { type: String, required: true }, // 사용자 이름
-  email: { type: String, unique: true, required: true }, // 이메일(로그인 ID)
-  password: { type: String, required: true }, // 비밀번호(해시된 값)
-  address: { type: String }, // 주소
-  phone: { type: String }, // 전화번호
+  name: {
+    type: String,
+    required: function () {
+      return !this.snsId; // ✅ SNS 로그인 사용자는 이름 필수 아님
+    },
+  },
+  email: {
+    type: String,
+    unique: true,
+    required: function () {
+      return !this.snsId; // ✅ SNS 로그인 사용자는 이메일 필수 아님
+    },
+  },
+  password: {
+    type: String,
+    required: function () {
+      return !this.snsId; // ✅ SNS 로그인 사용자는 비밀번호 불필요
+    },
+  },
+  address: { type: String },
+  phone: { type: String },
   role: {
     type: String,
     enum: ["user", "master", "admin", "manager", "rider"],
     default: "user",
     index: true,
-  }, // 권한
+  },
   store: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Store",
     required: function () {
-      return this.role === "manager"; // manager일 때는 반드시 store 필요
+      return this.role === "manager"; // ✅ manager일 때만 필수
     },
-  }, // 📌 manager 소속 마트
-  // ✅ 배송지 자동입력용 저장 필드
+  },
   savedDeliveryInfo: {
     receiver: { type: String },
     phone: { type: String },
     address: { type: String },
     updatedAt: { type: Date },
   },
-  createdAt: { type: Date, default: Date.now }, // 생성일시
+  snsProvider: { type: String }, // kakao, google, etc
+  snsId: { type: String }, // ✅ 기존 필드 유지
+  createdAt: { type: Date, default: Date.now },
 });
 
-// 비밀번호 비교 메서드
+// ✅ 비밀번호 비교 메서드 (SNS 로그인 사용자는 password 없을 수 있음)
 UserSchema.methods.comparePassword = async function (candidate) {
+  if (!this.password) return false;
   return bcrypt.compare(candidate, this.password);
 };
 
-// 기존 모델이 있으면 재사용 (Hot Reload 방지)
+// ✅ 기존 모델이 있으면 재사용 (Hot Reload 방지)
 export default mongoose.models.User || mongoose.model("User", UserSchema);

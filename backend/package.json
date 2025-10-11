@@ -11,6 +11,7 @@
   "keywords": [],
   "dependencies": {
     "@faker-js/faker": "^9.9.0",
+    "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dayjs": "^1.11.18",
