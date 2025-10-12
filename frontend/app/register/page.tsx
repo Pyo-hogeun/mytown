@@ -118,6 +118,11 @@ export default function RegisterPage() {
         storeId: roleTemp === 'manager' ? selectedStore : undefined,
       });
       alert('회원가입 성공');
+      // 🚀 role이 rider면 rider 정보 입력 페이지로 이동
+      if (roleTemp === 'rider') {
+        router.push(`/rider/register?user=${encodeURIComponent(email)}`);
+        return;
+      }
       router.push('/login');
     } catch (error: any) {
       alert(error.response?.data?.message || '회원가입 실패');
