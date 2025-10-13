@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import axios from "axios";
 import User from '../models/user.js';
+import { authMiddleware } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -162,7 +163,7 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     // store populate 추가
-    const user = await User.findOne({ email }).populate("store");
+    const user = await User.findOne({ email }).select("+password").populate("store");
     if (!user)
       return res
         .status(401)
@@ -189,6 +190,8 @@ router.post('/login', async (req, res) => {
         role: user.role,
         // manager라면 store 전체 정보 응답
         store: user.role === "manager" ? user.store : null,
+        // rider라면, 라이더정보 응답
+        riderInfo: user.role === "rider" ? user.riderInfo : null,
       },
     });
   } catch (err) {
@@ -264,6 +267,17 @@ router.get("/kakao/callback", async (req, res) => {
       message: '카카오 로그인 실패',
       error: err.response?.data || err,
     });
+  }
+});
+
+router.get("/me", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate("store")
+      .lean();
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: "사용자 정보를 불러오지 못했습니다." });
   }
 });
 

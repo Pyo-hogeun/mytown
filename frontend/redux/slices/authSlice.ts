@@ -1,17 +1,31 @@
 // 🔐 인증 상태 (토큰 + 사용자 정보) 관리
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Store } from './storeSlice';
+import axios from '@/utils/axiosInstance';
+
+export interface RiderInfo {
+  deliveryArea: string; // 예: '강남구 역삼동'
+  settlementAccount: {
+    bankName: string;
+    accountNumber: string;
+    verified: boolean;
+  };
+  vehicleType: 'motorcycle' | 'car';
+}
 
 export interface User {
   id: string;
   name: string;
   role: 'admin' | 'user' | 'manager' | 'master' | 'rider' | null;
+  email: string;
   store?: Store;
+  riderInfo?: RiderInfo | null; // ✅ 라이더 정보 포함 (선택적)
 }
 
 interface AuthState {
   token: string | null;
   user: User | null;
+  loading: boolean;
 }
 
 const initialState: AuthState = {
@@ -19,7 +33,13 @@ const initialState: AuthState = {
   user: typeof window !== 'undefined'
     ? JSON.parse(localStorage.getItem('user') || 'null')
     : null,
+  loading: false,
 };
+// ✅ 현재 로그인 사용자 정보 재요청
+export const fetchCurrentUser = createAsyncThunk("auth/fetchCurrentUser", async () => {
+  const res = await axios.get("/auth/me");
+  return res.data; // 백엔드에서 user 정보 반환하도록 구현되어 있어야 함
+});
 
 const authSlice = createSlice({
   name: 'auth',
@@ -41,6 +61,19 @@ const authSlice = createSlice({
       state.user = null;
       localStorage.removeItem('user');
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchCurrentUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
+        state.user = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchCurrentUser.rejected, (state) => {
+        state.loading = false;
+      });
   },
 });
 

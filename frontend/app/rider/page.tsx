@@ -6,17 +6,25 @@ import AvailableOrdersPage from '@/app/rider/availableOrders/page';
 import RiderOrdersPage from '@/app/rider/order/page';
 import axios from '@/utils/axiosInstance';
 import Settlement from './settlement/page';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 
 const RiderHome = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const initialTab = (searchParams.get("tab") as 'available' | 'assigned' | 'settlement') || 'available';
 
   const [activeKey, setActiveKey] = useState<'available' | 'assigned' | 'settlement'>(initialTab);
   const [hasAssignedOrders, setHasAssignedOrders] = useState(false);
+  const user = useSelector((state: RootState) => state.auth.user);
 
   // 🚀 최초 로딩 시 배정된 주문 여부 확인
   useEffect(() => {
+    if (user && !user.riderInfo) {
+      router.push(`/rider/register?user=${encodeURIComponent(user?.email)}`);
+      return;
+    }
     const fetchAssignedOrders = async () => {
       try {
         const res = await axios.get('/order/rider/assigned');

@@ -5,9 +5,15 @@ import styled, { keyframes } from 'styled-components';
 import axios from '@/utils/axiosInstance';
 import { useRouter } from 'next/navigation';
 import Input from '../component/Input';
+import { Card } from '../component/Card';
+import Container from '../component/Container';
+import Button from '../component/Button';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/redux/store';
+import { fetchCurrentUser } from '@/redux/slices/authSlice';
 
 // 📌 스타일 정의
-const Container = styled.div`
+const CenterContainer = styled(Container)`
   position: fixed;
   display: flex;
   align-items: center;
@@ -20,7 +26,7 @@ const Container = styled.div`
   z-index: -1;
 `;
 
-const Button = styled.button`
+const StyledButton = styled(Button)`
   width: 100%;
   margin-top: 16px;
   padding: 12px;
@@ -29,15 +35,6 @@ const Button = styled.button`
   color: white;
   border: none;
   border-radius: 8px;
-`;
-
-const Card = styled.div`
-  background: #fff;
-  padding: 40px 32px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  width: 100%;
-  max-width: 400px;
 `;
 
 const spin = keyframes`
@@ -91,6 +88,7 @@ export default function RegisterPage() {
   const [stores, setStores] = useState<Store[]>([]);
   const [selectedStore, setSelectedStore] = useState('');
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
 
   // 📌 manager 선택 시 마트 목록 불러오기
   useEffect(() => {
@@ -119,10 +117,12 @@ export default function RegisterPage() {
       });
       alert('회원가입 성공');
       // 🚀 role이 rider면 rider 정보 입력 페이지로 이동
-      if (roleTemp === 'rider') {
-        router.push(`/rider/register?user=${encodeURIComponent(email)}`);
-        return;
-      }
+      // if (roleTemp === 'rider') {
+      //   // ✅ 사용자 정보 다시 불러오기
+      //   dispatch(fetchCurrentUser());
+      //   router.push(`/rider/register?user=${encodeURIComponent(email)}`);
+      //   return;
+      // }
       router.push('/login');
     } catch (error: any) {
       alert(error.response?.data?.message || '회원가입 실패');
@@ -130,7 +130,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <Container>
+    <CenterContainer>
       <Card>
         <h2>회원가입</h2>
         <Input placeholder="이름" value={name} onChange={(e) => setName(e.target.value)} />
@@ -169,8 +169,8 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <Button onClick={handleRegister}>회원가입</Button>
+        <StyledButton onClick={handleRegister}>회원가입</StyledButton>
       </Card>
-    </Container>
+    </CenterContainer>
   );
 }

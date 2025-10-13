@@ -76,7 +76,7 @@ const CartButton = styled.div`
 
 const Profile = () => {
   const dispatch = useDispatch();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const user = useSelector((state: RootState) => state.auth.user);
   // ✅ 애니메이션 트리거 상태
   const [animate, setAnimate] = useState(false);
   // 🛒 Redux에서 장바구니 아이템 개수 가져오기

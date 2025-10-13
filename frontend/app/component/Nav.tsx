@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from "next/dynamic";
 import Link from "next/link"
 import styled, { css, keyframes } from "styled-components"
 import Profile from "./Profile"
@@ -15,7 +16,7 @@ const Container = styled.div`
   }
 `;
 const Item = styled.li`
-  // list-style: none;
+  list-style: none;
 `;
 interface Menu {
   path: string;
@@ -36,7 +37,7 @@ const menus: Menu[] = [
 ];
 
 const Nav = () => {
-  const { user } = useSelector((state: RootState) => state.auth);
+  const user = useSelector((state: RootState) => state.auth.user);
   const role = user?.role ?? null;
   return (
     <Container>
@@ -53,4 +54,5 @@ const Nav = () => {
     </Container>
   );
 };
-export default Nav
+// ✅ dynamic import로 SSR 비활성화
+export default dynamic(() => Promise.resolve(Nav), { ssr: false });

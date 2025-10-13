@@ -32,6 +32,7 @@ const UserSchema = new mongoose.Schema({
     required: function () {
       return !this.snsId; // ✅ SNS 로그인 사용자는 비밀번호 불필요
     },
+    select: false, // ✅ 기본적으로 쿼리에서 제외
   },
   address: { type: String },
   phone: { type: String },
