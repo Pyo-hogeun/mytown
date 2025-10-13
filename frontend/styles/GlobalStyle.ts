@@ -12,6 +12,12 @@ const GlobalStyle = createGlobalStyle`
     text-decoration: none;
     color: inherit;
   }
+
+  ul{
+    li{
+      list-style: none;
+    }
+  }
 `;
 
 export default GlobalStyle;

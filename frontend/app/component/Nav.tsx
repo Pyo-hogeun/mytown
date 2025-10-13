@@ -15,7 +15,7 @@ const Container = styled.div`
   }
 `;
 const Item = styled.li`
-  list-style: none;
+  // list-style: none;
 `;
 interface Menu {
   path: string;

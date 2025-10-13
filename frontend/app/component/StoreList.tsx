@@ -1,8 +1,10 @@
 'use client';
 
+import { fetchStores } from '@/redux/slices/storeSlice';
+import { AppDispatch, RootState } from '@/redux/store';
 import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { fetchStores, Store } from '@/utils/api/stores';
 
 const Table = styled.table`
   width: 100%;
@@ -22,22 +24,13 @@ const Td = styled.td`
 `;
 
 const StoreList: React.FC = () => {
-  const [stores, setStores] = useState<Store[]>([]);
-  const [loading, setLoading] = useState(true);
+  // const [stores, setStores] = useState<Store[]>([]);
+  const dispatch = useDispatch<AppDispatch>();
+  const {items: stores, loading} = useSelector((state:RootState)=> state.store)
 
   useEffect(() => {
-    const loadStores = async () => {
-      try {
-        const data = await fetchStores();
-        setStores(data);
-      } catch (err) {
-        console.error('스토어 조회 실패:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadStores();
-  }, []);
+    dispatch(fetchStores())
+  }, [dispatch]);
 
   if (loading) return <p>불러오는 중...</p>;
 
