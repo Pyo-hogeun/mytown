@@ -9,7 +9,14 @@ import { faker } from "@faker-js/faker";
 
 const router = express.Router();
 /**
- * @openapi
+ * @swagger
+ * tags:
+ *   name: Order
+ *   description: 주문 관련 API
+ */
+
+/**
+ * @swagger
  * /order:
  *   post:
  *     summary: 주문 생성
@@ -31,71 +38,42 @@ const router = express.Router();
  *             properties:
  *               items:
  *                 type: array
- *                 description: 주문할 상품 목록
  *                 items:
  *                   type: object
  *                   properties:
  *                     product:
  *                       type: string
  *                       description: 상품 ID
+ *                     store:
+ *                       type: string
+ *                       description: 스토어 ID
  *                     quantity:
  *                       type: integer
- *                       description: 수량
+ *                     unitPrice:
+ *                       type: number
+ *                     optionId:
+ *                       type: string
  *               receiver:
  *                 type: string
- *                 description: 수령인 이름
  *               phone:
  *                 type: string
- *                 description: 수령인 연락처
  *               address:
  *                 type: string
- *                 description: 배송지 주소
  *               deliveryTime:
  *                 type: string
- *                 format: date-time
- *                 description: 요청 배송 시간 (선택)
  *               paymentMethod:
  *                 type: string
- *                 enum: [pending, accepted, delivering, completed, cancelled]
- *                 description: 결제 수단
- *                 
+ *                 enum: [card, kakao, naver]
+ *               rememberDelivery:
+ *                 type: boolean
  *     responses:
  *       200:
  *         description: 스토어별 주문 생성 성공
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                 orders:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       orderId:
- *                         type: string
- *                       store:
- *                         type: string
- *                       totalPrice:
- *                         type: number
- *                       receiver:
- *                         type: string
- *                       phone:
- *                         type: string
- *                       address:
- *                         type: string
- *                       deliveryTime:
- *                         type: string
- *                 cart:
- *                   type: object
  *       400:
- *         description: 요청 데이터 오류 (상품이나 배송정보 누락 등)
+ *         description: 요청 데이터 오류
  *       500:
  *         description: 서버 오류
  */
-// ✅ 주문 생성 (프론트에서 전달된 합산값 그대로 사용)
 router.post("/", authMiddleware, async (req, res) => {
   try {
     const {
@@ -244,7 +222,7 @@ router.post("/", authMiddleware, async (req, res) => {
 
 
 /**
- * @openapi
+ * @swagger
  * /order:
  *   get:
  *     summary: 내 주문 목록 조회
@@ -254,15 +232,6 @@ router.post("/", authMiddleware, async (req, res) => {
  *     responses:
  *       200:
  *         description: 주문 목록 반환
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 orders:
- *                   type: array
- *                   items:
- *                     type: object
  *       500:
  *         description: 주문 조회 실패
  */
@@ -283,7 +252,7 @@ router.get("/", authMiddleware, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /order/manager:
  *   get:
  *     summary: 매니저 전용 주문 목록 조회
@@ -295,13 +264,20 @@ router.get("/", authMiddleware, async (req, res) => {
  *         name: user
  *         schema:
  *           type: string
- *         required: false
  *         description: 특정 사용자 ID로 필터링
+ *       - in: query
+ *         name: userName
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: phone
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: 매니저가 자신의 매장 주문 목록 반환
+ *         description: 매니저 주문 목록 반환
  *       403:
- *         description: 접근 권한 없음 (매니저 전용)
+ *         description: 접근 권한 없음
  *       500:
  *         description: 주문 조회 실패
  */
@@ -346,7 +322,7 @@ router.get("/manager", authMiddleware, async (req, res) => {
 
 
 /**
- * @openapi
+ * @swagger
  * /order/{orderId}:
  *   get:
  *     summary: 특정 주문 상세 조회
@@ -356,17 +332,13 @@ router.get("/manager", authMiddleware, async (req, res) => {
  *     parameters:
  *       - in: path
  *         name: orderId
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
  *         description: 주문 ID
  *     responses:
  *       200:
  *         description: 주문 상세 정보 반환
- *         content:
- *           application/json:
- *             schema:
- *               type: object
  *       404:
  *         description: 주문을 찾을 수 없음
  *       500:
@@ -407,15 +379,14 @@ router.get("/:orderId", authMiddleware, async (req, res) => {
 });
 
 /**
- * @openapi
+ * @swagger
  * /order/{id}/cancel:
  *   patch:
  *     summary: 주문 취소
- *     description: 로그인한 사용자가 본인의 주문을 취소합니다. 배송 중(`delivering`) 또는 완료(`completed`) 상태인 주문은 취소할 수 없습니다.
- *     tags:
- *       - Order
+ *     description: 로그인한 사용자가 본인의 주문을 취소합니다. 배송 중(`delivering`) 또는 완료(`completed`) 상태는 취소 불가.
+ *     tags: [Order]
  *     security:
- *       - bearerAuth: []   # JWT 인증 필요
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -426,46 +397,8 @@ router.get("/:orderId", authMiddleware, async (req, res) => {
  *     responses:
  *       200:
  *         description: 주문 취소 성공
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 order:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                       example: 64d1234abc5678ef90123456
- *                     status:
- *                       type: string
- *                       example: cancelled
- *                     totalPrice:
- *                       type: number
- *                       example: 32000
- *                     receiver:
- *                       type: string
- *                       example: 홍길동
- *                     phone:
- *                       type: string
- *                       example: "010-1234-5678"
- *                     address:
- *                       type: string
- *                       example: "서울특별시 강남구 테헤란로 123"
- *                     deliveryTime:
- *                       type: object
- *                       properties:
- *                         day:
- *                           type: string
- *                           example: "월요일"
- *                         time:
- *                           type: string
- *                           example: "14:30"
  *       400:
- *         description: 취소 불가 (배송 중/완료된 주문)
+ *         description: 취소 불가 (배송 중/완료)
  *       403:
  *         description: 다른 사용자의 주문
  *       404:
@@ -506,13 +439,11 @@ router.patch("/:id/cancel", authMiddleware, async (req, res) => {
 
 
 /**
- * @openapi
+ * @swagger
  * /order/{id}/status:
  *   patch:
  *     summary: 주문 상태 변경 (매니저 전용)
- *     description: 매니저가 해당 매장의 주문 상태를 변경합니다.
- *     tags:
- *       - Order
+ *     tags: [Order]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -521,7 +452,7 @@ router.patch("/:id/cancel", authMiddleware, async (req, res) => {
  *         required: true
  *         schema:
  *           type: string
- *         description: 상태를 변경할 주문 ID
+ *         description: 주문 ID
  *     requestBody:
  *       required: true
  *       content:
@@ -531,7 +462,7 @@ router.patch("/:id/cancel", authMiddleware, async (req, res) => {
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [pending, accepted, delivering, completed]
+ *                 enum: [pending, accepted, assigned, delivering, completed, cancelled]
  *     responses:
  *       200:
  *         description: 상태 변경 성공
@@ -574,7 +505,23 @@ router.patch("/:id/status", authMiddleware, async (req, res) => {
   }
 });
 
-// GET /api/orders/rider/available
+/**
+ * @swagger
+ * /order/rider/available:
+ *   get:
+ *     summary: 라이더 - 배정 가능한 주문 목록
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 배정 가능한 주문 목록 반환
+ *       403:
+ *         description: 라이더 전용 접근
+ *       500:
+ *         description: 서버 오류
+ */
+
 router.get("/rider/available", authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== "rider") {
@@ -593,7 +540,31 @@ router.get("/rider/available", authMiddleware, async (req, res) => {
   }
 });
 
-// POST /api/orders/rider/:orderId/assign
+/**
+ * @swagger
+ * /order/rider/{orderId}/assign:
+ *   post:
+ *     summary: 라이더 - 주문 배정하기
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 배정할 주문 ID
+ *     responses:
+ *       200:
+ *         description: 주문 배정 완료
+ *       400:
+ *         description: 이미 배정된 주문
+ *       403:
+ *         description: 라이더 전용 접근
+ *       500:
+ *         description: 서버 오류
+ */
 router.post("/rider/:orderId/assign", authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== "rider") {
@@ -620,7 +591,22 @@ router.post("/rider/:orderId/assign", authMiddleware, async (req, res) => {
   }
 });
 
-// GET /api/orders/rider/assigned
+/**
+ * @swagger
+ * /order/rider/assigned:
+ *   get:
+ *     summary: 라이더 - 배정된 주문 목록
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 배정된 주문 목록 반환
+ *       403:
+ *         description: 라이더 전용 접근
+ *       500:
+ *         description: 서버 오류
+ */
 router.get("/rider/assigned", authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== "rider") {
@@ -641,7 +627,22 @@ router.get("/rider/assigned", authMiddleware, async (req, res) => {
   }
 });
 
-// GET /api/orders/rider/completed
+/**
+ * @swagger
+ * /order/rider/completed:
+ *   get:
+ *     summary: 라이더 - 완료된 주문 목록
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 완료된 주문 목록 반환
+ *       403:
+ *         description: 라이더 전용 접근
+ *       500:
+ *         description: 서버 오류
+ */
 router.get("/rider/completed", authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== "rider") {
@@ -661,6 +662,44 @@ router.get("/rider/completed", authMiddleware, async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 });
+
+/**
+ * @swagger
+ * /order/rider/{id}/status:
+ *   patch:
+ *     summary: 라이더 - 주문 상태 변경
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 상태 변경할 주문 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [assigned, delivering, completed]
+ *     responses:
+ *       200:
+ *         description: 상태 변경 성공
+ *       400:
+ *         description: 잘못된 상태 값
+ *       403:
+ *         description: 라이더 전용 접근
+ *       404:
+ *         description: 주문 없음
+ *       500:
+ *         description: 서버 오류
+ */
 
 // 라이더 전용 상태 변경
 router.patch("/rider/:id/status", authMiddleware, async (req, res) => {
@@ -701,7 +740,18 @@ router.patch("/rider/:id/status", authMiddleware, async (req, res) => {
 });
 
 
-
+/**
+ * @swagger
+ * /order/seed:
+ *   post:
+ *     summary: 개발용 - 랜덤 주문 100개 생성
+ *     tags: [Order]
+ *     responses:
+ *       200:
+ *         description: 랜덤 주문 생성 완료
+ *       500:
+ *         description: 시드 데이터 생성 오류
+ */
 
 // ✅ 개발용 - 랜덤 주문 100개 생성 (1회 실행 후 제거 권장)
 router.post("/seed", async (req, res) => {

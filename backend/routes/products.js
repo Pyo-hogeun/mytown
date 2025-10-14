@@ -156,6 +156,85 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: '전체 상품 조회 실패', error: err.message });
   }
 });
+/**
+ * @openapi
+ * /products/{id}:
+ *   get:
+ *     summary: 특정 상품 조회
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 조회할 상품의 ID
+ *     responses:
+ *       200:
+ *         description: 상품 상세 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                   example: "64d1234abc5678ef90123456"
+ *                 store:
+ *                   type: string
+ *                   example: "64c1234abc1234def5678901"
+ *                 storeName:
+ *                   type: string
+ *                   example: "우리마트"
+ *                 name:
+ *                   type: string
+ *                   example: "우유 1L"
+ *                 price:
+ *                   type: number
+ *                   example: 2800
+ *                 stockQty:
+ *                   type: number
+ *                   example: 120
+ *                 imageUrl:
+ *                   type: string
+ *                   example: "https://cdn.example.com/products/abc.jpg"
+ *                 options:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       extraPrice:
+ *                         type: number
+ *                       stockQty:
+ *                         type: number
+ *                 status:
+ *                   type: string
+ *                   enum: [draft, published, hidden]
+ *                 featured:
+ *                   type: boolean
+ *                 priority:
+ *                   type: number
+ *                 visibleFrom:
+ *                   type: string
+ *                   format: date-time
+ *                 visibleTo:
+ *                   type: string
+ *                   format: date-time
+ *                 channels:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       404:
+ *         description: 상품을 찾을 수 없습니다.
+ *       500:
+ *         description: 서버 오류
+ */
+
+
 // 특정 상품 조회
 router.get('/:id', async (req, res) => {
   try {

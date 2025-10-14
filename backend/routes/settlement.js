@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 const router = express.Router();
 
 /**
- * @swagger
+ * @openapi
  * /api/settlement/rider:
  *   get:
  *     summary: 로그인한 라이더의 정산 내역 조회
@@ -48,10 +48,12 @@ const router = express.Router();
  */
 router.get("/rider", authMiddleware, async (req, res) => {
   try {
+    // ✅ 로그인한 사용자가 rider인지 검증
     if (req.user.role !== "rider") {
       return res.status(403).json({ message: "라이더만 접근 가능합니다." });
     }
 
+    // ✅ 본인 정산 내역 조회
     const settlements = await Settlement.find({ rider: req.user._id })
       .sort({ weekStart: -1 });
 
@@ -62,7 +64,20 @@ router.get("/rider", authMiddleware, async (req, res) => {
   }
 });
 
-// 관리자 정산 목록 조회
+/**
+ * @openapi
+ * /api/settlement/manage:
+ *   get:
+ *     summary: 관리자 정산 목록 조회
+ *     tags: [Settlement]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 관리자용 정산 목록 반환
+ *       403:
+ *         description: 관리자 전용 접근 제한
+ */
 router.get("/manage", authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== "admin") {
@@ -81,7 +96,7 @@ router.get("/manage", authMiddleware, async (req, res) => {
 });
 
 /**
- * @swagger
+ * @openapi
  * /api/settlement/{id}:
  *   get:
  *     summary: 특정 정산 상세 조회 (라이더 전용)
@@ -98,53 +113,6 @@ router.get("/manage", authMiddleware, async (req, res) => {
  *     responses:
  *       200:
  *         description: 정산 상세 조회 성공
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 settlement:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                     rider:
- *                       type: object
- *                       properties:
- *                         _id:
- *                           type: string
- *                         name:
- *                           type: string
- *                     weekStart:
- *                       type: string
- *                       format: date
- *                     weekEnd:
- *                       type: string
- *                       format: date
- *                     totalLength:
- *                       type: number
- *                     commission:
- *                       type: number
- *                     status:
- *                       type: string
- *                       enum: [pending, paid]
- *                     orders:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           _id:
- *                             type: string
- *                           totalPrice:
- *                             type: number
- *                           store:
- *                             type: object
- *                             properties:
- *                               name:
- *                                 type: string
- *                           completedAt:
- *                             type: string
- *                             format: date-time
  *       403:
  *         description: 라이더만 접근 가능
  *       404:
@@ -158,6 +126,7 @@ router.get("/:id", authMiddleware, async (req, res) => {
 
     const { id } = req.params;
 
+    // ✅ rider 본인 것만 조회
     const settlement = await Settlement.findOne({
       _id: id,
       rider: req.user._id,
@@ -180,7 +149,7 @@ router.get("/:id", authMiddleware, async (req, res) => {
 });
 
 /**
- * @swagger
+ * @openapi
  * /api/settlement/{id}/pay:
  *   patch:
  *     summary: 특정 정산 지급 완료 처리 (관리자 전용)
@@ -227,7 +196,7 @@ router.patch("/:id/pay", authMiddleware, async (req, res) => {
 });
 
 /**
- * @swagger
+ * @openapi
  * /api/settlement/manual:
  *   post:
  *     summary: 특정 주차 정산 수동 생성 (관리자 전용)
@@ -271,10 +240,10 @@ router.post("/manual", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "weekStart, weekEnd 값이 필요합니다." });
     }
     
-    // ✅ 기존 정산 삭제 (재생성 지원)
+    // ✅ 기존 동일 주차 정산 삭제 후 재생성
     await Settlement.deleteMany({ weekStart, weekEnd });
     
-    // ✅ 완료된 주문 조회
+    // ✅ 해당 기간 완료 주문 조회
     const completedOrders = await Order.find({
       status: "completed",
       completedAt: {
@@ -287,7 +256,7 @@ router.post("/manual", authMiddleware, async (req, res) => {
       return res.json({ message: "해당 기간에 완료된 주문이 없습니다." });
     }
 
-    // ✅ 라이더별 그룹핑
+    // ✅ 라이더별 그룹화
     const riderMap = new Map();
     completedOrders.forEach((order) => {
       if (!order.assignedRider) return;
@@ -302,14 +271,14 @@ router.post("/manual", authMiddleware, async (req, res) => {
     const settlements = [];
     for (const [riderId, orders] of riderMap.entries()) {
       const totalLength = orders.length;
-      const commission = totalLength * 3000; // 고정 3천원
+      const commission = totalLength * 3000; // 건당 3,000원
 
       const settlement = new Settlement({
         rider: riderId,
         weekStart: dayjs(weekStart).toDate(),
         weekEnd: dayjs(weekEnd).toDate(),
-        totalLength,  // ✅ 주문 총 건수
-        commission,   // ✅ 정산 수수료 총 합계
+        totalLength,
+        commission,
         status: "pending",
       });
 

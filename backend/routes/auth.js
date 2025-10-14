@@ -10,16 +10,65 @@ const router = express.Router();
 
 /**
  * @openapi
+ * components:
+ *   schemas:
+ *     RiderInfo:
+ *       type: object
+ *       required:
+ *         - deliveryArea
+ *         - settlementAccount
+ *         - vehicleType
+ *       properties:
+ *         deliveryArea:
+ *           type: string
+ *           example: "강남구 역삼동"
+ *         settlementAccount:
+ *           type: object
+ *           properties:
+ *             bankName:
+ *               type: string
+ *               example: "국민은행"
+ *             accountNumber:
+ *               type: string
+ *               example: "123456-78-901234"
+ *             verified:
+ *               type: boolean
+ *               example: true
+ *         vehicleType:
+ *           type: string
+ *           enum: [motorcycle, car]
+ *           example: motorcycle
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: "650abcd1234ef567890abcd1"
+ *         name:
+ *           type: string
+ *           example: "홍길동"
+ *         email:
+ *           type: string
+ *           example: "hong@test.com"
+ *         role:
+ *           type: string
+ *           enum: [user, admin, master, manager, rider]
+ *         store:
+ *           type: string
+ *           example: "64c1234abc1234def5678901"
+ *         riderInfo:
+ *           $ref: "#/components/schemas/RiderInfo"
+ */
+
+
+
+/**
+ * @openapi
  * /auth/register:
  *   post:
  *     summary: 회원가입
- *     description: |
- *       새 사용자를 등록합니다.  
- *       - 기본 `role`은 `user`입니다.  
- *       - `roleTemp`가 `admin`인 경우, 관리자 코드(`ADMIN_SIGNUP_CODE`)와 일치하면 `admin`으로 가입할 수 있습니다.  
- *       - `roleTemp`가 `manager`인 경우, 반드시 `storeId` 필드를 포함해야 하며 **하나의 매장(store)만 연결**됩니다.  
- *     tags:
- *       - Auth
+ *     tags: [Auth]
+ *     description: 사용자 또는 관리자/라이더를 등록합니다.
  *     requestBody:
  *       required: true
  *       content:
@@ -30,11 +79,10 @@ const router = express.Router();
  *               - email
  *               - password
  *               - name
- *               - roleTemp
  *             properties:
  *               email:
  *                 type: string
- *                 example: test@example.com
+ *                 example: user@test.com
  *               password:
  *                 type: string
  *                 example: "123456"
@@ -44,44 +92,24 @@ const router = express.Router();
  *               roleTemp:
  *                 type: string
  *                 enum: [user, manager, admin, rider, master]
- *                 example: user
+ *                 example: rider
  *               roleCode:
  *                 type: string
- *                 description: 관리자 가입 시 필요한 코드
- *                 example: "ADMIN_SECRET_CODE"
+ *                 description: 관리자 가입 시 필요
+ *                 example: ADMIN_SECRET_CODE
  *               storeId:
  *                 type: string
- *                 description: |
- *                   `roleTemp`가 `manager`일 때 **필수**입니다.  
- *                   선택한 마트(Store)의 `_id` 값을 전달해야 하며, 하나만 연결할 수 있습니다.
- *                 example: "64c1234abc1234def5678901"
+ *                 description: manager 가입 시 필요
  *     responses:
  *       201:
  *         description: 회원가입 성공
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                   example: 650abcd1234ef567890abcd1
- *                 email:
- *                   type: string
- *                   example: test@example.com
- *                 name:
- *                   type: string
- *                   example: 홍길동
- *                 role:
- *                   type: string
- *                   example: manager
- *                 store:
- *                   type: string
- *                   example: 64c1234abc1234def5678901
+ *               $ref: "#/components/schemas/User"
  *       400:
  *         description: 회원가입 실패
  */
-
 router.post('/register', async (req, res) => {
   try {
     const { email, password, name, roleCode, roleTemp, storeId } = req.body;
@@ -131,9 +159,8 @@ router.post('/register', async (req, res) => {
  * /auth/login:
  *   post:
  *     summary: 로그인
- *     description: 사용자 로그인 후 JWT 토큰을 발급합니다. JWT payload에는 `{ id, email, role, store }`가 포함됩니다.
- *     tags:
- *       - Auth
+ *     tags: [Auth]
+ *     description: 이메일/비밀번호로 로그인하여 JWT 토큰을 발급받습니다.
  *     requestBody:
  *       required: true
  *       content:
@@ -152,11 +179,19 @@ router.post('/register', async (req, res) => {
  *                 example: "123456"
  *     responses:
  *       200:
- *         description: 로그인 성공, JWT 토큰 발급
+ *         description: 로그인 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 user:
+ *                   $ref: "#/components/schemas/User"
  *       401:
- *         description: 인증 실패 (이메일 또는 비밀번호 오류)
- *       500:
- *         description: 서버 오류
+ *         description: 이메일 또는 비밀번호 오류
  */
 router.post('/login', async (req, res) => {
   try {
@@ -198,6 +233,37 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: '로그인 실패', error: err.message });
   }
 });
+
+/**
+ * @openapi
+ * /auth/kakao/callback:
+ *   get:
+ *     summary: 카카오 로그인 콜백
+ *     tags: [Auth]
+ *     description: 카카오 인증 후 사용자 정보를 받아 JWT 토큰을 발급합니다.
+ *     parameters:
+ *       - in: query
+ *         name: code
+ *         required: true
+ *         description: 카카오에서 전달한 인가 코드
+ *         schema:
+ *           type: string
+ *           example: "abc1234xyz"
+ *     responses:
+ *       200:
+ *         description: 카카오 로그인 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   $ref: "#/components/schemas/User"
+ *       500:
+ *         description: 카카오 로그인 실패
+ */
 
 router.get("/kakao/callback", async (req, res) => {
   console.log('key: ', process.env.KAKAO_REST_KEY, process.env.KAKAO_REDIRECT_URI)
@@ -269,6 +335,26 @@ router.get("/kakao/callback", async (req, res) => {
     });
   }
 });
+
+/**
+ * @openapi
+ * /auth/me:
+ *   get:
+ *     summary: 내 정보 조회
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 사용자 정보 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/User"
+ *       500:
+ *         description: 사용자 정보를 불러오지 못했습니다.
+ */
+
 
 router.get("/me", authMiddleware, async (req, res) => {
   try {
