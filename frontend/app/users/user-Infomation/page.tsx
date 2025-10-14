@@ -93,7 +93,7 @@ const UserInfomation = () => {
             <StyledLink href="/">연락처 관리</StyledLink>
           </li>
           <li>
-            <StyledLink href="/">비밀번호 변경</StyledLink>
+            <StyledLink href="/users/change-password">비밀번호 변경</StyledLink>
           </li>
         </List>
       </Card>

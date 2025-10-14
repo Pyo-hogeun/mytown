@@ -367,5 +367,63 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/auth/password:
+ *   patch:
+ *     summary: 로그인된 사용자의 비밀번호 변경
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: 비밀번호 변경 성공
+ *       400:
+ *         description: 현재 비밀번호가 올바르지 않음
+ *       401:
+ *         description: 인증 필요
+ */
+router.patch("/password", authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword)
+      return res.status(400).json({ message: "필수 입력값 누락" });
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "사용자 없음" });
+
+    if (user.snsProvider)
+      return res.status(400).json({ message: "SNS 계정은 비밀번호 변경이 불가합니다." });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch)
+      return res.status(400).json({ message: "현재 비밀번호가 올바르지 않습니다." });
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.json({ message: "비밀번호 변경 완료" });
+  } catch (err) {
+    console.error("비밀번호 변경 오류:", err);
+    res.status(500).json({ message: "비밀번호 변경 실패" });
+  }
+});
+
 
 export default router;
