@@ -62,6 +62,20 @@ router.get("/", async (req, res) => {
   }
 });
 
+//특정 사용자 정보 조회
+router.get("/:id", async (req, res) => {
+  console.log('req.params.id:', req.params.id);
+  try {
+    const user = await User.findOne({_id: req.params.id})
+
+    res.json(user);
+
+  } catch (error) {
+    console.error('user read:', error);
+    res.status(500).json({ message: 'user read error' });
+  }
+})
+
 /**
  * @swagger
  * /users/{id}/role:

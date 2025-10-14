@@ -118,7 +118,7 @@ const Profile = () => {
             <Store>{user.store?.name} 🛒</Store> :
             false}
 
-          <Name>{user.name}</Name>
+          <Name><Link href={`/users/user-Infomation?id=${user.id}`}>{user.name}</Link></Name>
           <Role>{user.role}</Role>
           <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
         </>
