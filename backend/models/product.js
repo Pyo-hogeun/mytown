@@ -33,6 +33,9 @@ const ProductSchema = new Schema(
     stockQty: { type: Number, default: 0, min: 0 },
     imageUrl: { type: String, default: "" },
 
+    // ✅ 상품 상세 설명 (에디터 내용)
+    description: { type: String, default: "" },
+
     // 옵션 목록
     options: { type: [optionSchema], default: [] },
 

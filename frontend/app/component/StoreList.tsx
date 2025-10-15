@@ -2,6 +2,7 @@
 
 import { fetchStores } from '@/redux/slices/storeSlice';
 import { AppDispatch, RootState } from '@/redux/store';
+import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -52,7 +53,7 @@ const StoreList: React.FC = () => {
           <tbody>
             {stores.map((store) => (
               <tr key={store._id}>
-                <Td>{store.name}</Td>
+                <Td><Link href={`/products?storeId=${store._id}&storeName=${store.name}`}>{store.name}</Link></Td>
                 <Td>{store.address}</Td>
                 <Td>{store.phone}</Td>
                 <Td>{new Date(store.createdAt).toLocaleDateString()}</Td>

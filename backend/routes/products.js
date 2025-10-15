@@ -82,7 +82,8 @@ router.post('/', async (req, res) => {
   try {
     const {
       storeId, storeName, name, price, stockQty, imageUrl, options,
-      status, featured, priority, visibleFrom, visibleTo, channels
+      status, featured, priority, visibleFrom, visibleTo, channels,
+      description // ✅ 추가
     } = req.body;
 
     const product = new Product({
@@ -99,6 +100,7 @@ router.post('/', async (req, res) => {
       visibleFrom,
       visibleTo,
       channels,
+      description, // ✅ 추가
     });
 
     await product.save();

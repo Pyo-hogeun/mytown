@@ -1,7 +1,7 @@
 'use client';
 
 import styled from 'styled-components';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import axios from '@/utils/axiosInstance';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/redux/store';
@@ -10,6 +10,7 @@ import { useRequireLogin } from '../hooks/useRequireLogin';
 import { addToCart } from '@/redux/slices/cartSlice';
 import Container from '../component/Container';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 const Title = styled.h1`
   font-size: 24px;
@@ -107,18 +108,12 @@ const Badge = styled.span`
 
 const ProductListPage = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { requireLogin } = useRequireLogin();
+  const searchParams = useSearchParams();
   const products = useSelector((state: RootState) => state.product.items);
   const user = useSelector((state: RootState) => state.auth.user);
-  // const handleAddToCart = (productId: string) => {
-  //   requireLogin(() => {
-  //     if (user?.role === "user") {
-  //       dispatch(addToCart({ productId }));
-  //     } else {
-  //       alert("관리자는 장바구니를 사용할 수 없습니다.");
-  //     }
-  //   });
-  // };
+  const storeId = searchParams.get("storeId");
+  const storeName = searchParams.get("storeName");
+
 
   // ✅ 권한이 있는 역할들을 배열로 정의
   const allowedRoles = ['master', 'admin', 'manager'];
@@ -138,6 +133,9 @@ const ProductListPage = () => {
       // 매니저라면 첫 번째 store 기준으로 상품 목록 조회
       url = `/products/store/${user?.store?._id}`;
     }
+    if (storeId) {
+      url = `/products/store/${storeId}`;
+    }
 
     axios.get(url)
       .then((res) => dispatch(setProducts(res.data)))
@@ -147,6 +145,7 @@ const ProductListPage = () => {
   return (
     <Container>
       <Title>🛒 오늘의 상품</Title>
+      <h3>{storeName}의 상품</h3>
       <Grid>
         {products.length > 0 ?
           products.map((product) => (
