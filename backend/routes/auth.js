@@ -400,22 +400,26 @@ router.get("/me", authMiddleware, async (req, res) => {
 router.patch("/password", authMiddleware, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
+    console.log('🔍 req.user:', req.user);
+    // ✅ 비밀번호 변경 시에만 password 필드 포함해서 조회
+    const user = await User.findById(req.user._id).select('+password');
 
-    if (!currentPassword || !newPassword)
-      return res.status(400).json({ message: "필수 입력값 누락" });
-
-    const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "사용자 없음" });
 
     if (user.snsProvider)
       return res.status(400).json({ message: "SNS 계정은 비밀번호 변경이 불가합니다." });
 
+    if (!user.password) {
+      return res.status(400).json({ message: '비밀번호 정보가 없습니다.' });
+    }
+
+
+
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch)
       return res.status(400).json({ message: "현재 비밀번호가 올바르지 않습니다." });
 
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(newPassword, salt);
+    user.password = newPassword
     await user.save();
 
     res.json({ message: "비밀번호 변경 완료" });

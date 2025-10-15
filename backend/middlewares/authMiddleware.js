@@ -4,14 +4,13 @@ import jwt from 'jsonwebtoken';
 import User from '../models/user.js'; // ESM에서는 파일 확장자 명시 필요
 
 export const authMiddleware = async (req, res, next) => {
-  const authHeader = req.header("Authorization");
-  if (!authHeader) {
-    return res.status(401).json({ message: "인증 토큰이 없습니다." });
-  }
-
-  const token = authHeader.replace("Bearer ", "");
-
   try {
+    const authHeader = req.header("Authorization");
+    if (!authHeader) {
+      return res.status(401).json({ message: "인증 토큰이 없습니다." });
+    }
+  
+    const token = authHeader.replace("Bearer ", "");
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // ✅ DB에서 유저 조회

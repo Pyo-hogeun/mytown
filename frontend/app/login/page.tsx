@@ -143,12 +143,7 @@ const LoginPage = () => {
         <Button onClick={handleLogin} loading={loading} disabled={loading}>
           {loading ? <Spinner /> : "로그인"}
         </Button>
-        <br />
-        <br />
         <hr />
-        <br />
-        <br />
-
         <KakaoLoginButton />
       </Card>
     </Container>

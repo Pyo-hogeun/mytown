@@ -7,6 +7,8 @@ import Container from '@/app/component/Container';
 import { Card } from '@/app/component/Card';
 import Button from '@/app/component/Button';
 import Input from '@/app/component/Input';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const Title = styled.h2`
   margin-bottom: 1.5em;
@@ -17,9 +19,13 @@ const Form = styled.form`
   flex-direction: column;
   gap: 1em;
 `;
-
+const FormList = styled.ul`
+  padding: 0;
+`
 const Label = styled.label`
+  display: block;
   font-weight: 600;
+  margin-bottom: 0.2em;
 `;
 
 const StyledButton = styled(Button)`
@@ -31,6 +37,10 @@ const StyledButton = styled(Button)`
   color: white;
   border: none;
   border-radius: 8px;
+  &:disabled{
+    cursor: default;
+    opacity: 0.3;
+  }
 `;
 
 const ErrorMessage = styled.p`
@@ -46,6 +56,7 @@ const SuccessMessage = styled.p`
 `;
 
 const ChangePasswordPage = () => {
+  const router = useRouter();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -118,43 +129,52 @@ const ChangePasswordPage = () => {
   return (
     <Container>
       <Card>
+        <Button onClick={()=>router.back()}>&lt; 뒤로</Button>
         <Title>비밀번호 변경</Title>
         <Form onSubmit={handleSubmit}>
-          <Label>현재 비밀번호</Label>
-          <Input
-            type="password"
-            value={currentPassword}
-            onChange={(e) => {
-              setCurrentPassword(e.target.value);
-              validate('currentPassword', e.target.value);
-            }}
-          />
-          {errors.currentPassword && <ErrorMessage>{errors.currentPassword}</ErrorMessage>}
+          <FormList>
+            <li>
+              <Label>현재 비밀번호</Label>
+              <Input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => {
+                  setCurrentPassword(e.target.value);
+                  validate('currentPassword', e.target.value);
+                }}
+              />
+              {errors.currentPassword && <ErrorMessage>{errors.currentPassword}</ErrorMessage>}
+            </li>
+            <li>
+              <Label>새 비밀번호</Label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => {
+                  setNewPassword(e.target.value);
+                  validate('newPassword', e.target.value);
+                }}
+              />
+              {errors.newPassword && <ErrorMessage>{errors.newPassword}</ErrorMessage>}
+            </li>
+            <li>
+              <Label>새 비밀번호 확인</Label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  validate('confirmPassword', e.target.value);
+                }}
+              />
+              {errors.confirmPassword && <ErrorMessage>{errors.confirmPassword}</ErrorMessage>}
 
-          <Label>새 비밀번호</Label>
-          <Input
-            type="password"
-            value={newPassword}
-            onChange={(e) => {
-              setNewPassword(e.target.value);
-              validate('newPassword', e.target.value);
-            }}
-          />
-          {errors.newPassword && <ErrorMessage>{errors.newPassword}</ErrorMessage>}
+              {errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
+              {success && <SuccessMessage>{success}</SuccessMessage>}
+            </li>
+          </FormList>
 
-          <Label>새 비밀번호 확인</Label>
-          <Input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => {
-              setConfirmPassword(e.target.value);
-              validate('confirmPassword', e.target.value);
-            }}
-          />
-          {errors.confirmPassword && <ErrorMessage>{errors.confirmPassword}</ErrorMessage>}
 
-          {errors.submit && <ErrorMessage>{errors.submit}</ErrorMessage>}
-          {success && <SuccessMessage>{success}</SuccessMessage>}
 
           <StyledButton type="submit" disabled={loading}>
             {loading ? '변경 중...' : '비밀번호 변경'}

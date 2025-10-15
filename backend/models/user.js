@@ -70,5 +70,13 @@ UserSchema.methods.comparePassword = async function (candidate) {
   return bcrypt.compare(candidate, this.password);
 };
 
+// 비밀번호 해싱 (save 훅 예시)
+UserSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
 // ✅ 기존 모델이 있으면 재사용 (Hot Reload 방지)
 export default mongoose.models.User || mongoose.model("User", UserSchema);

@@ -92,9 +92,12 @@ const UserInfomation = () => {
           <li>
             <StyledLink href="/">연락처 관리</StyledLink>
           </li>
-          <li>
-            <StyledLink href="/users/change-password">비밀번호 변경</StyledLink>
-          </li>
+          {
+            !userInfo?.snsProvider &&
+            <li>
+              <StyledLink href="/users/change-password">비밀번호 변경</StyledLink>
+            </li>
+          }
         </List>
       </Card>
 

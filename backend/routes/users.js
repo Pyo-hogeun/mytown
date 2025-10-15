@@ -54,7 +54,7 @@ router.get("/", async (req, res) => {
     if (phone) filter.phone = new RegExp(phone, "i");
     if (address) filter.address = new RegExp(address, "i");
 
-    const users = await User.find(filter).select("-password");
+    const users = await User.find(filter);
     res.json(users);
   } catch (error) {
     console.error("사용자 목록 조회 실패:", error);
@@ -64,7 +64,6 @@ router.get("/", async (req, res) => {
 
 //특정 사용자 정보 조회
 router.get("/:id", async (req, res) => {
-  console.log('req.params.id:', req.params.id);
   try {
     const user = await User.findOne({_id: req.params.id})
 
@@ -138,7 +137,7 @@ router.patch('/:id/role', authMiddleware, adminOnly, async (req, res) => {
       req.params.id,
       { role },
       { new: true }
-    ).select('-password');
+    );
 
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
