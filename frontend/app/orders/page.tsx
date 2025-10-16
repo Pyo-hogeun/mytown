@@ -7,6 +7,7 @@ import { cancelOrder, fetchOrders } from "@/redux/slices/orderSlice";
 import Container from "../component/Container";
 import styled from "styled-components";
 import Button from "../component/Button";
+import ReviewForm from "../component/ReviewForm";
 const List = styled.ul`
   listStyle: none;
   padding: 0;
@@ -50,6 +51,8 @@ const OrdersPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   // redux의 주문 상태(목록, 로딩 상태, 에러) 가져오기
   const { orders, status, error } = useSelector((s: RootState) => s.order);
+  const [openReviewKey, setOpenReviewKey] = useState<string | null>(null);
+
 
   // 로딩 플래그 (redux 상의 status 사용)
   const isLoading = status === "processing";
@@ -66,17 +69,6 @@ const OrdersPage = () => {
   const empty = useMemo(() => (orders ? orders.length === 0 : true), [orders]);
 
   const formatKrw = (n: number) => n.toLocaleString() + "원";
-
-  const calcOrderTotal = (o: any) => {
-    try {
-      return (o.orderItems || []).reduce(
-        (sum: number, it: any) => sum + (it.unitPrice || 0) * (it.quantity || 0),
-        0
-      );
-    } catch {
-      return 0;
-    }
-  };
 
   /**
    * 주문 취소 처리 함수
@@ -124,6 +116,10 @@ const OrdersPage = () => {
     [dispatch]
   );
 
+  const handleToggleReview = (key: string) => {
+    setOpenReviewKey(prev => (prev === key ? null : key));
+  };
+
   return (
     <Container>
       {isLoading && <p>주문 내역을 불러오는 중...</p>}
@@ -143,6 +139,7 @@ const OrdersPage = () => {
               // - 혹은 이미 취소 요청이 진행중이면 비활성화
               const isCancellable = order.status === "pending" || order.status === "accepted";
               const isCancelling = cancellingIds.includes(order._id);
+
 
               return (
                 <li key={order._id}>
@@ -166,14 +163,36 @@ const OrdersPage = () => {
 
                     <ItemList>
                       {(order.orderItems || []).map((it, iidx) => {
-                        const name = typeof it.product === "object" ? it.product?.name || it.product?._id : String(it.product ?? "상품명없음");
+                        const name = typeof it.product === "object"
+                          ? it.product?.name || it.product?._id
+                          : String(it.product ?? "상품명없음");
+                        const productId =
+                          typeof it.product === 'object'
+                            ? it.product?._id
+                            : String(it.product ?? '');
                         const line = (it.unitPrice || 0) * (it.quantity || 0);
-                        // NOTE: ItemList가 <ul>이라면 내부는 <li>가 되어야 함. 기존 구조에 맞춰 렌더링하세요.
+                        const reviewKey = `${order._id}-${productId}`;
                         return (
                           <div key={iidx}>
                             상품: {name} {formatKrw(line)}<br />
-                            {it.optionName?`옵션: ${it.optionName}(+${it.optionExtraPrice})`:false}<br/>
+                            {it.optionName ? `옵션: ${it.optionName}(+${it.optionExtraPrice})` : false}<br />
                             수량: {it.quantity}
+                            {order.status === 'completed' && (
+                              <>
+                                <br />
+                                <br />
+                                <Button onClick={() => handleToggleReview(reviewKey)}>
+                                  리뷰작성
+                                </Button>
+                                {openReviewKey === reviewKey && (
+                                  <ReviewForm
+                                    orderId={order._id}
+                                    productId={productId}
+                                    onClose={() => setOpenReviewKey(null)}
+                                  />
+                                )}
+                              </>
+                            )}
                           </div>
                         );
                       })}
@@ -189,8 +208,9 @@ const OrdersPage = () => {
 
                   {/* 합계 */}
                   <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end", fontWeight: 700 }}>
-                    총 결제금액&nbsp; {formatKrw(order.totalPrice??0)}
+                    총 결제금액&nbsp; {formatKrw(order.totalPrice ?? 0)}
                   </div>
+
 
                   {/* 주문취소 버튼 */}
                   <Button
@@ -204,6 +224,9 @@ const OrdersPage = () => {
                   >
                     {isCancelling ? "취소중..." : "주문취소"}
                   </Button>
+
+
+
                 </li>
               );
             })}

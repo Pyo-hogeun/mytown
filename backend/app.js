@@ -12,8 +12,7 @@ import orderRoutes from './routes/order.js';
 import settlementRoutes from './routes/settlement.js';
 import riderRoutes from './routes/rider.js';
 import { setupSwagger } from './swagger.js';
-// import riderRoutes from './routes/riders.js';
-// import reviewRoutes from './routes/reviews.js';
+import reviewRoutes from './routes/review.js';
 
 dotenv.config(); // 🔑 .env 로드
 connectDB();     // 🧩 MongoDB 연결
@@ -37,7 +36,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/order', orderRoutes);
 app.use('/api/settlement', settlementRoutes);
 app.use('/api/rider', riderRoutes);
-// app.use('/api/reviews', reviewRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // 기본 라우트
 app.get('/', (req, res) => {

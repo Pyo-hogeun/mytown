@@ -145,7 +145,7 @@ const ProductListPage = () => {
   return (
     <Container>
       <Title>🛒 오늘의 상품</Title>
-      <h3>{storeName}의 상품</h3>
+      {storeName&&<h3>{storeName}의 상품</h3>}
       <Grid>
         {products.length > 0 ?
           products.map((product) => (
