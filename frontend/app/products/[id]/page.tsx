@@ -1,3 +1,4 @@
+//products/[id]/page.tsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -8,6 +9,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/redux/store';
 import { addToCart } from '@/redux/slices/cartSlice';
 import Select from '@/app/component/Select';
+
+import { clearProduct, fetchProductById } from '@/redux/slices/productSlice';
+import QuantitySelector from '@/app/component/QuantitySelector';
+
 
 // --------------------------- 스타일 (styled-components) ---------------------------
 const Container = styled.div`
@@ -45,7 +50,7 @@ const Thumbs = styled.div`
   gap: 8px;
   overflow-x: auto;
 `;
-const Thumb = styled.img<{ active?: boolean }>`
+const Thumb = styled.img<{ active: boolean }>`
   width: 70px;
   height: 70px;
   object-fit: cover;
@@ -163,9 +168,9 @@ const ProductDetailPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.auth.user);
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // const [product, setProduct] = useState<Product | null>(null);
+  // const [loading, setLoading] = useState(false);
+  // const [error, setError] = useState<string | null>(null);
 
   const [mainIndex, setMainIndex] = useState(0);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
@@ -175,26 +180,17 @@ const ProductDetailPage = () => {
   const [newRating, setNewRating] = useState<number>(5);
   const [newComment, setNewComment] = useState<string>('');
 
+  const { selected: product, loading, error } = useSelector((state: RootState) => state.product);
+
   useEffect(() => {
     if (!id) return;
-    setLoading(true);
-    axios.get(`/products/${id}`)
-      .then((res) => {
-        setProduct(res.data);
-        // 초기 옵션 선택: 있으면 첫번째 옵션 선택
-        // if (res.data.options && res.data.options.length > 0) {
-        //   setSelectedOptionId(res.data.options[0]._id || null);
-        // }
-      })
-      .catch((err) => {
-        console.error(err);
-        setError('상품을 불러오는 데 실패했습니다.');
-      })
-      .finally(() => setLoading(false));
-  }, [id]);
+    dispatch(fetchProductById(id));
+
+    return () => { dispatch(clearProduct()); };
+
+  }, [id, dispatch]);
 
   if (!id) return <Container>상품 ID가 없습니다.</Container>;
-
   if (loading) return <Container>로딩중...</Container>;
   if (error) return <Container>{error}</Container>;
   if (!product) return <Container>상품을 찾을 수 없습니다.</Container>;
@@ -273,13 +269,19 @@ const ProductDetailPage = () => {
             </OptionBox>
           )}
 
-          <QtyWrap>
+          {/* <QtyWrap>
             <div>수량</div>
             <QtyButton onClick={decrement}>-</QtyButton>
             <div>{quantity}</div>
             <QtyButton onClick={increment}>+</QtyButton>
             <div style={{ marginLeft: 'auto', fontSize: 14, color: '#888' }}>재고: {remaining}</div>
-          </QtyWrap>
+          </QtyWrap> */}
+
+          <QuantitySelector
+            quantity={quantity}
+            remaining={selectedOption?.stock ?? product.stockQty}
+            onChange={(val) => setQuantity(val)}
+          />
 
           <AddButton onClick={handleAddToCart}>장바구니 담기</AddButton>
 

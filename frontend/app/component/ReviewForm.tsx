@@ -6,6 +6,7 @@ interface ReviewFormProps {
   orderId: string;
   productId: string;
   onClose: () => void;
+  onSubmitted: (review: any) => void; // ✅ 추가
 }
 const ListWrapper = styled.div`
   display: flex;
@@ -95,7 +96,7 @@ const SubmitButton = styled.button`
   }
 `;
 
-export default function ReviewForm({ orderId, productId, onClose }: ReviewFormProps) {
+export default function ReviewForm({ orderId, productId, onClose, onSubmitted }: ReviewFormProps) {
   const [rating, setRating] = useState(0);
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
@@ -106,13 +107,14 @@ export default function ReviewForm({ orderId, productId, onClose }: ReviewFormPr
 
     try {
       setLoading(true);
-      await axios.post('/reviews', {
+      const res = await axios.post('/reviews', {
         orderId,
         rating,
         content,
         product: productId, // ✅ productId 전달
       });
       alert('리뷰가 등록되었습니다.');
+      onSubmitted(res.data); // ✅ 등록된 리뷰 반환
       onClose();
     } catch (err) {
       alert('리뷰 등록에 실패했습니다.');

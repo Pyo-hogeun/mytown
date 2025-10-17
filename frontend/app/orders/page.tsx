@@ -8,6 +8,7 @@ import Container from "../component/Container";
 import styled from "styled-components";
 import Button from "../component/Button";
 import ReviewForm from "../component/ReviewForm";
+import axios from '@/utils/axiosInstance';
 const List = styled.ul`
   listStyle: none;
   padding: 0;
@@ -52,6 +53,8 @@ const OrdersPage = () => {
   // redux의 주문 상태(목록, 로딩 상태, 에러) 가져오기
   const { orders, status, error } = useSelector((s: RootState) => s.order);
   const [openReviewKey, setOpenReviewKey] = useState<string | null>(null);
+  const [reviewsByProduct, setReviewsByProduct] = useState<Record<string, any>>({});
+
 
 
   // 로딩 플래그 (redux 상의 status 사용)
@@ -65,6 +68,27 @@ const OrdersPage = () => {
   useEffect(() => {
     dispatch(fetchOrders());
   }, [dispatch]);
+  useEffect(() => {
+    if (orders.length > 0) {
+      // 각 주문별 리뷰 불러오기
+      const fetchReviews = async () => {
+        try {
+          const allReviews: Record<string, any> = {};
+          for (const order of orders) {
+            const res = await axios.get(`/reviews/${order._id}`);
+            for (const rv of res.data) {
+              allReviews[rv.product] = rv; // key를 productId로
+            }
+          }
+          setReviewsByProduct(allReviews);
+        } catch (err) {
+          console.error("리뷰 목록 불러오기 오류:", err);
+        }
+      };
+
+      fetchReviews();
+    }
+  }, [orders])
 
   const empty = useMemo(() => (orders ? orders.length === 0 : true), [orders]);
 
@@ -163,33 +187,63 @@ const OrdersPage = () => {
 
                     <ItemList>
                       {(order.orderItems || []).map((it, iidx) => {
-                        const name = typeof it.product === "object"
-                          ? it.product?.name || it.product?._id
-                          : String(it.product ?? "상품명없음");
+                        const name =
+                          typeof it.product === "object"
+                            ? it.product?.name || it.product?._id
+                            : String(it.product ?? "상품명없음");
                         const productId =
-                          typeof it.product === 'object'
+                          typeof it.product === "object"
                             ? it.product?._id
-                            : String(it.product ?? '');
+                            : String(it.product ?? "");
                         const line = (it.unitPrice || 0) * (it.quantity || 0);
                         const reviewKey = `${order._id}-${productId}`;
+                        const existingReview = reviewsByProduct[productId]; // ✅ 이미 등록된 리뷰 확인
+
                         return (
                           <div key={iidx}>
-                            상품: {name} {formatKrw(line)}<br />
-                            {it.optionName ? `옵션: ${it.optionName}(+${it.optionExtraPrice})` : false}<br />
+                            상품: {name} {formatKrw(line)}
+                            <br />
+                            {it.optionName ? `옵션: ${it.optionName}(+${it.optionExtraPrice})` : false}
+                            <br />
                             수량: {it.quantity}
-                            {order.status === 'completed' && (
+
+                            {order.status === "completed" && (
                               <>
                                 <br />
                                 <br />
-                                <Button onClick={() => handleToggleReview(reviewKey)}>
-                                  리뷰작성
-                                </Button>
-                                {openReviewKey === reviewKey && (
-                                  <ReviewForm
-                                    orderId={order._id}
-                                    productId={productId}
-                                    onClose={() => setOpenReviewKey(null)}
-                                  />
+                                {existingReview ? (
+                                  // ✅ 리뷰가 존재하면 내용 표시
+                                  <div
+                                    style={{
+                                      border: "1px solid #eee",
+                                      padding: "10px",
+                                      borderRadius: "8px",
+                                      background: "#fafafa",
+                                      marginTop: "8px",
+                                    }}
+                                  >
+                                    <div style={{ color: "#FFD700", marginBottom: "4px" }}>
+                                      {"★".repeat(existingReview.rating)}{"☆".repeat(5 - existingReview.rating)}
+                                    </div>
+                                    <div>{existingReview.content}</div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <Button onClick={() => handleToggleReview(reviewKey)}>리뷰작성</Button>
+                                    {openReviewKey === reviewKey && (
+                                      <ReviewForm
+                                        orderId={order._id}
+                                        productId={productId}
+                                        onClose={() => setOpenReviewKey(null)}
+                                        onSubmitted={(newReview) =>
+                                          setReviewsByProduct((prev) => ({
+                                            ...prev,
+                                            [productId]: newReview,
+                                          }))
+                                        }
+                                      />
+                                    )}
+                                  </>
                                 )}
                               </>
                             )}

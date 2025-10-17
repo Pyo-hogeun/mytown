@@ -18,6 +18,7 @@ export const store = configureStore({
     order: orderReducer,
     riderOrders: riderOrderReducer,
     riderSettlement: riderSettlementReducer,
+    
   },
 });
 

@@ -129,12 +129,12 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'manager 가입 시 storeId가 필요합니다.' });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // const salt = await bcrypt.genSalt(10);
+    // const hashedPassword = await bcrypt.hash(password, salt);
 
     const user = new User({
       email,
-      password: hashedPassword,
+      password,
       name,
       role,
       store: role === 'manager' ? storeId : undefined, // storeId 저장
