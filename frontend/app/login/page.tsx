@@ -45,7 +45,7 @@ const Title = styled.h1`
   color: #333;
 `;
 
-const Button = styled.button<{ loading?: boolean }>`
+const Button = styled.button<{ loading: boolean }>`
   width: 100%;
   padding: 12px 14px;
   background: ${({ loading }) => (loading ? '#ccc' : '#0070f3')};

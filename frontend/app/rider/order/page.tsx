@@ -66,7 +66,7 @@ const Page = () => {
         return "배달중"
       case "completed":
         return "완료"
-      case "cancelled":
+      case "canceled":
         return "취소"
     }
   }
@@ -88,8 +88,6 @@ const Page = () => {
       {currentOrders.map((order) => (
         <OrderItem key={order._id}>
           <List><Label>주문번호:</Label><CodeColorTransfer id={order._id} /></List>
-          <List><Label>가게:</Label> {order.store.name}</List>
-          <List><Label>가게주소:</Label> {order.store.address}</List>
           <List><Label>수령인:</Label> {order.receiver}</List>
           <List><Label>연락처:</Label> {order.phone}</List>
           <List><Label>주소:</Label> {order.address}</List>

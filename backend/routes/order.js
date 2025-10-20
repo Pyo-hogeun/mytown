@@ -84,103 +84,81 @@ router.post("/", authMiddleware, async (req, res) => {
       deliveryTime,
       paymentMethod,
       totalPrice,
-      rememberDelivery, // ✅ 프론트에서 체크 여부 전달
+      rememberDelivery,
     } = req.body;
 
-
-    if (!items || items.length === 0) {
+    if (!items || items.length === 0)
       return res.status(400).json({ message: "주문할 항목이 없습니다." });
-    }
-    if (!receiver || !phone || !address) {
+
+    if (!receiver || !phone || !address)
       return res.status(400).json({ message: "배송 정보가 누락되었습니다." });
-    }
 
-    // ✅ 스토어별 그룹화 (프론트에서 storeId를 같이 보내야 함)
-    const storeGrouped = items.reduce((acc, item) => {
-      if (!item.store) throw new Error(`상품 ${item.product}에 storeId가 없습니다.`);
-      const storeId = item.store;
-      if (!acc[storeId]) acc[storeId] = [];
-      acc[storeId].push(item);
-      return acc;
-    }, {});
-
-    // ✅ 1) 주문 전 재고 검증
+    // ✅ 1) 재고 검증
     for (const i of items) {
       const product = await Product.findById(i.product);
-      if (!product) {
-        return res.status(400).json({ message: `상품을 찾을 수 없습니다: ${i.product}` });
-      }
+      if (!product) return res.status(400).json({ message: `상품을 찾을 수 없습니다: ${i.product}` });
 
       if (i.optionId) {
-        // 옵션 재고 체크
         const option = product.options.id(i.optionId);
-        if (!option) {
+        if (!option)
           return res.status(400).json({ message: `옵션을 찾을 수 없습니다: ${i.optionId}` });
-        }
-        if (option.stockQty < i.quantity) {
+        if (option.stockQty < i.quantity)
           return res.status(400).json({
             message: `재고 부족: ${product.name} (${option.name}), 남은 수량: ${option.stockQty}`,
           });
-        }
       } else {
-        // 상품 재고 체크
-        if (product.stockQty < i.quantity) {
+        if (product.stockQty < i.quantity)
           return res.status(400).json({
             message: `재고 부족: ${product.name}, 남은 수량: ${product.stockQty}`,
           });
-        }
       }
     }
 
-    const createdOrders = [];
+    // ✅ 2) 주문 생성
+    const order = new Order({
+      user: req.user._id,
+      orderItems: await Promise.all(
+        items.map(async (i) => {
+          const product = await Product.findById(i.product);
+          if (!product) throw new Error(`상품을 찾을 수 없습니다: ${i.product}`);
+          return {
+            product: i.product,
+            store: product.store, // ✅ 상품이 속한 상점 자동 연결
+            quantity: i.quantity,
+            unitPrice: i.unitPrice,
+            optionName: i.optionName,
+            optionExtraPrice: i.optionExtraPrice ?? 0,
+          };
+        })
+      ),
+      totalPrice,
+      status: "pending",
+      receiver,
+      phone,
+      address,
+      deliveryTime,
+      paymentMethod,
+      rememberDelivery,
+      deliveryCharge: 3000,
+    });
 
-    for (const [storeId, storeItems] of Object.entries(storeGrouped)) {
+    await order.save();
 
-      const order = new Order({
-        user: req.user._id,
-        store: storeId,
-        orderItems: storeItems.map((i) => ({
-          product: i.product,
-          quantity: i.quantity,
-          unitPrice: i.unitPrice,       // 프론트에서 계산된 가격
-          optionName: i.optionName,     // 프론트 전달
-          optionExtraPrice: i.optionExtraPrice ?? 0,
-        })),
-        totalPrice: totalPrice,
-        status: "pending",
-        receiver,
-        phone,
-        address,
-        deliveryTime,
-        paymentMethod,
-        rememberDelivery,
-        deliveryCharge: 3000 //임시 수수료 3000원
-      });
+    // ✅ 3) 재고 차감
+    for (const i of items) {
+      const product = await Product.findById(i.product);
+      if (!product) continue;
 
-      await order.save();
-
-      // ✅ 주문 성공 시 재고 차감
-      for (const i of storeItems) {
-        const product = await Product.findById(i.product);
-        if (!product) continue;
-
-        if (i.optionId) {
-          // 옵션이 있는 경우 해당 옵션 재고 감소
-          const option = product.options.id(i.optionId);
-          if (option) {
-            option.stockQty = Math.max(0, option.stockQty - i.quantity);
-          }
-        } else {
-          // 옵션 없는 상품은 전체 재고 감소
-          product.stockQty = Math.max(0, product.stockQty - i.quantity);
-        }
-
-        await product.save();
+      if (i.optionId) {
+        const option = product.options.id(i.optionId);
+        if (option) option.stockQty = Math.max(0, option.stockQty - i.quantity);
+      } else {
+        product.stockQty = Math.max(0, product.stockQty - i.quantity);
       }
-      createdOrders.push(order);
+      await product.save();
     }
 
-    // ✅ 주문 완료 후 장바구니 정리
+    // ✅ 4) 장바구니 정리
     const cart = await Cart.findOne({ user: req.user._id });
     if (cart) {
       cart.items = cart.items.filter(
@@ -189,30 +167,16 @@ router.post("/", authMiddleware, async (req, res) => {
       await cart.save();
     }
 
-    // ✅ 배송지 기억하기 체크 시 User 모델 업데이트
+    // ✅ 5) 배송지 기억하기
     if (rememberDelivery) {
       await User.findByIdAndUpdate(req.user._id, {
-        savedDeliveryInfo: {
-          receiver,
-          phone,
-          address,
-          updatedAt: new Date(),
-        },
+        savedDeliveryInfo: { receiver, phone, address, updatedAt: new Date() },
       });
     }
 
     return res.json({
-      message: "스토어별 주문 생성 완료",
-      orders: createdOrders.map((o) => ({
-        orderId: o._id,
-        store: o.store,
-        totalPrice: o.totalPrice,
-        receiver: o.receiver,
-        phone: o.phone,
-        address: o.address,
-        deliveryTime: o.deliveryTime,
-      })),
-      cart,
+      message: "주문이 정상적으로 생성되었습니다.",
+      order,
     });
   } catch (err) {
     console.error("주문 생성 오류:", err);
@@ -238,16 +202,16 @@ router.post("/", authMiddleware, async (req, res) => {
 // ✅ 주문 목록 조회
 router.get("/", authMiddleware, async (req, res) => {
   try {
-    const userId = req.user._id;
-    const orders = await Order.find({ user: userId })
-      .sort({ createdAt: -1 })
-      .populate("store")
+    const orders = await Order.find({ user: req.user._id })
       .populate("orderItems.product")
-      .lean();
+      .populate("orderItems.store")
+      .populate("user", "name email")
+      .sort({ createdAt: -1 });
 
-    res.json({ orders });
+    res.json(orders);
   } catch (err) {
-    res.status(500).json({ message: "주문 조회 실패", error: err });
+    console.error("주문 목록 조회 오류:", err);
+    res.status(500).json({ message: "주문 목록 조회 실패" });
   }
 });
 
@@ -427,7 +391,7 @@ router.patch("/:id/cancel", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "배송 중/완료된 주문은 취소할 수 없습니다." });
     }
 
-    order.status = "cancelled";
+    order.status = "canceled";
     await order.save();
 
     res.json({ success: true, order });
@@ -462,7 +426,7 @@ router.patch("/:id/cancel", authMiddleware, async (req, res) => {
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [pending, accepted, assigned, delivering, completed, cancelled]
+ *                 enum: [pending, accepted, assigned, delivering, completed, canceled]
  *     responses:
  *       200:
  *         description: 상태 변경 성공
@@ -473,35 +437,19 @@ router.patch("/:id/cancel", authMiddleware, async (req, res) => {
  */
 router.patch("/:id/status", authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== "manager") {
-      return res.status(403).json({ message: "매니저만 주문 상태를 변경할 수 있습니다." });
-    }
-
-    const { id } = req.params;
     const { status } = req.body;
+    const validStatuses = ["pending", "accepted", "assigned", "delivering", "completed", "canceled"];
 
-    const order = await Order.findById(id).populate("store");
+    if (!validStatuses.includes(status))
+      return res.status(400).json({ message: "잘못된 주문 상태입니다." });
 
+    const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
     if (!order) return res.status(404).json({ message: "주문을 찾을 수 없습니다." });
 
-    // ✅ 매니저의 소속 매장만 변경 가능
-    if (order.store._id.toString() !== req.user.store.toString()) {
-      return res.status(403).json({ message: "본인 매장의 주문만 변경할 수 있습니다." });
-    }
-
-    // ✅ 상태 검증
-    const validStatuses = ["pending", "accepted", "assigned", "delivering", "completed", "cancelled"];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ message: "잘못된 상태 값입니다." });
-    }
-
-    order.status = status;
-    await order.save();
-
-    res.json({ success: true, order });
+    res.json(order);
   } catch (err) {
     console.error("주문 상태 변경 오류:", err);
-    res.status(500).json({ message: "상태 변경 실패" });
+    res.status(500).json({ message: "주문 상태 변경 실패" });
   }
 });
 
@@ -531,7 +479,10 @@ router.get("/rider/available", authMiddleware, async (req, res) => {
     const orders = await Order.find({
       status: "accepted",
       assignedRider: null,
-    }).populate("store", "name address");
+    }).populate({
+      path: "orderItems.product",
+      populate: { path: "store", select: "name address" }
+    });
 
     return res.json({ orders });
   } catch (err) {
@@ -575,7 +526,13 @@ router.post("/rider/:orderId/assign", authMiddleware, async (req, res) => {
       { _id: req.params.orderId, status: "accepted", assignedRider: null },
       { status: "assigned", assignedRider: req.user._id },
       { new: true }
-    ).populate("store", "name address");
+    ).populate({
+      path: "orderItems.product",
+      populate: {
+        path: "store",
+        select : "name address"
+      },
+    });
 
     if (!order) {
       return res.status(400).json({ message: "이미 다른 라이더에게 배정되었거나 주문을 찾을 수 없습니다." });
@@ -617,8 +574,13 @@ router.get("/rider/assigned", authMiddleware, async (req, res) => {
       assignedRider: req.user._id,
       status: { $in: ["assigned", "delivering"] },
     })
-    .populate("store")
-    .populate("orderItems.product");
+      .populate({
+        path: "orderItems.product",
+        populate: {
+          path: "store",
+          select : "name address"
+        }
+      });
 
     return res.json({ orders });
   } catch (err) {
@@ -653,8 +615,13 @@ router.get("/rider/completed", authMiddleware, async (req, res) => {
       assignedRider: req.user._id,
       status: { $in: ["completed"] },
     })
-    .populate("store")
-    .populate("orderItems.product");
+      .populate({
+        path: "orderItems.product",
+        populate: {
+          path: "store",
+          select : "name address"
+        }
+      });
 
     return res.json({ orders });
   } catch (err) {
@@ -715,7 +682,13 @@ router.patch("/rider/:id/status", authMiddleware, async (req, res) => {
       _id: id,
       assignedRider: req.user._id, // 본인 배정 주문만
     })
-    .populate("store");
+      .populate({
+        path:"orderItems.product",
+        populate: {
+          path: "store",
+          select: "name adress"
+        }
+      })
 
     if (!order) return res.status(404).json({ message: "주문 없음" });
 
@@ -730,7 +703,7 @@ router.patch("/rider/:id/status", authMiddleware, async (req, res) => {
     if (status === "completed") {
       order.completedAt = new Date();
     }
-    
+
     await order.save();
 
     res.json({ success: true, order });
@@ -790,7 +763,7 @@ router.post("/seed", async (req, res) => {
           "accepted",
           "delivering",
           "completed",
-          "cancelled",
+          "canceled",
         ]),
         receiver: faker.person.fullName(),
         phone: faker.phone.number("010-####-####"),

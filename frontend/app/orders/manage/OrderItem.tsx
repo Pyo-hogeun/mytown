@@ -49,7 +49,7 @@ const OrderItem = ({ order, onStatusChange }: OrderItemProps) => {
         onChange={(e) =>
           onStatusChange(order._id, e.target.value as OrderStatus, order.status)
         }
-        disabled={order.status === "completed" || order.status === "cancelled"}
+        disabled={order.status === "completed" || order.status === "canceled"}
       >
         {statuses.map((status) => (
           <option key={status} value={status}>
@@ -58,7 +58,7 @@ const OrderItem = ({ order, onStatusChange }: OrderItemProps) => {
             {status === "assigned" && "라이더 배정됨"}
             {status === "delivering" && "배송중"}
             {status === "completed" && "완료"}
-            {status === "cancelled" && "취소됨"}
+            {status === "canceled" && "취소됨"}
           </option>
         ))}
       </Select>

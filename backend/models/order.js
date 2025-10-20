@@ -1,18 +1,21 @@
-// models/order.js
+// models/Order.js
 import mongoose from "mongoose";
-
 const { Schema } = mongoose;
 
 // ✅ 주문 상품 단위 스키마
 const orderItemSchema = new Schema({
-  product: {
+product: {
     type: Schema.Types.ObjectId,
     ref: "Product",
     required: true,
   },
+  store: {
+    type: Schema.Types.ObjectId,
+    ref: "Store", // 각 상품의 소속 상점
+    required: true,
+  },
   optionId: {
     type: Schema.Types.ObjectId,
-    ref: "ProductOption", // 별도 모델 없다면 일단 ObjectId로만 저장
   },
   quantity: {
     type: Number,
@@ -24,32 +27,24 @@ const orderItemSchema = new Schema({
     required: true,
     min: 0,
   },
-  optionName: {
-    type: String,
-  },
+  optionName: String,
   optionExtraPrice: {
     type: Number,
     min: 0,
   },
 }, { _id: false });
 
-// ✅ 주문 스키마 정의
+// ✅ 주문 스키마
 const OrderSchema = new Schema({
   user: {
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
-  store: {
-    type: Schema.Types.ObjectId,
-    ref: "Store",
-    required: true,
-  },
   rider: {
     type: Schema.Types.ObjectId,
     ref: "Rider",
   },
-  //배달수수료
   deliveryCharge: {
     type: Number,
     min: 0,
@@ -72,55 +67,32 @@ const OrderSchema = new Schema({
     min: 0,
   },
 
-  // ✅ 배송 관련 필드
-  receiver: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  phone: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  address: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  rememberDelivery :{
-    type: Boolean,
-  },
+  // ✅ 배송 관련
+  receiver: { type: String, required: true, trim: true },
+  phone: { type: String, required: true, trim: true },
+  address: { type: String, required: true, trim: true },
+  rememberDelivery: { type: Boolean },
   deliveryTime: {
     day: { type: String, trim: true },
     time: { type: String, trim: true },
   },
 
-  // ✅ 결제 관련 필드
+  // ✅ 결제 관련
   paymentMethod: {
     type: String,
     enum: ["card", "kakao", "naver"],
     required: true,
   },
 
-  // ✅ 라이더 배정 관련
+  // ✅ 라이더 배정 및 완료 관련
   assignedRider: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User", // role: "rider"
+    type: Schema.Types.ObjectId,
+    ref: "User", // role: rider
     default: null,
   },
-
-  // ✅ 주문 완료 시각
-  completedAt: {
-    type: Date,
-    default: null,
-  },
-
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  completedAt: { type: Date, default: null },
+  createdAt: { type: Date, default: Date.now },
 });
 
-// ✅ 기존 모델이 이미 존재하면 재사용 (Hot Reload 방지)
+// ✅ 기존 모델이 존재하면 재사용
 export default mongoose.models.Order || mongoose.model("Order", OrderSchema);

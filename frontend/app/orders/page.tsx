@@ -42,6 +42,11 @@ const ItemList = styled.div`
     margin-bottom: 5px;
   }
 `;
+const StyledItem = styled.div`
+  border: 1px solid #f0f0f0;
+  padding: 1em;
+  margin-bottom: 0.2em;
+`
 const DeliveryInfo = styled.div`
   margin-top: 12px;
   border: 1px solid #f3f3f3;
@@ -69,7 +74,7 @@ const OrdersPage = () => {
     dispatch(fetchOrders());
   }, [dispatch]);
   useEffect(() => {
-    if (orders.length > 0) {
+    if (orders && orders.length > 0) {
       // 각 주문별 리뷰 불러오기
       const fetchReviews = async () => {
         try {
@@ -150,6 +155,7 @@ const OrdersPage = () => {
       {error && <p>주문 조회 중 오류가 발생했습니다: {String(error)}</p>}
       {empty && !isLoading && <p>주문 내역이 없습니다.</p>}
 
+
       {!isLoading && !error && !empty && (
         <>
           <h1 style={{ marginBottom: 16 }}>내 주문 내역</h1>
@@ -181,16 +187,20 @@ const OrdersPage = () => {
 
                   {/* 매장 + 상품 목록 */}
                   <OrderItem>
-                    <div style={{ fontWeight: 600, marginBottom: 6 }}>
-                      매장: {typeof order.store === "object" ? order.store?.name : String(order.store ?? "가맹점")}
-                    </div>
 
                     <ItemList>
                       {(order.orderItems || []).map((it, iidx) => {
+                        const product = it.product;
                         const name =
                           typeof it.product === "object"
                             ? it.product?.name || it.product?._id
                             : String(it.product ?? "상품명없음");
+                        const storeName =
+                          typeof it.store === "object" && it.store
+                            ? typeof it.store === "object"
+                              ? it.store?.name
+                              : String(it.store)
+                            : "가맹점";
                         const productId =
                           typeof it.product === "object"
                             ? it.product?._id
@@ -200,34 +210,20 @@ const OrdersPage = () => {
                         const existingReview = reviewsByProduct[productId]; // ✅ 이미 등록된 리뷰 확인
 
                         return (
-                          <div key={iidx}>
+                          <StyledItem key={iidx}>
                             상품: {name} {formatKrw(line)}
                             <br />
                             {it.optionName ? `옵션: ${it.optionName}(+${it.optionExtraPrice})` : false}
                             <br />
                             수량: {it.quantity}
+                            <br />
+                            가게 : {storeName}
 
                             {order.status === "completed" && (
                               <>
                                 <br />
                                 <br />
-                                {existingReview ? (
-                                  // ✅ 리뷰가 존재하면 내용 표시
-                                  <div
-                                    style={{
-                                      border: "1px solid #eee",
-                                      padding: "10px",
-                                      borderRadius: "8px",
-                                      background: "#fafafa",
-                                      marginTop: "8px",
-                                    }}
-                                  >
-                                    <div style={{ color: "#FFD700", marginBottom: "4px" }}>
-                                      {"★".repeat(existingReview.rating)}{"☆".repeat(5 - existingReview.rating)}
-                                    </div>
-                                    <div>{existingReview.content}</div>
-                                  </div>
-                                ) : (
+                                {!existingReview && (
                                   <>
                                     <Button onClick={() => handleToggleReview(reviewKey)}>리뷰작성</Button>
                                     {openReviewKey === reviewKey && (
@@ -247,7 +243,7 @@ const OrdersPage = () => {
                                 )}
                               </>
                             )}
-                          </div>
+                          </StyledItem>
                         );
                       })}
                     </ItemList>

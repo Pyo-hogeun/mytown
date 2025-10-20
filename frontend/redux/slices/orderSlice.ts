@@ -12,7 +12,7 @@ export interface OrderItemPayload {
 }
 
 export type PaymentMethod = "card" | "kakao" | "naver";
-export type OrderStatus = "pending" | "accepted" | "assigned" | "delivering" | "completed" | "cancelled";
+export type OrderStatus = "pending" | "accepted" | "assigned" | "delivering" | "completed" | "canceled";
 // ✅ 모든 주문 상태값 배열 (드롭다운 등에서 사용)
 export const validStatuses: OrderStatus[] = [
   "pending",
@@ -20,7 +20,7 @@ export const validStatuses: OrderStatus[] = [
   "assigned",
   "delivering",
   "completed",
-  "cancelled",
+  "canceled",
 ];
 export interface DeliveryTime {
   day: string;
@@ -55,11 +55,18 @@ export interface UserOrder {
   user?: { _id: string; name?: string; email?: string };
   store?: string | { _id: string; name?: string };
   orderItems: {
-    product: string | { _id: string; name?: string; price?: number };
+    product: string | {
+      _id: string; name?: string; price?: number
+    };
     quantity: number;
     unitPrice: number;
     optionName: string;
     optionExtraPrice: number;
+    store: {
+      _id: string;
+      name: string;
+      address: string;
+    };
   }[];
   optionId?: string;
   status?: OrderStatus;
@@ -92,7 +99,7 @@ export const createOrder = createAsyncThunk(
 
 export const fetchOrders = createAsyncThunk("order/fetchOrders", async () => {
   const res = await axios.get("/order");
-  return res.data.orders as UserOrder[];
+  return res.data as UserOrder[];
 });
 
 export const fetchOrderById = createAsyncThunk(
@@ -151,7 +158,7 @@ export const updateOrderStatus = createAsyncThunk(
   async ({ orderId, status }: { orderId: string; status: OrderStatus }, thunkAPI) => {
     try {
       const res = await axios.patch(`/order/${orderId}/status`, { status });
-      return res.data.order as UserOrder;
+      return res.data as UserOrder;
     } catch (err: any) {
       const message = err.response?.data?.message || "주문 상태 변경 실패";
       alert(message);
@@ -250,7 +257,7 @@ const orderSlice = createSlice({
       })
       .addCase(cancelOrder.fulfilled, (state, action: PayloadAction<any>) => {
         state.status = "succeeded";
-        // 해당 주문 상태를 cancelled 로 업데이트
+        // 해당 주문 상태를 canceled 로 업데이트
         const updated = action.payload.order;
         state.orders = state.orders.map((o) =>
           o._id === updated._id ? updated : o
