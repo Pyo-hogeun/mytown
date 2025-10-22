@@ -12,6 +12,7 @@ import Select from '@/app/component/Select';
 
 import { clearProduct, fetchProductById } from '@/redux/slices/productSlice';
 import QuantitySelector from '@/app/component/QuantitySelector';
+import ReviewList from '@/app/component/ReviewList';
 
 
 // --------------------------- 스타일 (styled-components) ---------------------------
@@ -120,10 +121,6 @@ const Description = styled.div`
   line-height: 1.6;
 `;
 
-const Reviews = styled.div`
-  margin-top: 18px;
-`;
-
 const ReviewItem = styled.div`
   padding: 12px;
   border-bottom: 1px solid #eee;
@@ -175,10 +172,7 @@ const ProductDetailPage = () => {
   const [mainIndex, setMainIndex] = useState(0);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
-
-  // 후기 쓰기 상태
-  const [newRating, setNewRating] = useState<number>(5);
-  const [newComment, setNewComment] = useState<string>('');
+  const [reviews, setReviews] = useState()
 
   const { selected: product, loading, error } = useSelector((state: RootState) => state.product);
 
@@ -313,22 +307,7 @@ const ProductDetailPage = () => {
         </InfoCard>
       </Grid>
 
-      <Reviews>
-        <h3>구매 후기</h3>
-        {(product.reviews && product.reviews.length > 0) ? (
-          product.reviews.map(rv => (
-            <ReviewItem key={rv._id || Math.random()}>
-              <div style={{ fontWeight: 700 }}>{rv.userName || '익명'}</div>
-              <div>별점: {rv.rating} / 5</div>
-              <div style={{ marginTop: 8 }}>{rv.comment}</div>
-              <div style={{ fontSize: 12, color: '#999', marginTop: 6 }}>{new Date(rv.createdAt || Date.now()).toLocaleString()}</div>
-            </ReviewItem>
-          ))
-        ) : (
-          <div>후기가 없습니다.</div>
-        )}
-
-      </Reviews>
+    <ReviewList productId={product._id} />
     </Container>
   );
 }

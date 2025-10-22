@@ -49,11 +49,25 @@ router.post("/", authMiddleware, async (req, res) => {
  * ✅ 특정 주문의 리뷰 조회
  * GET /reviews/:orderId
  */
-router.get("/:orderId", authMiddleware, async (req, res) => {
+router.get("/order/:orderId", authMiddleware, async (req, res) => {
   try {
     const { orderId } = req.params;
     const reviews = await Review.find({ order: orderId })
       .populate("user", "name")
+      .sort({ createdAt: -1 });
+
+    res.json(reviews);
+  } catch (error) {
+    console.error("리뷰 조회 오류:", error);
+    res.status(500).json({ message: "서버 오류" });
+  }
+});
+// 특정 상품 리뷰 조회
+router.get("/product/:productId", async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const reviews = await Review.find({ product: productId })
+      .populate("user")
       .sort({ createdAt: -1 });
 
     res.json(reviews);

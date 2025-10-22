@@ -32,7 +32,7 @@ const OrderItem = ({ order, onStatusChange }: OrderItemProps) => {
     : "";
 
   return (
-    <li>
+    <div>
       <h3>주문번호: {order._id}</h3>
       <Item><Label>주문시간: </Label>{formattedDate}</Item>
       <Item><Label>수령자명:</Label> {order.receiver}</Item>
@@ -62,7 +62,7 @@ const OrderItem = ({ order, onStatusChange }: OrderItemProps) => {
           </option>
         ))}
       </Select>
-    </li>
+    </div>
   );
 };
 

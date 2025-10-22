@@ -22,7 +22,7 @@ const List = styled.ul`
     background-color: #fff;
   }
 `;
-const OrderInfo = styled.li`
+const OrderInfo = styled.div`
   display: flex;
   justifyContent: space-between;
   alignItems: baseline;
@@ -75,7 +75,7 @@ const OrdersPage = () => {
         try {
           const allReviews: Record<string, any> = {};
           for (const order of orders) {
-            const res = await axios.get(`/reviews/${order._id}`);
+            const res = await axios.get(`/reviews/order/${order._id}`);
             for (const rv of res.data) {
               allReviews[rv.product] = rv; // key를 productId로
             }
