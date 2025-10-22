@@ -12,7 +12,7 @@ export interface OrderItemPayload {
 }
 
 export type PaymentMethod = "card" | "kakao" | "naver";
-export type OrderStatus = "pending" | "accepted" | "assigned" | "delivering" | "completed" | "cancelled";
+export type OrderStatus = "pending" | "accepted" | "assigned" | "delivering" | "completed" | "canceled";
 // ✅ 모든 주문 상태값 배열 (드롭다운 등에서 사용)
 export const validStatuses: OrderStatus[] = [
   "pending",
@@ -20,7 +20,7 @@ export const validStatuses: OrderStatus[] = [
   "assigned",
   "delivering",
   "completed",
-  "cancelled",
+  "canceled",
 ];
 export interface DeliveryTime {
   day: string;
@@ -250,7 +250,7 @@ const orderSlice = createSlice({
       })
       .addCase(cancelOrder.fulfilled, (state, action: PayloadAction<any>) => {
         state.status = "succeeded";
-        // 해당 주문 상태를 cancelled 로 업데이트
+        // 해당 주문 상태를 canceled 로 업데이트
         const updated = action.payload.order;
         state.orders = state.orders.map((o) =>
           o._id === updated._id ? updated : o

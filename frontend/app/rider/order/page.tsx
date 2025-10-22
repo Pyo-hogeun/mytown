@@ -66,7 +66,7 @@ const Page = () => {
         return "배달중"
       case "completed":
         return "완료"
-      case "cancelled":
+      case "canceled":
         return "취소"
     }
   }

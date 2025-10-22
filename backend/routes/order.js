@@ -427,7 +427,7 @@ router.patch("/:id/cancel", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "배송 중/완료된 주문은 취소할 수 없습니다." });
     }
 
-    order.status = "cancelled";
+    order.status = "canceled";
     await order.save();
 
     res.json({ success: true, order });
@@ -462,7 +462,7 @@ router.patch("/:id/cancel", authMiddleware, async (req, res) => {
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [pending, accepted, assigned, delivering, completed, cancelled]
+ *                 enum: [pending, accepted, assigned, delivering, completed, canceled]
  *     responses:
  *       200:
  *         description: 상태 변경 성공
@@ -490,7 +490,7 @@ router.patch("/:id/status", authMiddleware, async (req, res) => {
     }
 
     // ✅ 상태 검증
-    const validStatuses = ["pending", "accepted", "assigned", "delivering", "completed", "cancelled"];
+    const validStatuses = ["pending", "accepted", "assigned", "delivering", "completed", "canceled"];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: "잘못된 상태 값입니다." });
     }
@@ -790,7 +790,7 @@ router.post("/seed", async (req, res) => {
           "accepted",
           "delivering",
           "completed",
-          "cancelled",
+          "canceled",
         ]),
         receiver: faker.person.fullName(),
         phone: faker.phone.number("010-####-####"),
