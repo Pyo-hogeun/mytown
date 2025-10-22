@@ -109,10 +109,34 @@ router.post("/add", authMiddleware, async (req, res) => {
   try {
     const { productId, optionId, quantity } = req.body;
 
-    const product = await Product.findById(productId);
+    const product = await Product.findById(productId).populate("store");
     if (!product) return res.status(404).json({ message: "상품을 찾을 수 없습니다." });
 
-    let cart = await Cart.findOne({ user: req.user._id });
+
+    let cart = await Cart.findOne({ user: req.user._id })
+    .populate({
+      path: 'items.product',
+      populate: {
+        path: 'store'
+      }
+    });
+
+    // 장바구니가 비어있지 않다면, 기존 상품들의 store와 비교
+    if (cart && cart.items.length > 0) {
+      const existingStoreId = cart.items[0].product.store._id.toString();
+      const newProductStoreId = product.store._id.toString();
+
+      if (existingStoreId !== newProductStoreId) {
+        return res.status(400).json({
+          message: "다른 매장의 상품은 함께 담을 수 없습니다. 기존 장바구니를 비우고 다시 담아주세요.",
+          storeConflict: true,
+          existingStoreId,
+          newProductStoreId,
+        });
+      }
+    }
+
+    // 장바구니 없으면 새로 생성
     if (!cart) {
       cart = new Cart({ user: req.user._id, items: [] });
     }
@@ -120,14 +144,18 @@ router.post("/add", authMiddleware, async (req, res) => {
     // 같은 상품+옵션 조합이 이미 있는지 확인
     const existingItem = cart.items.find(
       (item) =>
-        item.product.toString() === productId &&
+        item.product._id.toString() === productId &&
         ((item.optionId && item.optionId.toString()) === (optionId || null))
     );
 
     if (existingItem) {
       existingItem.quantity += quantity || 1;
     } else {
-      cart.items.push({ product: productId, optionId: optionId || null, quantity: quantity || 1 });
+      cart.items.push({
+        product: productId,
+        optionId: optionId || null,
+        quantity: quantity || 1
+      });
     }
 
     await cart.save();
@@ -190,6 +218,16 @@ router.delete("/remove/:itemId", authMiddleware, async (req, res) => {
     res.json(updatedCart || { items: [] });
   } catch (err) {
     res.status(500).json({ message: "장바구니 삭제 실패", error: err.message });
+  }
+});
+
+// ✅ 장바구니 비우기
+router.post("/clear", authMiddleware, async (req, res) => {
+  try {
+    await Cart.deleteOne({ user: req.user._id });
+    res.json({ message: "장바구니가 비워졌습니다." });
+  } catch (err) {
+    res.status(500).json({ message: "장바구니 비우기 실패", error: err.message });
   }
 });
 

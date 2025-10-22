@@ -50,14 +50,14 @@ const Thumbs = styled.div`
   gap: 8px;
   overflow-x: auto;
 `;
-const Thumb = styled.img<{ active: boolean }>`
+const Thumb = styled.img<{ $active?: boolean }>`
   width: 70px;
   height: 70px;
   object-fit: cover;
   border-radius: 6px;
   cursor: pointer;
-  opacity: ${props => (props.active ? 1 : 0.7)};
-  box-shadow: ${props => (props.active ? '0 4px 12px rgba(0,0,0,0.15)' : 'none')};
+  opacity: ${props => (props.$active ? 1 : 0.7)};
+  box-shadow: ${props => (props.$active ? '0 4px 12px rgba(0,0,0,0.15)' : 'none')};
 `;
 
 const InfoCard = styled.div`
@@ -211,7 +211,7 @@ const ProductDetailPage = () => {
   const increment = () => setQuantity(prev => Math.min(prev + 1, Math.max(1, remaining)));
   const decrement = () => setQuantity(prev => Math.max(1, prev - 1));
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product) return;
     if (!user) {
       router.push('/login')
@@ -224,18 +224,38 @@ const ProductDetailPage = () => {
       alert('주문 수량이 남은 수량을 초과합니다.');
       return;
     }
-    // ADD TO CART 액션: productId, optionId (있으면), quantity 포함
-    dispatch(addToCart({
-      productId: product._id,
-      optionId: selectedOption?._id,
-      storeId: product.storeId,
-      quantity,
-      price: finalPrice,
-      name: product.name,
-      imageUrl: images[0],
-      storeName: product.storeName
-    }));
-    alert('장바구니에 추가되었습니다.');
+    try{
+      // ADD TO CART 액션: productId, optionId (있으면), quantity 포함
+      await dispatch(addToCart({
+        productId: product._id,
+        optionId: selectedOption?._id,
+        storeId: product.storeId,
+        quantity,
+        price: finalPrice,
+        name: product.name,
+        imageUrl: images[0],
+        storeName: product.storeName
+      })).unwrap();
+      alert('장바구니에 추가되었습니다.');
+    } catch (err) {
+      if (err === "DIFFERENT_STORE") {
+        if (window.confirm("다른 매장의 상품이 담겨 있습니다. 기존 장바구니를 비우고 새로 담을까요?")) {
+          await axios.post("/cart/clear");
+          dispatch(addToCart({
+            productId: product._id,
+            optionId: selectedOption?._id,
+            storeId: product.storeId,
+            quantity,
+            price: finalPrice,
+            name: product.name,
+            imageUrl: images[0],
+            storeName: product.storeName
+          }));
+        }
+      } else {
+        alert(err);
+      }
+    } 
   };
 
 
@@ -246,7 +266,7 @@ const ProductDetailPage = () => {
           <MainImage src={images[mainIndex]} alt={product.name} />
           <Thumbs>
             {images.map((src, idx) => (
-              <Thumb key={idx} src={src} alt={`thumb-${idx}`} active={idx === mainIndex} onClick={() => setMainIndex(idx)} />
+              <Thumb key={idx} src={src} alt={`thumb-${idx}`} $active={idx === mainIndex} onClick={() => setMainIndex(idx)} />
             ))}
           </Thumbs>
         </Gallery>

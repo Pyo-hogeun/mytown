@@ -40,7 +40,7 @@ const mapCartItems = (items: any[]): CartItem[] => {
     _id: i._id,
     quantity: i.quantity,
     product: typeof i.product === "string" ? { _id: i.product, name: "", price: 0 } : i.product,
-    optionId: i.optionId? i.optionId: null,
+    optionId: i.optionId ? i.optionId : null,
   }));
 };
 
@@ -62,10 +62,20 @@ export const addToCart = createAsyncThunk<
     name: string;
     imageUrl: string;
     storeName: string;
+  },
+  {
+    rejectValue: string
   }
->("cart/addToCart", async ({ productId, optionId, quantity }) => {
-  const res = await axios.post("/cart/add", { productId, optionId, quantity });
-  return res.data.items as CartItem[];
+>("cart/addToCart", async ({ productId, optionId, quantity }, { rejectWithValue }) => {
+  try {
+    const res = await axios.post("/cart/add", { productId, optionId, quantity });
+    return res.data.items as CartItem[];
+  } catch (err: any) {
+    if (err.response?.data?.storeConflict) {
+      return rejectWithValue("DIFFERENT_STORE");
+    }
+    return rejectWithValue(err.response?.data?.message || "장바구니 추가 실패");
+  }
 });
 // 장바구니에서 상품 제거
 export const deleteFromCart = createAsyncThunk(
@@ -86,6 +96,11 @@ export const checkout = createAsyncThunk(
     return res.data.order;
   }
 );
+// ✅ 장바구니 비우기
+export const clearCart = createAsyncThunk("cart/clearCart", async () => {
+  await axios.post("/cart/clear");
+  return [];
+});
 
 const cartSlice = createSlice({
   name: "cart",
@@ -98,9 +113,6 @@ const cartSlice = createSlice({
       state.items = state.items.filter(
         (i) => !(i.product._id === action.payload.productId && (i.option?._id ?? null) === (action.payload.optionId ?? null))
       );
-    },
-    clearCart: (state) => {
-      state.items = [];
     },
   },
   extraReducers: (builder) => {
@@ -117,9 +129,12 @@ const cartSlice = createSlice({
       })
       .addCase(deleteFromCart.fulfilled, (state, action) => {
         state.items = action.payload.items;
+      })
+      .addCase(clearCart.fulfilled, (state) => {
+        state.items = [];
       });
   },
 });
 
-export const { updateCart, removeFromCart, clearCart } = cartSlice.actions;
+export const { updateCart, removeFromCart } = cartSlice.actions;
 export default cartSlice.reducer;
