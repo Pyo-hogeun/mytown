@@ -25,6 +25,10 @@ const ReviewContainer = styled.div`
   flex-direction: column;
   gap: 16px;
   padding: 16px 0;
+  background-color: #FFF;
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 `;
 
 const ReviewCard = styled.div`
@@ -90,7 +94,8 @@ const ReviewList: React.FC<ReviewListProps> = ({ productId }) => {
   if (reviews.length === 0) return <EmptyMsg>아직 작성된 리뷰가 없습니다.</EmptyMsg>;
 
   return (
-    <ReviewContainer>
+    <ReviewContainer className="column-1-3">
+      <h3>구매자 리뷰</h3>
       {reviews.map((r) => (
         <ReviewCard key={r._id}>
           <Header>

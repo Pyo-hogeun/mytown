@@ -160,6 +160,8 @@ export const updateOrderStatus = createAsyncThunk(
   }
 );
 
+
+
 interface OrderState {
   status: "idle" | "processing" | "succeeded" | "failed";
   error?: string | null;
@@ -214,11 +216,11 @@ const orderSlice = createSlice({
     // ✅ 저장된 배송지 한번에 세팅
     setDeliveryInfo: (
       state,
-      action: PayloadAction<{ receiver: string; phone: string; address: string }>
+      action: PayloadAction<{ receiver: string; phone: string; address?: string }>
     ) => {
       state.receiver = action.payload.receiver;
       state.phone = action.payload.phone;
-      state.address = action.payload.address;
+      state.address = action.payload.address ?? '';
     },
   },
   extraReducers: (builder) => {
@@ -269,7 +271,8 @@ const orderSlice = createSlice({
         if (state.selectedOrder?._id === action.payload._id) {
           state.selectedOrder = action.payload;
         }
-      });
+      })
+      
   },
 });
 

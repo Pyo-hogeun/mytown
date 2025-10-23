@@ -12,13 +12,20 @@ export interface RiderInfo {
   };
   vehicleType: 'motorcycle' | 'car';
 }
-
+export interface SavedDeliveryInfo {
+  receiver?: string;
+  phone?: string;
+  address?: string;
+  updatedAt?: string;
+}
 export interface User {
   id: string;
   name: string;
   role: 'admin' | 'user' | 'manager' | 'master' | 'rider' | null;
   email: string;
   store?: Store;
+  phone?: string;
+  savedDeliveryInfo?: SavedDeliveryInfo | null;
   riderInfo?: RiderInfo | null; // ✅ 라이더 정보 포함 (선택적)
 }
 
@@ -40,6 +47,34 @@ export const fetchCurrentUser = createAsyncThunk("auth/fetchCurrentUser", async 
   const res = await axios.get("/auth/me");
   return res.data; // 백엔드에서 user 정보 반환하도록 구현되어 있어야 함
 });
+// ✅ 유저 배송지 조회
+export const fetchSavedDeliveryInfo = createAsyncThunk(
+  "order/fetchSavedDeliveryInfo",
+  async (_, thunkAPI) => {
+    try {
+      const res = await axios.get("/users/me/delivery-info");
+      return res.data.deliveryInfo;
+    } catch (err: any) {
+      return thunkAPI.rejectWithValue("배송지 조회 실패");
+    }
+  }
+);
+
+// ✅ 유저 배송지 저장
+export const saveDeliveryInfoToUser = createAsyncThunk(
+  "order/saveDeliveryInfoToUser",
+  async (
+    { receiver, phone, address }: { receiver: string; phone: string; address: string },
+    thunkAPI
+  ) => {
+    try {
+      const res = await axios.post("/users/me/delivery-info", { receiver, phone, address });
+      return res.data.deliveryInfo;
+    } catch (err: any) {
+      return thunkAPI.rejectWithValue("배송지 저장 실패");
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: 'auth',
@@ -73,6 +108,27 @@ const authSlice = createSlice({
       })
       .addCase(fetchCurrentUser.rejected, (state) => {
         state.loading = false;
+      })
+      // ✅ 배송지 조회 성공 시 user.savedDeliveryInfo 갱신
+      .addCase(fetchSavedDeliveryInfo.fulfilled, (state, action) => {
+        console.log('redux!, ', state.user);
+        if (!state.user) return;
+        state.user.savedDeliveryInfo = {
+          receiver: action.payload?.receiver || '',
+          phone: action.payload?.phone || '',
+          address: action.payload?.address || '',
+          updatedAt: action.payload?.updatedAt || undefined,
+        };
+      })
+      // ✅ 배송지 저장 성공 시 user.savedDeliveryInfo 갱신
+      .addCase(saveDeliveryInfoToUser.fulfilled, (state, action) => {
+        if (!state.user) return;
+        state.user.savedDeliveryInfo = {
+          receiver: action.payload?.receiver || '',
+          phone: action.payload?.phone || '',
+          address: action.payload?.address || '',
+          updatedAt: action.payload?.updatedAt || new Date().toISOString(),
+        };
       });
   },
 });

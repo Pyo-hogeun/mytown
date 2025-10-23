@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { deleteFromCart, fetchCart } from '@/redux/slices/cartSlice';
 import styled from 'styled-components';
 import { AppDispatch, RootState } from '@/redux/store';
 import axios from '@/utils/axiosInstance';
 import { useRouter } from 'next/navigation';
-import ShippingForm from './ShippingForm';
+import ShippingForm, { ShippingFormRef } from './ShippingForm';
 import DeliveryTimeSelector from './DeliveryTimeSelector';
 import Button from '../component/Button';
 
@@ -67,6 +67,7 @@ interface CartItem {
 export default function CartPage() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const shippingFormRef = useRef<ShippingFormRef>(null);
   const cart = useSelector((state: RootState) => state.cart.items) as CartItem[];
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -125,6 +126,9 @@ export default function CartPage() {
         };
       });
 
+    // ✅ 배송지 저장
+    shippingFormRef.current?.saveDeliveryIfRemembered();
+
     router.push(`/checkout?items=${encodeURIComponent(JSON.stringify(selectedItems))}`);
   };
 
@@ -133,7 +137,7 @@ export default function CartPage() {
     <Container>
       {cart.length > 0 ?
         (<>
-          <ShippingForm />
+          <ShippingForm ref={shippingFormRef}/>
           <DeliveryTimeSelector />
         </>
         ) : ('장바구니가 비어있습니다.')

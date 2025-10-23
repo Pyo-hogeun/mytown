@@ -29,6 +29,9 @@ const Grid = styled.div`
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
   }
+  .column-1-3{
+    grid-column: 1 / 3;
+  }
 `;
 
 const Gallery = styled.div`
@@ -90,19 +93,6 @@ const OptionBox = styled.div`
   margin: 12px 0;
 `;
 
-const QtyWrap = styled.div`
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin: 12px 0;
-`;
-
-const QtyButton = styled.button`
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-`;
-
 const AddButton = styled.button`
   display:block;
   width:100%;
@@ -121,10 +111,6 @@ const Description = styled.div`
   line-height: 1.6;
 `;
 
-const ReviewItem = styled.div`
-  padding: 12px;
-  border-bottom: 1px solid #eee;
-`;
 
 // --------------------------- 타입 정의 ---------------------------
 type Option = {
@@ -218,7 +204,7 @@ const ProductDetailPage = () => {
       alert('주문 수량이 남은 수량을 초과합니다.');
       return;
     }
-    try{
+    try {
       // ADD TO CART 액션: productId, optionId (있으면), quantity 포함
       await dispatch(addToCart({
         productId: product._id,
@@ -249,7 +235,7 @@ const ProductDetailPage = () => {
       } else {
         alert(err);
       }
-    } 
+    }
   };
 
 
@@ -283,14 +269,6 @@ const ProductDetailPage = () => {
             </OptionBox>
           )}
 
-          {/* <QtyWrap>
-            <div>수량</div>
-            <QtyButton onClick={decrement}>-</QtyButton>
-            <div>{quantity}</div>
-            <QtyButton onClick={increment}>+</QtyButton>
-            <div style={{ marginLeft: 'auto', fontSize: 14, color: '#888' }}>재고: {remaining}</div>
-          </QtyWrap> */}
-
           <QuantitySelector
             quantity={quantity}
             remaining={selectedOption?.stock ?? product.stockQty}
@@ -305,9 +283,10 @@ const ProductDetailPage = () => {
           </Description>
 
         </InfoCard>
+        <ReviewList productId={product._id} />
       </Grid>
 
-    <ReviewList productId={product._id} />
+      
     </Container>
   );
 }
