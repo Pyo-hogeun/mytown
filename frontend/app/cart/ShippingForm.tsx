@@ -15,6 +15,19 @@ const FormContainer = styled.div`
   border-radius: 8px;
   background: #fafafa;
 `;
+const AddressRow = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+`;
+const SearchButton = styled.button`
+  background: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+`;
 export interface ShippingFormRef {
   saveDeliveryIfRemembered: () => void;
   remember: boolean;
@@ -57,6 +70,15 @@ const ShippingForm = forwardRef<ShippingFormRef>((_, ref) => {
     }
   }, [dispatch, user?.savedDeliveryInfo]);
 
+  // ✅ 카카오 주소 검색
+  const handleAddressSearch = () => {
+    new window.daum.Postcode({
+      oncomplete: (data: any) => {
+        const fullAddress = data.address; // 선택한 전체 주소
+        dispatch(setAddress(fullAddress));
+      },
+    }).open();
+  };
 
   return (
     <FormContainer>
@@ -73,12 +95,17 @@ const ShippingForm = forwardRef<ShippingFormRef>((_, ref) => {
         value={phone}
         onChange={(e) => dispatch(setPhone(e.target.value))}
       />
-      <Input
-        type="text"
-        placeholder="배송지 주소"
-        value={address}
-        onChange={(e) => dispatch(setAddress(e.target.value))}
-      />
+      <AddressRow>
+        <Input
+          type="text"
+          placeholder="배송지 주소"
+          value={address}
+          onChange={(e) => dispatch(setAddress(e.target.value))}
+        />
+        <SearchButton type="button" onClick={handleAddressSearch}>
+          주소 검색
+        </SearchButton>
+      </AddressRow>
       <div className="save-delievery-info">
         <label htmlFor="save">
           <input
