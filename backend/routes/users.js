@@ -163,7 +163,7 @@ router.get("/me/delivery-info", authMiddleware, async (req, res) => {
 // ✅ 배송지 저장/업데이트
 router.post("/me/delivery-info", authMiddleware, async (req, res) => {
   try {
-    const { receiver, phone, address } = req.body;
+    const { receiver, phone, address, detailAddress } = req.body;
     const user = await User.findByIdAndUpdate(
       req.user._id,
       {
@@ -171,6 +171,7 @@ router.post("/me/delivery-info", authMiddleware, async (req, res) => {
           receiver,
           phone,
           address,
+          detailAddress,
           updatedAt: new Date(),
         },
       },

@@ -16,6 +16,7 @@ export interface SavedDeliveryInfo {
   receiver?: string;
   phone?: string;
   address?: string;
+  detailAddress?: string;
   updatedAt?: string;
 }
 export interface User {
@@ -64,11 +65,11 @@ export const fetchSavedDeliveryInfo = createAsyncThunk(
 export const saveDeliveryInfoToUser = createAsyncThunk(
   "order/saveDeliveryInfoToUser",
   async (
-    { receiver, phone, address }: { receiver: string; phone: string; address: string },
+    { receiver, phone, address, detailAddress }: { receiver: string; phone: string; address: string; detailAddress: string; },
     thunkAPI
   ) => {
     try {
-      const res = await axios.post("/users/me/delivery-info", { receiver, phone, address });
+      const res = await axios.post("/users/me/delivery-info", { receiver, phone, address, detailAddress });
       return res.data.deliveryInfo;
     } catch (err: any) {
       return thunkAPI.rejectWithValue("배송지 저장 실패");
@@ -117,6 +118,7 @@ const authSlice = createSlice({
           receiver: action.payload?.receiver || '',
           phone: action.payload?.phone || '',
           address: action.payload?.address || '',
+          detailAddress: action.payload?.detailAddress || '',
           updatedAt: action.payload?.updatedAt || undefined,
         };
       })
@@ -127,6 +129,7 @@ const authSlice = createSlice({
           receiver: action.payload?.receiver || '',
           phone: action.payload?.phone || '',
           address: action.payload?.address || '',
+          detailAddress: action.payload?.detailAddress || '',
           updatedAt: action.payload?.updatedAt || new Date().toISOString(),
         };
       });

@@ -53,6 +53,7 @@ const UserSchema = new mongoose.Schema({
     receiver: { type: String },
     phone: { type: String },
     address: { type: String },
+    detailAddress: { type: String },
     updatedAt: { type: Date },
   },
   snsProvider: { type: String }, // kakao, google, etc

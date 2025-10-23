@@ -33,6 +33,7 @@ export interface CreateOrderPayload {
   receiver: string;
   phone: string;
   address: string;
+  detailAddress: string;
   deliveryTime?: DeliveryTime;
   maskedCard?: string;
   totalPrice: number;
@@ -45,6 +46,7 @@ export interface CreatedOrder {
   receiver?: string;
   phone?: string;
   address?: string;
+  detailAddress?: string;
   deliveryTime?: DeliveryTime;
   optionId?: string;
 }
@@ -68,6 +70,7 @@ export interface UserOrder {
   receiver: string;
   phone: string;
   address: string;
+  detailAddress: string;
   deliveryTime?: DeliveryTime;
 }
 
@@ -177,6 +180,7 @@ interface OrderState {
   receiver: string;
   phone: string;
   address: string;
+  detailAddress: string;
   deliveryTime?: DeliveryTime;
 }
 
@@ -191,6 +195,7 @@ const initialState: OrderState = {
   receiver: "",
   phone: "",
   address: "",
+  detailAddress: "",
   deliveryTime: undefined,
 };
 
@@ -209,6 +214,9 @@ const orderSlice = createSlice({
     },
     setAddress: (state, action: PayloadAction<string>) => {
       state.address = action.payload;
+    },
+    setDetailAddress: (state, action: PayloadAction<string>) => {
+      state.detailAddress = action.payload;
     },
     setDeliveryTime: (state, action: PayloadAction<DeliveryTime>) => {
       state.deliveryTime = action.payload;
@@ -276,5 +284,5 @@ const orderSlice = createSlice({
   },
 });
 
-export const { resetOrderState, setReceiver, setPhone, setAddress, setDeliveryTime, setDeliveryInfo } = orderSlice.actions;
+export const { resetOrderState, setReceiver, setPhone, setAddress, setDetailAddress, setDeliveryTime, setDeliveryInfo } = orderSlice.actions;
 export default orderSlice.reducer;

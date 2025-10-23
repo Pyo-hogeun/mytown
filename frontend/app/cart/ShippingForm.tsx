@@ -3,10 +3,11 @@
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { AppDispatch, RootState } from "@/redux/store";
-import { setReceiver, setPhone, setAddress } from "@/redux/slices/orderSlice";
+import { setReceiver, setPhone, setAddress, setDetailAddress } from "@/redux/slices/orderSlice";
 import Input from "../component/Input";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { fetchSavedDeliveryInfo, saveDeliveryInfoToUser } from "@/redux/slices/authSlice";
+import PhoneInput from "../component/PhoneInput";
 
 const FormContainer = styled.div`
   margin: 20px 0;
@@ -18,15 +19,16 @@ const FormContainer = styled.div`
 const AddressRow = styled.div`
   display: flex;
   gap: 8px;
-  align-items: center;
+  align-items: flex-start;
 `;
 const SearchButton = styled.button`
-  background: #0070f3;
-  color: white;
-  border: none;
+  border:1px solid #ccc;
+  background:#fff;
   border-radius: 6px;
-  padding: 8px 12px;
   cursor: pointer;
+  white-space: nowrap;
+  height: 42px;
+
 `;
 export interface ShippingFormRef {
   saveDeliveryIfRemembered: () => void;
@@ -34,14 +36,16 @@ export interface ShippingFormRef {
 }
 const ShippingForm = forwardRef<ShippingFormRef>((_, ref) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { receiver, phone, address, orders } = useSelector((s: RootState) => s.order);
+  const { receiver, phone, address, detailAddress } = useSelector((s: RootState) => s.order);
   const { user } = useSelector((state: RootState) => state.auth);
   const [remember, setRemember] = useState(true);
+  const [carrier, setCarrier] = useState("");
+
 
   // ✅ 배송지 저장 (체크된 경우만)
   const handleSaveDelivery = () => {
     if (!remember) return;
-    dispatch(saveDeliveryInfoToUser({ receiver, phone, address }));
+    dispatch(saveDeliveryInfoToUser({ receiver, phone, address, detailAddress }));
     alert("배송지가 저장되었습니다.");
   };
 
@@ -63,10 +67,11 @@ const ShippingForm = forwardRef<ShippingFormRef>((_, ref) => {
   // ✅ savedDeliveryInfo가 불러와지면 orderSlice에 반영
   useEffect(() => {
     if (user?.savedDeliveryInfo) {
-      const { receiver, phone, address } = user.savedDeliveryInfo;
+      const { receiver, phone, address, detailAddress } = user.savedDeliveryInfo;
       if (receiver) dispatch(setReceiver(receiver));
       if (phone) dispatch(setPhone(phone));
       if (address) dispatch(setAddress(address));
+      if (detailAddress) dispatch(setDetailAddress(detailAddress));
     }
   }, [dispatch, user?.savedDeliveryInfo]);
 
@@ -89,11 +94,18 @@ const ShippingForm = forwardRef<ShippingFormRef>((_, ref) => {
         value={receiver}
         onChange={(e) => dispatch(setReceiver(e.target.value))}
       />
-      <Input
+      {/* <Input
         type="text"
         placeholder="연락처"
         value={phone}
         onChange={(e) => dispatch(setPhone(e.target.value))}
+      /> */}
+
+      <PhoneInput
+        value={phone}
+        onChange={(val) => dispatch(setPhone(val))}
+        carrier={carrier}
+        onCarrierChange={setCarrier}
       />
       <AddressRow>
         <Input
@@ -101,11 +113,18 @@ const ShippingForm = forwardRef<ShippingFormRef>((_, ref) => {
           placeholder="배송지 주소"
           value={address}
           onChange={(e) => dispatch(setAddress(e.target.value))}
+          disabled={true}
         />
         <SearchButton type="button" onClick={handleAddressSearch}>
           주소 검색
         </SearchButton>
       </AddressRow>
+      <Input
+        type="text"
+        placeholder="주소 상세"
+        value={detailAddress}
+        onChange={(e) => dispatch(setDetailAddress(e.target.value))}
+      />
       <div className="save-delievery-info">
         <label htmlFor="save">
           <input
