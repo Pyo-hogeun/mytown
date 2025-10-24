@@ -196,7 +196,7 @@ const initialState: OrderState = {
   phone: "",
   address: "",
   detailAddress: "",
-  deliveryTime: undefined,
+  deliveryTime: {day:'',time:''},
 };
 
 const orderSlice = createSlice({

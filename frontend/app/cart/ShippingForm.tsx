@@ -8,6 +8,7 @@ import Input from "../component/Input";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { fetchSavedDeliveryInfo, saveDeliveryInfoToUser } from "@/redux/slices/authSlice";
 import PhoneInput from "../component/PhoneInput";
+import Button from "../component/Button";
 
 const FormContainer = styled.div`
   margin: 20px 0;
@@ -28,8 +29,12 @@ const SearchButton = styled.button`
   cursor: pointer;
   white-space: nowrap;
   height: 42px;
-
 `;
+const SaveDelieveryInfoWrapper = styled.div`
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+`
 export interface ShippingFormRef {
   saveDeliveryIfRemembered: () => void;
   remember: boolean;
@@ -39,7 +44,6 @@ const ShippingForm = forwardRef<ShippingFormRef>((_, ref) => {
   const { receiver, phone, address, detailAddress } = useSelector((s: RootState) => s.order);
   const { user } = useSelector((state: RootState) => state.auth);
   const [remember, setRemember] = useState(true);
-  const [carrier, setCarrier] = useState("");
 
 
   // ✅ 배송지 저장 (체크된 경우만)
@@ -94,18 +98,10 @@ const ShippingForm = forwardRef<ShippingFormRef>((_, ref) => {
         value={receiver}
         onChange={(e) => dispatch(setReceiver(e.target.value))}
       />
-      {/* <Input
-        type="text"
-        placeholder="연락처"
-        value={phone}
-        onChange={(e) => dispatch(setPhone(e.target.value))}
-      /> */}
 
       <PhoneInput
         value={phone}
         onChange={(val) => dispatch(setPhone(val))}
-        carrier={carrier}
-        onCarrierChange={setCarrier}
       />
       <AddressRow>
         <Input
@@ -125,7 +121,7 @@ const ShippingForm = forwardRef<ShippingFormRef>((_, ref) => {
         value={detailAddress}
         onChange={(e) => dispatch(setDetailAddress(e.target.value))}
       />
-      <div className="save-delievery-info">
+      <SaveDelieveryInfoWrapper>
         <label htmlFor="save">
           <input
             type="checkbox"
@@ -135,8 +131,8 @@ const ShippingForm = forwardRef<ShippingFormRef>((_, ref) => {
           />
           배송지 기억하기
         </label>
-      </div>
-      <button onClick={handleSaveDelivery}>배송지 저장</button>
+        <Button onClick={handleSaveDelivery}>배송지 저장</Button>
+      </SaveDelieveryInfoWrapper>
     </FormContainer>
   );
 });

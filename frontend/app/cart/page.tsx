@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import ShippingForm, { ShippingFormRef } from './ShippingForm';
 import DeliveryTimeSelector from './DeliveryTimeSelector';
 import Button from '../component/Button';
+import Image from 'next/image';
 
 const Container = styled.div`
   max-width:800px;
@@ -135,14 +136,7 @@ export default function CartPage() {
 
   return (
     <Container>
-      {cart.length > 0 ?
-        (<>
-          <ShippingForm ref={shippingFormRef}/>
-          <DeliveryTimeSelector />
-        </>
-        ) : ('장바구니가 비어있습니다.')
-      }
-
+      <h3>장바구니 상품목록</h3>
       {cart.map(item => {
         const option = item.optionId
           ? item.product.options?.find(o => o._id === item.optionId)
@@ -153,6 +147,10 @@ export default function CartPage() {
             <CartItemRow>
               <Checkbox type="checkbox" checked={selectedIds.includes(item._id)} onChange={() => handleCheckbox(item._id)} />
               <ItemName>
+                {
+                  item.product.imageUrl?
+                  <Image src={item.product.imageUrl} width={30} height={30} alt="썸네일" style={{borderRadius: '4px', verticalAlign:'middle', marginRight:'4px'}}/>:false
+                }
                 {item.product.name}
                 {option && (
                   <div style={{ fontSize: '0.8em', color: '#666' }}>
@@ -172,6 +170,16 @@ export default function CartPage() {
           </div>
         )
       })}
+
+      {cart.length > 0 ?
+        (<>
+          <ShippingForm ref={shippingFormRef}/>
+          <DeliveryTimeSelector />
+        </>
+        ) : ('장바구니가 비어있습니다.')
+      }
+
+      
       <Total>총 결제금액: {totalPrice.toLocaleString()}원</Total>
       <CheckoutButton onClick={handleCheckout}>결제</CheckoutButton>
     </Container>

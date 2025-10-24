@@ -1,110 +1,113 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { setDeliveryTime } from '@/redux/slices/orderSlice';
+import { generateTimeSlots } from '@/utils/generateTimeSlots';
 
-const days = ['월', '화', '수', '목', '금', '토', '일'];
-const timeSlots = Array.from({ length: 20 }, (_, i) => {
-  const hour = Math.floor(i / 2) + 9; // 09:00 ~ 18:30
-  const minute = i % 2 === 0 ? '00' : '30';
-  return `${hour.toString().padStart(2, '0')}:${minute}`;
-});
-
-const GridContainer = styled.div`
-  display: grid;
-  grid-template-columns: 80px repeat(${days.length}, 1fr);
-  border-left: 1px solid #ddd;
-  border-top: 1px solid #ddd;
-  // border-radius: 8px;
-  overflow: hidden;
-  margin-bottom: 20px;
-`;
-
-const HeaderCell = styled.div`
-  background: #f5f5f5;
-  padding: 8px;
-  font-weight: bold;
-  text-align: center;
-  border-bottom: 1px solid #ddd;
-  border-right: 1px solid #ddd;
-`;
-
-const TimeCell = styled.div`
-  padding: 8px;
-  text-align: center;
-  border-bottom: 1px solid #ddd;
-  border-right: 1px solid #ddd;
+const Container = styled.div`
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #eee;
+  border-radius: 8px;
   background: #fafafa;
 `;
 
-const SlotButton = styled.button<{ selected: boolean }>`
-  width: 100%;
-  height: 100%;
-  padding: 6px;
-  border: none;
-  cursor: pointer;
-  background-color: ${({ selected }) => (selected ? '#0070f3' : 'white')};
-  color: ${({ selected }) => (selected ? 'white' : '#333')};
-  border-radius: 4px;
-
-  &:hover {
-    background-color: ${({ selected }) => (selected ? '#005bb5' : '#f0f0f0')};
-  }
-`;
-const Cell = styled.div`
+const SelectBox = styled.select`
   padding: 8px;
-  border-right: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
-`
+  margin-right: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-size: 15px;
+`;
+
+const SummaryText = styled.p`
+  margin-top: 12px;
+  color: #333;
+  font-weight: 500;
+`;
+
 const DeliveryTimeSelector: React.FC = () => {
   const dispatch = useDispatch();
   const selected = useSelector((state: RootState) => state.order.deliveryTime);
 
-  const handleSelect = (day: string, time: string) => {
-    dispatch(setDeliveryTime({ day, time }));
-  };
+  // 오늘 기준 7일치 요일+날짜 생성
+  const weekOptions = useMemo(() => {
+    const today = new Date();
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      const label = `${days[date.getDay()]}요일 (${date.getMonth() + 1}/${date.getDate()})`;
+      return {
+        value: date.toISOString(),
+        label,
+      };
+    });
+  }, []);
+
+  const [selectedDay, setSelectedDay] = useState(weekOptions[0].value);
+  const [selectedTime, setSelectedTime] = useState('');
+
+  // 선택한 날짜에 따라 시간대 갱신
+  const timeSlots = useMemo(() => generateTimeSlots(selectedDay), [selectedDay]);
+
+  // 초기값 설정
+  useEffect(() => {
+    if (timeSlots.length > 0 && !selectedTime) {
+      setSelectedTime(timeSlots[0]);
+    }
+  }, [timeSlots, selectedTime]);
+
+  useEffect(() => {
+    if (selectedDay && selectedTime) {
+      const dayLabel = weekOptions.find((d) => d.value === selectedDay)?.label ?? '';
+      dispatch(setDeliveryTime({ day: dayLabel, time: selectedTime }));
+    }
+  }, [selectedDay, selectedTime, dispatch, weekOptions]);
+
+  // 자연스러운 문장 변환
+  const friendlyMessage = useMemo(() => {
+    if (!selected?.day || !selected?.time) return '';
+    return `${selected.day} ${selected.time}에 받아볼게요.`;
+  }, [selected]);
 
   return (
-    <div>
+    <Container>
       <h3>희망 배송 시간 선택</h3>
-      <GridContainer>
-        <div></div>
-        {days.map((day) => (
-          <HeaderCell key={day}>{day}</HeaderCell>
-        ))}
+      <div>
+        <SelectBox
+          value={selectedDay}
+          onChange={(e) => setSelectedDay(e.target.value)}
+        >
+          {weekOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </SelectBox>
 
-        {timeSlots.map((time) => (
-          <React.Fragment key={time}>
-            <TimeCell>{time}</TimeCell>
-            {days.map((day) => {
-              const isSelected =
-                selected?.day === day && selected?.time === time;
-              return (
-                <Cell
-                  key={`${day}-${time}`}
-                >
-                  <SlotButton
-                    selected={isSelected}
-                    onClick={() => handleSelect(day, time)}
-                  >
-                    {isSelected ? '✓' : ''}
-                  </SlotButton>
-                </Cell>
-              );
-            })}
-          </React.Fragment>
-        ))}
-      </GridContainer>
+        {timeSlots.length > 0 ?(
+          <SelectBox
+          value={selectedTime}
+          onChange={(e) => setSelectedTime(e.target.value)}
+        >
+          {timeSlots.map((time) => (
+            <option key={time} value={time}>
+              {time}
+            </option>
+          ))}
+        </SelectBox>
+        ):(<p>오늘은 배송 종료입니다.</p>)}
 
-      {selected && (
-        <p>
-          선택한 시간: {selected.day}요일 {selected.time}
-        </p>
-      )}
-    </div>
+        
+      </div>
+
+      {timeSlots.length > 0 && friendlyMessage ? <SummaryText>{friendlyMessage}</SummaryText>: false}
+    </Container>
   );
 };
 

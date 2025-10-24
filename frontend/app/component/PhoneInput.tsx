@@ -13,13 +13,6 @@ const Wrapper = styled.div`
   align-items: flex-start;
 `;
 
-const Select = styled.select`
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #fff;
-  height: 42px;
-`;
 
 const StyledInput = styled(Input)<{ $error?: boolean }>`
   border: 1px solid ${({ $error }) => ($error ? 'red' : '#ccc')};
@@ -38,15 +31,11 @@ const ErrorMsg = styled.div`
 export interface PhoneInputProps {
   value: string;
   onChange: (value: string) => void;
-  carrier: string;
-  onCarrierChange: (carrier: string) => void;
 }
 
 const PhoneInput: React.FC<PhoneInputProps> = ({
   value,
   onChange,
-  carrier,
-  onCarrierChange,
 }) => {
   const [error, setError] = useState('');
 
@@ -73,13 +62,6 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   return (
     <Container>
       <Wrapper>
-        <Select value={carrier} onChange={(e) => onCarrierChange(e.target.value)}>
-          <option value="">통신사 선택</option>
-          <option value="SKT">SKT</option>
-          <option value="KT">KT</option>
-          <option value="LGU+">LGU+</option>
-          <option value="알뜰폰">알뜰폰</option>
-        </Select>
 
         <StyledInput
           type="text"
