@@ -417,8 +417,6 @@ router.patch("/:id/cancel", authMiddleware, async (req, res) => {
     // ✅ 본인 주문만 취소 가능
     if (order.user.toString() !== req.user._id.toString()) {
 
-      console.log("order.user:", order.user.toString());
-      console.log("req.user.id:", req.user._id.toString());
       return res.status(403).json({ message: "자신의 주문만 취소할 수 있습니다." });
     }
 
@@ -771,8 +769,6 @@ router.post("/seed", async (req, res) => {
       const user = users[Math.floor(Math.random() * users.length)];
       const product = products[Math.floor(Math.random() * products.length)];
       const quantity = Math.floor(Math.random() * 5) + 1;
-
-      console.log('product.store', product.store.name);
 
       const order = new Order({
         user: user._id,

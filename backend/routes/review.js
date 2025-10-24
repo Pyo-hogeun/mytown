@@ -23,9 +23,6 @@ router.post("/", authMiddleware, async (req, res) => {
     // 주문이 실제로 사용자 소유인지 확인
     const order = await Order.findById(orderId).populate("orderItems.product");
     if (!order || order.user.toString() !== req.user._id.toString()) {
-      console.log('ORDER: ', order);
-      console.log('ORDER USER: ', order.user);
-      console.log('REQ USER: ', req.user._id);
       return res.status(403).json({ message: "리뷰 작성 권한이 없습니다." });
     }
 

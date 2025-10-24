@@ -266,7 +266,6 @@ router.post('/login', async (req, res) => {
  */
 
 router.get("/kakao/callback", async (req, res) => {
-  console.log('key: ', process.env.KAKAO_REST_KEY, process.env.KAKAO_REDIRECT_URI)
   const { code } = req.query;
 
   try {
@@ -293,7 +292,6 @@ router.get("/kakao/callback", async (req, res) => {
     });
 
     const kakaoUser = userRes.data;
-    console.log('카카오유저: ', userRes);
 
     const kakaoId = kakaoUser.id.toString();
     const email = kakaoUser.kakao_account?.email || `${kakaoId}@kakao-user.com`;
@@ -400,7 +398,6 @@ router.get("/me", authMiddleware, async (req, res) => {
 router.patch("/password", authMiddleware, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    console.log('🔍 req.user:', req.user);
     // ✅ 비밀번호 변경 시에만 password 필드 포함해서 조회
     const user = await User.findById(req.user._id).select('+password');
 
