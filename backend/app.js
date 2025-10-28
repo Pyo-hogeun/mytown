@@ -67,6 +67,14 @@ setupSwagger(app);
 app.get('/', (req, res) => {
   res.send('🛒 Shopping Delivery API is running');
 });
+// 🔍 연결 테스트용 라우트
+app.get('/api/test', (req, res) => {
+  res.json({
+    success: true,
+    message: '✅ Render 서버가 정상적으로 작동 중입니다!',
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // ----------------- 서버 시작 (비동기 초기화) -----------------
 const PORT = process.env.PORT;
