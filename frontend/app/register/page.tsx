@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 import axios from '@/utils/axiosInstance';
 import { useRouter } from 'next/navigation';
 import Input from '../component/Input';

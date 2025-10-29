@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import axios from "@/utils/axiosInstance";
 import { useSearchParams } from "next/navigation";
 import Container from "@/app/component/Container";
@@ -9,7 +9,7 @@ import ProfileImage from "@/app/component/ProfileImage";
 import styled from "styled-components";
 import Link from "next/link";
 
-const UserInfomation = () => {
+const UserInfomationContent = () => {
   interface User {
     name?: string;
     phone?: string;
@@ -105,4 +105,10 @@ const UserInfomation = () => {
 
   )
 }
-export default UserInfomation
+export default function UserInfomation(){
+  return(
+    <Suspense fallback={<div>로딩중...</div>}>
+      <UserInfomationContent />
+    </Suspense>
+  )
+}

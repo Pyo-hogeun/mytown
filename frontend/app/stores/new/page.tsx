@@ -12,7 +12,7 @@ const Page = () => {
   return(
     <Container>
       {
-        !user || !allowedRoles.includes(user.role)?(
+        !user || !allowedRoles.includes(user.role || '')?(
           <p>권한이 없습니다.</p>
         ):(
           <StoreForm />

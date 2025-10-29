@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Tabs from '@/app/component/Tabs';
 import AvailableOrdersPage from '@/app/rider/availableOrders/page';
 import RiderOrdersPage from '@/app/rider/order/page';
@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 
-const RiderHome = () => {
+const RiderHomeContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialTab = (searchParams.get("tab") as 'available' | 'assigned' | 'settlement') || 'available';
@@ -55,4 +55,10 @@ const RiderHome = () => {
   );
 };
 
-export default RiderHome;
+export default function RiderHome(){
+  return(
+    <Suspense fallback={<div>로딩중...</div>}>
+      <RiderHomeContent />
+    </Suspense>
+  )
+};

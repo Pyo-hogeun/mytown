@@ -1,7 +1,7 @@
 'use client';
 
 import styled from 'styled-components';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import axios from '@/utils/axiosInstance';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/redux/store';
@@ -104,7 +104,7 @@ const Badge = styled.span`
   margin: 0 0.2em;
 `;
 
-const ProductListPage = () => {
+const ProductListPageContent = () => {
   const dispatch = useDispatch<AppDispatch>();
   const searchParams = useSearchParams();
   const products = useSelector((state: RootState) => state.product.items);
@@ -185,4 +185,10 @@ const ProductListPage = () => {
   );
 };
 
-export default ProductListPage;
+export default function ProductListPage(){
+  return(
+    <Suspense fallback={<div>로딩중..</div>}>
+      <ProductListPageContent />
+    </Suspense>
+  )
+};

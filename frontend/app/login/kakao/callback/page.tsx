@@ -1,13 +1,13 @@
 // app/login/kakao/callback/page.tsx
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "@/utils/axiosInstance";
 import { useDispatch } from "react-redux";
 import { setToken, setUser } from "@/redux/slices/authSlice";
 
-const KakaoCallback = () => {
+const KakaoCallbackContent = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const searchParams = useSearchParams();
@@ -28,4 +28,10 @@ const KakaoCallback = () => {
 
   return <p>카카오 로그인 처리중...</p>;
 }
-export default KakaoCallback
+export default function KakaoCallback(){
+  return(
+    <Suspense fallback={<div>로딩중...</div>}>
+      <KakaoCallbackContent />
+    </Suspense>
+  )
+}

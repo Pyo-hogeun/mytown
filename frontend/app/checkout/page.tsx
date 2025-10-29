@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
 import { createOrder, PaymentMethod } from '@/redux/slices/orderSlice';
@@ -82,7 +82,7 @@ type CheckoutItem = {
   optionExtraPrice: number;
 };
 
-const CheckoutPage = () => {
+const CheckoutPageContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const dispatch = useDispatch<any>();
@@ -292,4 +292,10 @@ const CheckoutPage = () => {
   );
 };
 
-export default CheckoutPage;
+export default function CheckoutPage(){
+  return(
+    <Suspense fallback={<div>로딩중..</div>}>
+      <CheckoutPageContent />
+    </Suspense>
+  )
+};
