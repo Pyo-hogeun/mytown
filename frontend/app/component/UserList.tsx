@@ -37,14 +37,6 @@ const Select = styled.select`
   padding: 4px;
 `;
 
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: 'user' | 'admin';
-  createdAt: string;
-}
-
 const UserList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const token = useSelector((state: RootState) => state.auth.token);

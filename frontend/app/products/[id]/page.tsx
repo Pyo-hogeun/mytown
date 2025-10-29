@@ -112,22 +112,6 @@ const Description = styled.div`
 `;
 
 
-// --------------------------- 타입 정의 ---------------------------
-type Option = {
-  _id?: string;
-  name: string;
-  extraPrice?: number;
-  stock?: number;
-};
-
-type Review = {
-  _id?: string;
-  userName?: string;
-  rating: number;
-  comment: string;
-  createdAt?: string;
-};
-
 // --------------------------- 컴포넌트 ---------------------------
 const ProductDetailPage = () => {
   const router = useRouter();

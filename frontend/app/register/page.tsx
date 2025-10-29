@@ -8,8 +8,6 @@ import Input from '../component/Input';
 import { Card } from '../component/Card';
 import Container from '../component/Container';
 import Button from '../component/Button';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '@/redux/store';
 
 // 📌 스타일 정의
 const CenterContainer = styled(Container)`
@@ -36,10 +34,6 @@ const StyledButton = styled(Button)`
   border-radius: 8px;
 `;
 
-const spin = keyframes`
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-`;
 const Select = styled.select`
   width: 100%;
   padding: 12px 14px;
