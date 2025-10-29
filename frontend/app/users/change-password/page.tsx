@@ -7,7 +7,6 @@ import Container from '@/app/component/Container';
 import { Card } from '@/app/component/Card';
 import Button from '@/app/component/Button';
 import Input from '@/app/component/Input';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 const Title = styled.h2`

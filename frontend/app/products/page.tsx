@@ -1,13 +1,11 @@
 'use client';
 
 import styled from 'styled-components';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import axios from '@/utils/axiosInstance';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/redux/store';
 import { setProducts } from '@/redux/slices/productSlice';
-import { useRequireLogin } from '../hooks/useRequireLogin';
-import { addToCart } from '@/redux/slices/cartSlice';
 import Container from '../component/Container';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -176,7 +174,6 @@ const ProductListPage = () => {
 
 
               }
-              {/* {user?.role === 'user' ? <Button onClick={() => handleAddToCart(product._id)}>장바구니 담기</Button> : undefined} */}
 
             </CardItem>
 

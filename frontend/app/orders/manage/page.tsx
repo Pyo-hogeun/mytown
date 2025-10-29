@@ -3,9 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
-import { fetchManagerOrders, OrderStatus, updateOrderStatus, validStatuses } from "@/redux/slices/orderSlice";
+import { fetchManagerOrders, OrderStatus, updateOrderStatus } from "@/redux/slices/orderSlice";
 import { useRouter } from "next/navigation";
-import Select from "@/app/component/Select";
 import styled from "styled-components";
 import Input from "@/app/component/Input";
 import Button from "@/app/component/Button";
@@ -79,20 +78,20 @@ const ManagerOrdersPage = () => {
   }
 
   // ✅ useMemo로 검색 결과 최적화
-  const filteredOrders = useMemo(() => {
-    if (!searchName && !searchPhone) return orders;
+  // const filteredOrders = useMemo(() => {
+  //   if (!searchName && !searchPhone) return orders;
   
-    return orders.filter((o) => {
-      const nameMatch = searchName
-        ? o.user?.name?.toLowerCase().includes(searchName.toLowerCase())
-        : true;
-      const phoneMatch = searchPhone
-        ? o.phone?.toLowerCase().includes(searchPhone.toLowerCase())
-        : true;
+  //   return orders.filter((o) => {
+  //     const nameMatch = searchName
+  //       ? o.user?.name?.toLowerCase().includes(searchName.toLowerCase())
+  //       : true;
+  //     const phoneMatch = searchPhone
+  //       ? o.phone?.toLowerCase().includes(searchPhone.toLowerCase())
+  //       : true;
   
-      return nameMatch && phoneMatch; // ✅ 반드시 true/false 반환
-    });
-  }, [orders, searchName, searchPhone]);
+  //     return nameMatch && phoneMatch; // ✅ 반드시 true/false 반환
+  //   });
+  // }, [orders, searchName, searchPhone]);
   
 
   if (!user || user.role !== "manager") {

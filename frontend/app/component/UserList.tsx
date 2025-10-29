@@ -47,7 +47,6 @@ interface User {
 
 const UserList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const [users, setUsers] = useState<User[]>([]);
   const token = useSelector((state: RootState) => state.auth.token);
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const { list } = useSelector((state:RootState)=>state.users);
@@ -105,6 +104,30 @@ const UserList: React.FC = () => {
           placeholder="사용자 이름 검색"
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
+        />
+        <Input
+          type="text"
+          placeholder="이메일 검색"
+          value={searchEmail}
+          onChange={(e) => setSearchEmail(e.target.value)}
+        />
+        <Input
+          type="text"
+          placeholder="사용자 권한 검색"
+          value={searchRole}
+          onChange={(e) => setSearchRole(e.target.value)}
+        />
+        <Input
+          type="text"
+          placeholder="전화번호 검색"
+          value={searchPhone}
+          onChange={(e) => setSearchPhone(e.target.value)}
+        />
+        <Input
+          type="text"
+          placeholder="주소 검색"
+          value={searchAddress}
+          onChange={(e) => setSearchAddress(e.target.value)}
         />
       </SearchItem>
       <SearchButton onClick={handleSearch}>검색</SearchButton>

@@ -127,7 +127,7 @@ const ProductForm = () => {
               <li>
                 <Label>상품이미지</Label>
                 <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="상품이미지" />
-                <p>'https://...' 처럼 절대경로를 포함해야합니다.</p>
+                <p>https://... 처럼 절대경로를 포함해야합니다.</p>
               </li>
               <li>
                 <Label>옵션</Label>

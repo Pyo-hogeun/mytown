@@ -8,36 +8,6 @@ interface ReviewFormProps {
   onClose: () => void;
   onSubmitted: (review: any) => void; // ✅ 추가
 }
-const ListWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const OrderCard = styled.div`
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 16px;
-  background: #fff;
-
-  .info {
-    margin-bottom: 8px;
-  }
-`;
-
-const ReviewButton = styled.button`
-  background: #007aff;
-  color: #fff;
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-
-  &:hover {
-    background: #0059c9;
-  }
-`;
-
 const FormWrapper = styled.div`
   margin-top: 12px;
   border-top: 1px solid #eee;
@@ -118,6 +88,7 @@ export default function ReviewForm({ orderId, productId, onClose, onSubmitted }:
       onClose();
     } catch (err) {
       alert('리뷰 등록에 실패했습니다.');
+      console.log('err: ', err);
     } finally {
       setLoading(false);
     }

@@ -16,7 +16,6 @@ const RiderHome = () => {
   const initialTab = (searchParams.get("tab") as 'available' | 'assigned' | 'settlement') || 'available';
 
   const [activeKey, setActiveKey] = useState<'available' | 'assigned' | 'settlement'>(initialTab);
-  const [hasAssignedOrders, setHasAssignedOrders] = useState(false);
   const user = useSelector((state: RootState) => state.auth.user);
 
   // 🚀 최초 로딩 시 배정된 주문 여부 확인
@@ -30,7 +29,6 @@ const RiderHome = () => {
         const res = await axios.get('/order/rider/assigned');
         if (res.data.orders && res.data.orders.length > 0 && !searchParams.get('tab')) {
           setActiveKey('assigned'); // 배정된 주문 있으면 바로 해당 탭 활성화
-          setHasAssignedOrders(true);
         }
       } catch (err) {
         console.error('배정된 주문 확인 실패:', err);

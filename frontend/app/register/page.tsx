@@ -10,7 +10,6 @@ import Container from '../component/Container';
 import Button from '../component/Button';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/redux/store';
-import { fetchCurrentUser } from '@/redux/slices/authSlice';
 
 // 📌 스타일 정의
 const CenterContainer = styled(Container)`
@@ -59,17 +58,6 @@ const Label = styled.label`
   display: block;
   margin-bottom: 10px;
 `
-const Spinner = styled.div`
-  border: 2px solid #fff;
-  border-top: 2px solid transparent;
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  animation: ${spin} 0.6s linear infinite;
-  position: absolute;
-  left: calc(50% - 8px);
-  top: calc(50% - 8px);
-`;
 
 // 📌 마트 타입
 interface Store {
@@ -88,7 +76,6 @@ export default function RegisterPage() {
   const [stores, setStores] = useState<Store[]>([]);
   const [selectedStore, setSelectedStore] = useState('');
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
 
   // 📌 manager 선택 시 마트 목록 불러오기
   useEffect(() => {

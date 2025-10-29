@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
 import { createOrder, PaymentMethod } from '@/redux/slices/orderSlice';
@@ -117,7 +117,7 @@ const CheckoutPage = () => {
   const [agree, setAgree] = useState(false);
 
   // Redux에서 배송 정보 가져오기
-  const { receiver, phone, address, deliveryTime } = orderState;
+  const { receiver, phone, address, detailAddress, deliveryTime } = orderState;
 
   const onCardNumberChange = (v: string) => {
     const digits = v.replace(/\D/g, '').slice(0, 16);
@@ -145,6 +145,7 @@ const CheckoutPage = () => {
     receiver.trim() !== '' &&
     phone.trim() !== '' &&
     address.trim() !== '' &&
+    detailAddress.trim() !== '' &&
     deliveryTime &&
     isCardFormValid() &&
     orderState.status !== 'processing';
@@ -175,6 +176,7 @@ const CheckoutPage = () => {
           receiver,
           phone,
           address,
+          detailAddress,
           deliveryTime,
           maskedCard,
           totalPrice

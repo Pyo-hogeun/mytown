@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link"
-import styled, { css, keyframes } from "styled-components"
+import styled from "styled-components"
 import Profile from "./Profile"
 import { useSelector } from "react-redux"
 import { RootState } from "@/redux/store"

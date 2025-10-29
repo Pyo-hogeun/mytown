@@ -1,7 +1,7 @@
 // rider/register/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import axios from "@/utils/axiosInstance";
 import { useRouter } from "next/navigation";
 import Container from "@/app/component/Container";

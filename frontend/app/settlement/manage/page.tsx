@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { fetchManageSettlements, fetchRiderSettlements, paySettlement } from "@/redux/slices/riderSettlementSlice";
+import { fetchManageSettlements, paySettlement } from "@/redux/slices/riderSettlementSlice";
 import styled from "styled-components";
 import Container from "@/app/component/Container";
 import { useRouter } from "next/navigation";

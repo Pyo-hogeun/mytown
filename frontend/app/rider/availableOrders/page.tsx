@@ -27,7 +27,7 @@ const Charge = styled.span`
   font-size: 1.5em;
   color: #007bff;
 `
-const page = () => {
+const Page = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const { items, loading, error } = useSelector((state: RootState) => state.riderOrders);
@@ -71,4 +71,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

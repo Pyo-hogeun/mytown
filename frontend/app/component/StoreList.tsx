@@ -3,7 +3,7 @@
 import { fetchStores } from '@/redux/slices/storeSlice';
 import { AppDispatch, RootState } from '@/redux/store';
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
@@ -25,7 +25,6 @@ const Td = styled.td`
 `;
 
 const StoreList: React.FC = () => {
-  // const [stores, setStores] = useState<Store[]>([]);
   const dispatch = useDispatch<AppDispatch>();
   const {items: stores, loading} = useSelector((state:RootState)=> state.store)
 

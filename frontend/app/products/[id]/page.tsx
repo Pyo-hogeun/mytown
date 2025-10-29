@@ -128,20 +128,6 @@ type Review = {
   createdAt?: string;
 };
 
-type Product = {
-  _id: string;
-  name: string;
-  price: number;
-  storeName: string;
-  storeId: string;
-  stockQty: number;
-  imageUrl?: string; // 기존 데이터 호환성
-  images?: string[]; // 권장 필드
-  options?: Option[];
-  description?: string;
-  reviews?: Review[];
-};
-
 // --------------------------- 컴포넌트 ---------------------------
 const ProductDetailPage = () => {
   const router = useRouter();
@@ -158,7 +144,6 @@ const ProductDetailPage = () => {
   const [mainIndex, setMainIndex] = useState(0);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
-  const [reviews, setReviews] = useState()
 
   const { selected: product, loading, error } = useSelector((state: RootState) => state.product);
 
@@ -187,9 +172,6 @@ const ProductDetailPage = () => {
 
   // 남은 수량: 옵션별 재고 우선, 없으면 product.stockQty 사용
   const remaining = selectedOption?.stock ?? product.stockQty;
-
-  const increment = () => setQuantity(prev => Math.min(prev + 1, Math.max(1, remaining)));
-  const decrement = () => setQuantity(prev => Math.max(1, prev - 1));
 
   const handleAddToCart = async () => {
     if (!product) return;
