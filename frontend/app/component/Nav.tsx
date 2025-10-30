@@ -13,10 +13,16 @@ const Container = styled.div`
   ul{
     display: flex;
     gap: 20px;
+    ${(props) => props.theme.breakpoints.mobile} {
+      display: block;
+    }
   }
 `;
 const Item = styled.li`
   list-style: none;
+  ${(props) => props.theme.breakpoints.mobile} {
+    margin-bottom: 1em;
+  }
 `;
 interface Menu {
   path: string;

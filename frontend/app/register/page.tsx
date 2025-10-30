@@ -18,9 +18,12 @@ const CenterContainer = styled(Container)`
   top: 0;
   left: 0;
   min-height: 100vh;
-  width: 100vw;
+  width: 100%;
   background: #f5f6f8;
   z-index: -1;
+  ${(props) => props.theme.breakpoints.mobile} {
+    width: auto;
+  }
 `;
 
 const StyledButton = styled(Button)`

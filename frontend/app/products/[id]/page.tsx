@@ -26,11 +26,11 @@ const Grid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
   .column-1-3{
     grid-column: 1 / 3;
+  }
+  ${(props) => props.theme.breakpoints.mobile} {
+    grid-template-columns: 1fr;
   }
 `;
 
@@ -39,6 +39,9 @@ const Gallery = styled.div`
   border-radius: 12px;
   padding: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  ${(props) => props.theme.breakpoints.mobile} {
+    grid-column: 1 / 3;
+  }
 `;
 
 const MainImage = styled.img`
@@ -69,6 +72,9 @@ const InfoCard = styled.div`
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  ${(props) => props.theme.breakpoints.mobile} {
+    grid-column: 1 / 3;
+  }
 `;
 
 const Title = styled.h1`

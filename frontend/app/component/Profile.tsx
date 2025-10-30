@@ -69,8 +69,8 @@ const CartBadge = styled.span.withConfig({ shouldForwardProp: (props) => props !
     `}
 `;
 const CartButton = styled.div`
-  position: relative;
   display: inline-block;
+  position: relative;
   padding: 0 40px 0 10px;
 `;
 

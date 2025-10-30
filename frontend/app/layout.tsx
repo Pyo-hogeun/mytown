@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AppProviders>
           <GlobalStyle />
           <Nav />
-          
+
           {children}
         </AppProviders>
       </body>
