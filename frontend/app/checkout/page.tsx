@@ -1,12 +1,14 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
-import { createOrder, PaymentMethod } from '@/redux/slices/orderSlice';
+import PortOne from "@portone/browser-sdk/v2"
 import type { RootState } from '@/redux/store';
+import { createOrder, PaymentMethod } from '@/redux/slices/orderSlice';
 import { fetchCart } from '@/redux/slices/cartSlice';
+import Button from '../component/Button';
 
 const Container = styled.div`
   max-width:900px;
@@ -35,26 +37,7 @@ const Row = styled.div`
   &:last-child{border-bottom:none;}
 `;
 const Price = styled.div`font-weight:600;`;
-const RadioRow = styled.div`display:flex;gap:12px;`;
-const Input = styled.input`
-  width:100%;
-  padding:10px;
-  border:1px solid #ddd;
-  border-radius:8px;
-  box-sizing:border-box;
-`;
-const Inline = styled.div`display:flex;margin-bottom:10px;gap:8px;`;
-const Select = styled.select`
-  padding:10px;
-  border:1px solid #ddd;
-  border-radius:8px;
-`;
-const Agree = styled.label`
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-top:12px;
-`;
+
 const paySpin = keyframes`0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}`;
 const Spinner = styled.div`
   width:16px;
@@ -81,12 +64,26 @@ type CheckoutItem = {
   optionName?: string;
   optionExtraPrice: number;
 };
-
+type PaymentStatusType = 'IDLE' | 'PENDING' | 'FAILED' | 'PAID';
+interface PaymentStatus {
+  status: PaymentStatusType;
+  message? : string;
+}
 const CheckoutPageContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const dispatch = useDispatch<any>();
   const orderState = useSelector((s: RootState) => s.order);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>({
+    status: 'IDLE',
+  })
+  // Redux에서 배송 정보 가져오기
+  const { receiver, phone, address, detailAddress, deliveryTime } = orderState;
+
+  const NEXT_PUBLIC_PORTONE_STORE_ID = process.env.NEXT_PUBLIC_PORTONE_STORE_ID!;
+  const NEXT_PUBLIC_PORTONE_SECRET = process.env.NEXT_PUBLIC_PORTONE_SECRET!;
+  const NEXT_PUBLIC_PORTONE_CLIENT = process.env.NEXT_PUBLIC_PORTONE_CLIENT!;
+  const NEXT_PUBLIC_PORTONE_CHANNEL_KEY = process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY!;
 
   // 선택 항목 파싱
   const items: CheckoutItem[] = useMemo(() => {
@@ -106,150 +103,61 @@ const CheckoutPageContent = () => {
     [items]
   );
 
+  const randomId = () => {
+    return [...crypto.getRandomValues(new Uint32Array(2))]
+      .map((word) => word.toString(16).padStart(8, "0"))
+      .join("")
+  }
+  const handleClose = () =>
+    setPaymentStatus({
+      status: "IDLE",
+    })
+  const isWaitingPayment = paymentStatus.status !== "IDLE"
 
-  // 결제 수단 상태
-  const [method, setMethod] = useState<PaymentMethod>('card');
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvc, setCvc] = useState('');
-  const [installment, setInstallment] = useState('0');
-  const [cardBrand, setCardBrand] = useState('국민');
-  const [agree, setAgree] = useState(false);
-
-  // Redux에서 배송 정보 가져오기
-  const { receiver, phone, address, detailAddress, deliveryTime } = orderState;
-
-  const onCardNumberChange = (v: string) => {
-    const digits = v.replace(/\D/g, '').slice(0, 16);
-    const grouped = digits.replace(/(\d{4})(?=\d)/g, '$1-');
-    setCardNumber(grouped);
-  };
-  const onExpiryChange = (v: string) => {
-    const digits = v.replace(/\D/g, '').slice(0, 4);
-    let out = digits;
-    if (digits.length >= 3) out = digits.slice(0, 2) + '/' + digits.slice(2);
-    setExpiry(out);
-  };
-
-  const isCardFormValid = () => {
-    if (method !== 'card') return true;
-    const okNumber = /^\d{4}-\d{4}-\d{4}-\d{4}$/.test(cardNumber);
-    const okExpiry = /^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry);
-    const okCvc = /^\d{3,4}$/.test(cvc);
-    return okNumber && okExpiry && okCvc;
-  };
-
-  const canPay =
-    items.length > 0 &&
-    agree &&
-    receiver.trim() !== '' &&
-    phone.trim() !== '' &&
-    address.trim() !== '' &&
-    detailAddress.trim() !== '' &&
-    deliveryTime &&
-    isCardFormValid() &&
-    orderState.status !== 'processing';
-
-  const maskedCard =
-    method === 'card'
-      ? cardNumber.replace(/^(\d{0,4})-(\d{0,4})-(\d{0,4})-(\d{0,4})$/, '****-****-****-$4')
-      : undefined;
-
-  const onPay = async () => {
-    if (!canPay) return;
-    try {
-      const payloadItems = items.map(i => ({
-        _id: i._id,
-        product: i.product,
-        name: i.name,
-        store: i.store,
-        quantity: i.quantity,
-        unitPrice: i.unitPrice,
-        optionName: i.optionName,
-        optionExtraPrice: i.optionExtraPrice,
-      }));
-
-      const action = await dispatch(
-        createOrder({
-          items: payloadItems,
-          paymentMethod: method,
-          receiver,
-          phone,
-          address,
-          detailAddress,
-          deliveryTime,
-          maskedCard,
-          totalPrice
-        })
-      );
-
-      if (createOrder.fulfilled.match(action)) {
-        dispatch(fetchCart());
-        router.push(`/order-complete`);
-      }
-    } catch { }
-  };
+  const handleSubmit = async (e:any) => {
+    e.preventDefault();
+    setPaymentStatus({ status: "PENDING" })
+    const paymentId = randomId();
+    const payment = await PortOne.requestPayment({
+      storeId: NEXT_PUBLIC_PORTONE_STORE_ID,
+      channelKey: NEXT_PUBLIC_PORTONE_CHANNEL_KEY,
+      paymentId,
+      orderName: items[0].name,
+      totalAmount: totalPrice,
+      currency: "KRW",
+      payMethod: "CARD",
+    })
+    if (payment?.code !== undefined) {
+      setPaymentStatus({
+        status: "FAILED",
+        message: payment.message,
+      })
+      return
+    }
+    const completeResponse = await fetch("/api/payment/complete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        paymentId: payment?.paymentId,
+      }),
+    })
+    if (completeResponse.ok) {
+      const paymentComplete = await completeResponse.json()
+      setPaymentStatus({
+        status: paymentComplete.status,
+      })
+    } else {
+      setPaymentStatus({
+        status: "FAILED",
+        message: await completeResponse.text(),
+      })
+    }
+  }
 
   return (
     <Container>
-      <Card>
-        <SectionTitle>결제 수단</SectionTitle>
-        <RadioRow>
-          <label><input type="radio" name="pm" checked={method === 'card'} onChange={() => setMethod('card')} /> 신용/체크카드</label>
-          <label><input type="radio" name="pm" checked={method === 'kakao'} onChange={() => setMethod('kakao')} /> 카카오페이</label>
-          <label><input type="radio" name="pm" checked={method === 'naver'} onChange={() => setMethod('naver')} /> 네이버페이</label>
-        </RadioRow>
-
-        {method === 'card' && (
-          <>
-            <SectionTitle style={{ marginTop: 16 }}>카드 정보</SectionTitle>
-            <Inline>
-              <Select value={cardBrand} onChange={(e) => setCardBrand(e.target.value)}>
-                <option>국민</option><option>신한</option><option>현대</option><option>삼성</option><option>우리</option>
-              </Select>
-              <Select value={installment} onChange={(e) => setInstallment(e.target.value)}>
-                <option value="0">일시불</option>
-                <option value="2">2개월</option>
-                <option value="3">3개월</option>
-                <option value="6">6개월</option>
-              </Select>
-            </Inline>
-
-            <div style={{ marginTop: 10 }} />
-            <label>카드번호</label>
-            <Input
-              inputMode="numeric"
-              placeholder="0000-0000-0000-0000"
-              value={cardNumber}
-              onChange={(e) => onCardNumberChange(e.target.value)}
-            />
-            <Inline>
-              <div style={{ flex: 1 }}>
-                <label>만료 (MM/YY)</label>
-                <Input inputMode="numeric" placeholder="MM/YY" value={expiry} onChange={(e) => onExpiryChange(e.target.value)} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label>CVC</label>
-                <Input inputMode="numeric" placeholder="***" value={cvc} onChange={(e) => setCvc(e.target.value.replace(/\D/g, ''))} />
-              </div>
-            </Inline>
-          </>
-        )}
-
-        <Agree>
-          <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
-          결제 이용약관과 개인정보 제3자 제공에 동의합니다.
-        </Agree>
-
-        <PayButton disabled={!canPay} onClick={onPay}>
-          {orderState.status === 'processing' && <Spinner />}
-          {orderState.status === 'processing' ? '결제 처리 중...' : '결제하기'}
-        </PayButton>
-
-        {orderState.status === 'failed' && (
-          <div style={{ color: 'crimson', marginTop: 8 }}>결제/주문에 실패했습니다: {orderState.error ?? '오류'}</div>
-        )}
-      </Card>
 
       <Card>
         <SectionTitle>주문 요약</SectionTitle>
@@ -282,18 +190,71 @@ const CheckoutPageContent = () => {
           <div style={{ fontWeight: 700 }}>총 결제금액</div>
           <Price style={{ fontSize: 18 }}>{totalPrice.toLocaleString()}원</Price>
         </Row>
-        {method === 'card' && maskedCard && (
-          <div style={{ marginTop: 8, fontSize: 13, color: '#666' }}>
-            선택 카드: {maskedCard} ({cardBrand}, {installment === '0' ? '일시불' : `${installment}개월`})
-          </div>
-        )}
+
+        <PayButton type="submit">결제</PayButton>
       </Card>
+
+      <Card>
+
+        <form onSubmit={handleSubmit}>
+          <article>
+            {
+              items.map((item)=>{
+                return(
+                <div className="item">
+                  <div className="item-image">
+                    {/* <img src={`/${item.id}.png`} /> */}
+                  </div>
+                  <div className="item-text">
+                    <h5>{item.name}</h5>
+                    <p>{item.unitPrice.toLocaleString()}원</p>
+                  </div>
+                </div>
+                )
+
+              })
+            }
+            <div className="price">
+              <label>총 구입 가격</label>
+              {totalPrice.toLocaleString()}원
+            </div>
+          </article>
+          <button
+            type="submit"
+            aria-busy={isWaitingPayment}
+            disabled={isWaitingPayment}
+          >
+            결제
+          </button>
+        </form>
+        {paymentStatus.status === "FAILED" && (
+          <dialog open>
+            <header>
+              <h1>결제 실패</h1>
+            </header>
+            <p>{paymentStatus.message}</p>
+            <button type="button" onClick={handleClose}>
+              닫기
+            </button>
+          </dialog>
+        )}
+        <dialog open={paymentStatus.status === "PAID"}>
+          <header>
+            <h1>결제 성공</h1>
+          </header>
+          <p>결제에 성공했습니다.</p>
+          <button type="button" onClick={handleClose}>
+            닫기
+          </button>
+        </dialog>
+      </Card>
+
     </Container>
   );
 };
 
-export default function CheckoutPage(){
-  return(
+export default function CheckoutPage() {
+  return (
     <Suspense fallback={<div>로딩중..</div>}>
       <CheckoutPageContent />
     </Suspense>
