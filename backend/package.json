@@ -13,8 +13,10 @@
   "keywords": [],
   "dependencies": {
     "@faker-js/faker": "^9.9.0",
+    "@portone/server-sdk": "^0.17.0",
     "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",
+    "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "dayjs": "^1.11.18",
     "dotenv": "^16.5.0",

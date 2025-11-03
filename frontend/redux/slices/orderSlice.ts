@@ -11,7 +11,7 @@ export interface OrderItemPayload {
   optionExtraPrice?: number;
 }
 
-export type PaymentMethod = "card" | "kakao" | "naver";
+export type PaymentMethod = "CARD" | null;
 export type OrderStatus = "pending" | "accepted" | "assigned" | "delivering" | "completed" | "canceled";
 // ✅ 모든 주문 상태값 배열 (드롭다운 등에서 사용)
 export const validStatuses: OrderStatus[] = [

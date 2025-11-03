@@ -14,7 +14,9 @@ import settlementRoutes from './routes/settlement.js';
 import riderRoutes from './routes/rider.js';
 import { setupSwagger } from './swagger.js';
 import reviewRoutes from './routes/review.js';
+import paymentRoutes from './routes/payment.js';
 import mongoose from 'mongoose';
+import bodyParser from 'body-parser';
 
 dotenv.config(); // 🔑 .env 로드
 
@@ -43,7 +45,13 @@ app.use(
 // 기본 미들웨어
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use(
+  "/api/payment/webhook",
+  bodyParser.text({
+    type: "application/json",
+  }),
+);
+app.use(bodyParser.json());
 // 헬스 체크 (Render health check에 사용)
 app.get('/health', (req, res) => {
   res.json({ ok: true, env: process.env.NODE_ENV || 'development', time: new Date().toISOString() });
@@ -59,6 +67,7 @@ app.use('/api/order', orderRoutes);
 app.use('/api/settlement', settlementRoutes);
 app.use('/api/rider', riderRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Swagger (엔드포인트는 라우트 등록 후)
 setupSwagger(app);

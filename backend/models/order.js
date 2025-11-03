@@ -99,7 +99,7 @@ const OrderSchema = new Schema({
   // ✅ 결제 관련 필드
   paymentMethod: {
     type: String,
-    enum: ["card", "kakao", "naver"],
+    enum: ["CARD", null],
     required: true,
   },
 

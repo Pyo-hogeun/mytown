@@ -112,7 +112,6 @@ const authSlice = createSlice({
       })
       // ✅ 배송지 조회 성공 시 user.savedDeliveryInfo 갱신
       .addCase(fetchSavedDeliveryInfo.fulfilled, (state, action) => {
-        console.log('redux!, ', state.user);
         if (!state.user) return;
         state.user.savedDeliveryInfo = {
           receiver: action.payload?.receiver || '',

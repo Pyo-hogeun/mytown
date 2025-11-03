@@ -63,7 +63,6 @@ const ShippingForm = forwardRef<ShippingFormRef>((_, ref) => {
   // ✅ 로그인 시 유저의 저장된 배송지 불러오기
   useEffect(() => {
     if (user?.id) {
-      console.log('user! ', user.id);
       dispatch(fetchSavedDeliveryInfo());
     }
   }, [dispatch, user?.id]);

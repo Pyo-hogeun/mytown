@@ -6,7 +6,8 @@ import styled, { keyframes } from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
 import PortOne from "@portone/browser-sdk/v2"
 import type { RootState } from '@/redux/store';
-import { createOrder, PaymentMethod } from '@/redux/slices/orderSlice';
+import axios from '@/utils/axiosInstance';
+import { createOrder } from '@/redux/slices/orderSlice';
 import { fetchCart } from '@/redux/slices/cartSlice';
 import Button from '../component/Button';
 
@@ -67,7 +68,7 @@ type CheckoutItem = {
 type PaymentStatusType = 'IDLE' | 'PENDING' | 'FAILED' | 'PAID';
 interface PaymentStatus {
   status: PaymentStatusType;
-  message? : string;
+  message?: string;
 }
 const CheckoutPageContent = () => {
   const searchParams = useSearchParams();
@@ -84,11 +85,11 @@ const CheckoutPageContent = () => {
   const NEXT_PUBLIC_PORTONE_SECRET = process.env.NEXT_PUBLIC_PORTONE_SECRET!;
   const NEXT_PUBLIC_PORTONE_CLIENT = process.env.NEXT_PUBLIC_PORTONE_CLIENT!;
   const NEXT_PUBLIC_PORTONE_CHANNEL_KEY = process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY!;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   // 선택 항목 파싱
   const items: CheckoutItem[] = useMemo(() => {
     const param = searchParams.get('items');
-    console.log('param', param);
     if (!param) return [];
     try { return JSON.parse(decodeURIComponent(param)); } catch { return []; }
   }, [searchParams]);
@@ -114,7 +115,7 @@ const CheckoutPageContent = () => {
     })
   const isWaitingPayment = paymentStatus.status !== "IDLE"
 
-  const handleSubmit = async (e:any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     setPaymentStatus({ status: "PENDING" })
     const paymentId = randomId();
@@ -126,6 +127,7 @@ const CheckoutPageContent = () => {
       totalAmount: totalPrice,
       currency: "KRW",
       payMethod: "CARD",
+      redirectUrl: `${API_BASE_URL}/payment-redirect`,
     })
     if (payment?.code !== undefined) {
       setPaymentStatus({
@@ -134,25 +136,66 @@ const CheckoutPageContent = () => {
       })
       return
     }
-    const completeResponse = await fetch("/api/payment/complete", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+
+    try {
+      // 백엔드에 검증 요청
+      const { data } = await axios.post("/payment/complete", {
         paymentId: payment?.paymentId,
-      }),
-    })
-    if (completeResponse.ok) {
-      const paymentComplete = await completeResponse.json()
-      setPaymentStatus({
-        status: paymentComplete.status,
-      })
-    } else {
+        amount: totalPrice,
+      });
+      console.log('data: ', data);
+
+      if (data.status === "PAID") {
+        setPaymentStatus({ status: "PAID" });
+        alert("결제 성공! 주문을 생성합니다.");
+
+        // 주문 생성
+      const payloadItems = items.map(i => ({
+        _id: i._id,
+        product: i.product,
+        name: i.name,
+        store: i.store,
+        quantity: i.quantity,
+        unitPrice: i.unitPrice,
+        optionName: i.optionName,
+        optionExtraPrice: i.optionExtraPrice,
+      }));
+
+      const action = await dispatch(
+        createOrder({
+          items: payloadItems,
+          paymentMethod: "CARD",
+          receiver,
+          phone,
+          address,
+          detailAddress,
+          deliveryTime,
+          totalPrice,
+        })
+      );
+
+      if (createOrder.fulfilled.match(action)) {
+        dispatch(fetchCart());
+        setPaymentStatus({ status: "PAID" });
+        router.push(`/order-complete`);
+      } else {
+        setPaymentStatus({
+          status: "FAILED",
+          message: "주문 생성에 실패했습니다.",
+        });
+      }
+      } else {
+        setPaymentStatus({
+          status: "FAILED",
+          message: "결제 상태가 PAID가 아닙니다.",
+        });
+      }
+    } catch (err: any) {
+      console.error(err);
       setPaymentStatus({
         status: "FAILED",
-        message: await completeResponse.text(),
-      })
+        message: err.response?.data?.message || "결제 검증 실패",
+      });
     }
   }
 
@@ -199,17 +242,17 @@ const CheckoutPageContent = () => {
         <form onSubmit={handleSubmit}>
           <article>
             {
-              items.map((item)=>{
-                return(
-                <div className="item">
-                  <div className="item-image">
-                    {/* <img src={`/${item.id}.png`} /> */}
+              items.map((item) => {
+                return (
+                  <div className="item">
+                    <div className="item-image">
+                      {/* <img src={`/${item.id}.png`} /> */}
+                    </div>
+                    <div className="item-text">
+                      <h5>{item.name}</h5>
+                      <p>{item.unitPrice.toLocaleString()}원</p>
+                    </div>
                   </div>
-                  <div className="item-text">
-                    <h5>{item.name}</h5>
-                    <p>{item.unitPrice.toLocaleString()}원</p>
-                  </div>
-                </div>
                 )
 
               })
