@@ -64,4 +64,9 @@ router.post("/complete", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+
+router.get('/channel-key', (req, res) => {
+  res.json({ channelKey: process.env.PORTONE_CHANNEL_KEY });
+});
 export default router;

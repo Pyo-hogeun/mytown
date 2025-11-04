@@ -10,6 +10,7 @@ import axios from '@/utils/axiosInstance';
 import { createOrder } from '@/redux/slices/orderSlice';
 import { fetchCart } from '@/redux/slices/cartSlice';
 
+
 const Container = styled.div`
   max-width:900px;
   margin:60px auto;
@@ -73,7 +74,6 @@ const CheckoutPageContent = () => {
   const { receiver, phone, address, detailAddress, deliveryTime } = orderState;
 
   const NEXT_PUBLIC_PORTONE_STORE_ID = process.env.NEXT_PUBLIC_PORTONE_STORE_ID!;
-  const NEXT_PUBLIC_PORTONE_CHANNEL_KEY = process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY!;
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   // 선택 항목 파싱
@@ -105,12 +105,13 @@ const CheckoutPageContent = () => {
   const isWaitingPayment = paymentStatus.status !== "IDLE"
 
   const handleSubmit = async (e: any) => {
+    const { data: { channelKey } } = await axios.get("/payment/channel-key");
     e.preventDefault();
     setPaymentStatus({ status: "PENDING" })
     const paymentId = randomId();
     const payment = await PortOne.requestPayment({
       storeId: NEXT_PUBLIC_PORTONE_STORE_ID,
-      channelKey: NEXT_PUBLIC_PORTONE_CHANNEL_KEY,
+      channelKey,
       paymentId,
       orderName: items[0].name,
       totalAmount: totalPrice,
@@ -139,40 +140,40 @@ const CheckoutPageContent = () => {
         alert("결제 성공! 주문을 생성합니다.");
 
         // 주문 생성
-      const payloadItems = items.map(i => ({
-        _id: i._id,
-        product: i.product,
-        name: i.name,
-        store: i.store,
-        quantity: i.quantity,
-        unitPrice: i.unitPrice,
-        optionName: i.optionName,
-        optionExtraPrice: i.optionExtraPrice,
-      }));
+        const payloadItems = items.map(i => ({
+          _id: i._id,
+          product: i.product,
+          name: i.name,
+          store: i.store,
+          quantity: i.quantity,
+          unitPrice: i.unitPrice,
+          optionName: i.optionName,
+          optionExtraPrice: i.optionExtraPrice,
+        }));
 
-      const action = await dispatch(
-        createOrder({
-          items: payloadItems,
-          paymentMethod: "CARD",
-          receiver,
-          phone,
-          address,
-          detailAddress,
-          deliveryTime,
-          totalPrice,
-        })
-      );
+        const action = await dispatch(
+          createOrder({
+            items: payloadItems,
+            paymentMethod: "CARD",
+            receiver,
+            phone,
+            address,
+            detailAddress,
+            deliveryTime,
+            totalPrice,
+          })
+        );
 
-      if (createOrder.fulfilled.match(action)) {
-        dispatch(fetchCart());
-        setPaymentStatus({ status: "PAID" });
-        router.push(`/order-complete`);
-      } else {
-        setPaymentStatus({
-          status: "FAILED",
-          message: "주문 생성에 실패했습니다.",
-        });
-      }
+        if (createOrder.fulfilled.match(action)) {
+          dispatch(fetchCart());
+          setPaymentStatus({ status: "PAID" });
+          router.push(`/order-complete`);
+        } else {
+          setPaymentStatus({
+            status: "FAILED",
+            message: "주문 생성에 실패했습니다.",
+          });
+        }
       } else {
         setPaymentStatus({
           status: "FAILED",
