@@ -1,15 +1,14 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Suspense, useEffect, useMemo, useState } from 'react';
-import styled, { keyframes } from 'styled-components';
+import { Suspense, useMemo, useState } from 'react';
+import styled from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
 import PortOne from "@portone/browser-sdk/v2"
 import type { RootState } from '@/redux/store';
 import axios from '@/utils/axiosInstance';
 import { createOrder } from '@/redux/slices/orderSlice';
 import { fetchCart } from '@/redux/slices/cartSlice';
-import Button from '../component/Button';
 
 const Container = styled.div`
   max-width:900px;
@@ -39,15 +38,7 @@ const Row = styled.div`
 `;
 const Price = styled.div`font-weight:600;`;
 
-const paySpin = keyframes`0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}`;
-const Spinner = styled.div`
-  width:16px;
-  height:16px;
-  border-radius:50%;
-  border:2px solid #fff;
-  border-top-color:transparent;
-  animation:${paySpin} 0.6s linear infinite;
-`;
+
 const PayButton = styled.button<{ disabled?: boolean }>`
   width:100%;padding:14px;border:none;border-radius:10px;
   background:${p => p.disabled ? '#c9c9c9' : '#0070f3'};color:#fff;cursor:${p => p.disabled ? 'not-allowed' : 'pointer'};
@@ -82,8 +73,6 @@ const CheckoutPageContent = () => {
   const { receiver, phone, address, detailAddress, deliveryTime } = orderState;
 
   const NEXT_PUBLIC_PORTONE_STORE_ID = process.env.NEXT_PUBLIC_PORTONE_STORE_ID!;
-  const NEXT_PUBLIC_PORTONE_SECRET = process.env.NEXT_PUBLIC_PORTONE_SECRET!;
-  const NEXT_PUBLIC_PORTONE_CLIENT = process.env.NEXT_PUBLIC_PORTONE_CLIENT!;
   const NEXT_PUBLIC_PORTONE_CHANNEL_KEY = process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY!;
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -242,9 +231,9 @@ const CheckoutPageContent = () => {
         <form onSubmit={handleSubmit}>
           <article>
             {
-              items.map((item) => {
+              items.map((item, index) => {
                 return (
-                  <div className="item">
+                  <div className="item" key={index}>
                     <div className="item-image">
                       {/* <img src={`/${item.id}.png`} /> */}
                     </div>
