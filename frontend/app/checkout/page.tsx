@@ -224,42 +224,11 @@ const CheckoutPageContent = () => {
           <Price style={{ fontSize: 18 }}>{totalPrice.toLocaleString()}원</Price>
         </Row>
 
-        <PayButton type="submit">결제</PayButton>
+        <PayButton onClick={handleSubmit} disabled={isWaitingPayment}>결제</PayButton>
       </Card>
 
       <Card>
 
-        <form onSubmit={handleSubmit}>
-          <article>
-            {
-              items.map((item, index) => {
-                return (
-                  <div className="item" key={index}>
-                    <div className="item-image">
-                      {/* <img src={`/${item.id}.png`} /> */}
-                    </div>
-                    <div className="item-text">
-                      <h5>{item.name}</h5>
-                      <p>{item.unitPrice.toLocaleString()}원</p>
-                    </div>
-                  </div>
-                )
-
-              })
-            }
-            <div className="price">
-              <label>총 구입 가격</label>
-              {totalPrice.toLocaleString()}원
-            </div>
-          </article>
-          <button
-            type="submit"
-            aria-busy={isWaitingPayment}
-            disabled={isWaitingPayment}
-          >
-            결제
-          </button>
-        </form>
         {paymentStatus.status === "FAILED" && (
           <dialog open>
             <header>
