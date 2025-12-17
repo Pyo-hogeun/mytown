@@ -53,11 +53,28 @@ const router = express.Router();
  *         description: 서버 오류
  */
 router.post('/', authMiddleware, adminOnly, async (req, res) => {
-  const { name, address, phone } = req.body;
+  const { name, address, phone, location } = req.body;
   const userId = req.user.id;
 
   try {
-    const store = new Store({ name, address, owner: userId, phone });
+    const coords = {};
+
+    if (location) {
+      const { lat, lng } = location;
+
+      if (lat !== undefined && lng !== undefined) {
+        const parsedLat = Number(lat);
+        const parsedLng = Number(lng);
+
+        if (Number.isNaN(parsedLat) || Number.isNaN(parsedLng)) {
+          return res.status(400).json({ message: '위도/경도는 숫자여야 합니다.' });
+        }
+
+        coords.location = { lat: parsedLat, lng: parsedLng };
+      }
+    }
+
+    const store = new Store({ name, address, owner: userId, phone, ...coords });
     await store.save();
     res.status(201).json(store);
   } catch (err) {
@@ -90,6 +107,88 @@ router.get('/', async (req, res) => {
     res.json(stores);
   } catch (err) {
     res.status(500).json({ message: '마트 조회 실패', error: err.message });
+  }
+});
+
+/**
+ * @openapi
+ * /stores/{id}/location:
+ *   put:
+ *     summary: 매장 위치 정보 업데이트
+ *     tags:
+ *       - Store
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 업데이트할 매장 ID
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               address:
+ *                 type: string
+ *               location:
+ *                 type: object
+ *                 properties:
+ *                   lat:
+ *                     type: number
+ *                   lng:
+ *                     type: number
+ *     responses:
+ *       200:
+ *         description: 업데이트된 매장 정보
+ *       400:
+ *         description: 잘못된 요청
+ *       404:
+ *         description: 매장을 찾을 수 없음
+ *       500:
+ *         description: 서버 오류
+ */
+router.put('/:id/location', authMiddleware, adminOnly, async (req, res) => {
+  const { address, location } = req.body;
+  const update = {};
+
+  if (address !== undefined) {
+    update.address = address;
+  }
+
+  if (location) {
+    const { lat, lng } = location;
+
+    if (lat !== undefined && lng !== undefined) {
+      const parsedLat = Number(lat);
+      const parsedLng = Number(lng);
+
+      if (Number.isNaN(parsedLat) || Number.isNaN(parsedLng)) {
+        return res.status(400).json({ message: '위도/경도는 숫자여야 합니다.' });
+      }
+
+      update.location = { lat: parsedLat, lng: parsedLng };
+    }
+  }
+
+  if (!Object.keys(update).length) {
+    return res.status(400).json({ message: '업데이트할 항목이 없습니다.' });
+  }
+
+  try {
+    const store = await Store.findByIdAndUpdate(req.params.id, update, { new: true });
+
+    if (!store) {
+      return res.status(404).json({ message: '해당 매장을 찾을 수 없습니다.' });
+    }
+
+    res.json(store);
+  } catch (err) {
+    res.status(500).json({ message: '매장 위치 업데이트 실패', error: err.message });
   }
 });
 

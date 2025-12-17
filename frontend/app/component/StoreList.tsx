@@ -46,6 +46,8 @@ const StoreList: React.FC = () => {
               <Th>이름</Th>
               <Th>주소</Th>
               <Th>전화번호</Th>
+              <Th>위도</Th>
+              <Th>경도</Th>
               <Th>등록일</Th>
             </tr>
           </thead>
@@ -55,6 +57,8 @@ const StoreList: React.FC = () => {
                 <Td><Link href={`/products?storeId=${store._id}&storeName=${store.name}`}>{store.name}</Link></Td>
                 <Td>{store.address}</Td>
                 <Td>{store.phone}</Td>
+                <Td>{store.location?.lat ?? '-'}</Td>
+                <Td>{store.location?.lng ?? '-'}</Td>
                 <Td>{new Date(store.createdAt).toLocaleDateString()}</Td>
               </tr>
             ))}

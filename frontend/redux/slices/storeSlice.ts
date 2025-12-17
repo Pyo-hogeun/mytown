@@ -6,6 +6,10 @@ export type Store = {
   name: string;
   address?: string;
   phone?: string;
+  location?: {
+    lat?: number;
+    lng?: number;
+  };
   createdAt: string;
 };
 
