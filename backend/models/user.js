@@ -16,6 +16,11 @@ const RiderInfoSchema = new mongoose.Schema({
     enum: ["AVAILABLE", "UNAVAILABLE"],
     default: "AVAILABLE",
   },
+  location: {
+    lat: { type: Number },
+    lng: { type: Number },
+    updatedAt: { type: Date },
+  },
 }, { _id: false });
 
 const UserSchema = new mongoose.Schema({

@@ -12,6 +12,7 @@ import cartRoutes from './routes/cart.js';
 import orderRoutes from './routes/order.js';
 import settlementRoutes from './routes/settlement.js';
 import riderRoutes from './routes/rider.js';
+import geocodingRoutes from './routes/geocoding.js';
 import { setupSwagger } from './swagger.js';
 import reviewRoutes from './routes/review.js';
 import paymentRoutes from './routes/payment.js';
@@ -66,6 +67,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/order', orderRoutes);
 app.use('/api/settlement', settlementRoutes);
 app.use('/api/rider', riderRoutes);
+app.use('/api/geocoding', geocodingRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/payment', paymentRoutes);
 

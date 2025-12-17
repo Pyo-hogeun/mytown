@@ -68,6 +68,23 @@ const OrdersAssignPage = () => {
   const { orders, availableRiders, ridersStatus } = useSelector((state: RootState) => state.order);
   const [selectedRiders, setSelectedRiders] = useState<Record<string, string>>({});
 
+  const formatDistance = (riderId: string) => {
+    const rider = availableRiders.find((r) => r._id === riderId);
+    if (!rider) return "";
+    if (rider.distanceFromStore === null || rider.distanceFromStore === undefined) {
+      return "(거리 정보 없음)";
+    }
+    return `(매장 기준 약 ${rider.distanceFromStore.toFixed(1)}km)`;
+  };
+
+  const renderRiderLocation = (riderId: string) => {
+    const rider = availableRiders.find((r) => r._id === riderId);
+    if (!rider?.riderInfo?.location) return "위치 정보 없음";
+    const { lat, lng, updatedAt } = rider.riderInfo.location;
+    const timestamp = updatedAt ? new Date(updatedAt).toLocaleString() : "업데이트 시간 정보 없음";
+    return `${lat?.toFixed(5)}, ${lng?.toFixed(5)} (업데이트: ${timestamp})`;
+  };
+
   useEffect(() => {
     if (!user) {
       router.push("/login");
@@ -155,6 +172,13 @@ const OrdersAssignPage = () => {
               <Info>
                 <Label>현재 배정 라이더</Label>
                 {order.assignedRider.name} ({order.assignedRider.phone || "연락처 없음"})
+                {order.assignedRider.riderInfo?.location && (
+                  <div>
+                    위치: {`${order.assignedRider.riderInfo.location.lat?.toFixed(5) ?? "-"}, ${
+                      order.assignedRider.riderInfo.location.lng?.toFixed(5) ?? "-"
+                    }`}
+                  </div>
+                )}
               </Info>
             )}
             <Info>
@@ -165,17 +189,23 @@ const OrdersAssignPage = () => {
                   setSelectedRiders((prev) => ({ ...prev, [order._id]: e.target.value }))
                 }
                 disabled={ridersStatus === "loading"}
-              >
-                <option value="" disabled>
-                  라이더를 선택하세요
-                </option>
-                {availableRiders.map((rider) => (
-                  <option key={rider._id} value={rider._id}>
-                    {rider.name} {rider.phone ? `(${rider.phone})` : ""}
+                >
+                  <option value="" disabled>
+                    라이더를 선택하세요
                   </option>
-                ))}
-              </Select>
+                  {availableRiders.map((rider) => (
+                    <option key={rider._id} value={rider._id}>
+                      {rider.name} {rider.phone ? `(${rider.phone})` : ""} {formatDistance(rider._id)}
+                    </option>
+                  ))}
+                </Select>
             </Info>
+            {selectedRiders[order._id] && (
+              <Info>
+                <Label>선택한 라이더 위치</Label>
+                {renderRiderLocation(selectedRiders[order._id])}
+              </Info>
+            )}
             <AssignButton onClick={() => handleAssign(order)} disabled={availableRiders.length === 0}>
               {availableRiders.length === 0 ? "배정 가능한 라이더 없음" : "라이더 배정"}
             </AssignButton>
