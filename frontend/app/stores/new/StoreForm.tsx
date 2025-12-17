@@ -11,6 +11,12 @@ const Input = styled.input`
   margin-top: 1rem;
 `;
 
+const AddressRow = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+`;
+
 const Button = styled.button`
   margin-top: 1rem;
   padding: 0.6rem 1rem;
@@ -28,6 +34,15 @@ const StoreForm = () => {
   const [lng, setLng] = useState('');
   const [isGeocoding, setIsGeocoding] = useState(false);
   const router = useRouter();
+
+  const handleAddressSearch = () => {
+    new window.daum.Postcode({
+      oncomplete: (data: any) => {
+        const fullAddress = data.address;
+        setAddress(fullAddress);
+      },
+    }).open();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +84,12 @@ const StoreForm = () => {
     <h1>🏬 마트 등록 (관리자 전용)</h1>
     <form onSubmit={handleSubmit}>
       <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="마트 이름" required />
-      <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="주소" />
+      <AddressRow>
+        <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="주소" />
+        <Button type="button" onClick={handleAddressSearch} style={{ marginTop: 0 }}>
+          주소 검색
+        </Button>
+      </AddressRow>
       <Button type="button" onClick={requestGeocode} disabled={isGeocoding}>
         {isGeocoding ? '주소 변환 중...' : '주소로 좌표 찾기'}
       </Button>
