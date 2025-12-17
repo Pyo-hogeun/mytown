@@ -3,6 +3,10 @@ import mongoose from "mongoose";
 const StoreSchema = new mongoose.Schema({
   name: { type: String, required: true },
   address: { type: String },
+  location: {
+    lat: { type: Number },
+    lng: { type: Number },
+  },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // 해당 마트 관리자
   phone: { type: String },                // 옵션: 전화번호
 }, {

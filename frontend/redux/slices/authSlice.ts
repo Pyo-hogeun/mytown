@@ -12,6 +12,11 @@ export interface RiderInfo {
   };
   vehicleType: 'motorcycle' | 'car';
   status?: 'AVAILABLE' | 'UNAVAILABLE';
+  location?: {
+    lat: number;
+    lng: number;
+    updatedAt?: string;
+  };
 }
 export interface SavedDeliveryInfo {
   receiver?: string;

@@ -1,6 +1,7 @@
 // routes/rider.js
 import express from "express";
 import User from "../models/user.js";
+import Store from "../models/store.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -115,16 +116,95 @@ router.get("/available", authMiddleware, async (req, res) => {
       return res.status(403).json({ message: "매니저만 라이더 목록을 조회할 수 있습니다." });
     }
 
+    const store = await Store.findById(req.user.store);
+    const storeLocation = store?.location;
+    const hasStoreLocation =
+      typeof storeLocation?.lat === "number" && typeof storeLocation?.lng === "number";
+
     const riders = await User.find({
       role: "rider",
       "riderInfo.status": "AVAILABLE",
     }).select("name phone riderInfo");
 
-    res.json({ riders });
+    const ridersWithDistance = riders.map((rider) => {
+      const riderObj = rider.toObject();
+      const riderLocation = riderObj.riderInfo?.location;
+      const hasRiderLocation =
+        typeof riderLocation?.lat === "number" && typeof riderLocation?.lng === "number";
+      const distanceFromStore =
+        hasStoreLocation && hasRiderLocation
+          ? calculateDistanceKm(
+              { lat: storeLocation.lat, lng: storeLocation.lng },
+              { lat: riderLocation.lat, lng: riderLocation.lng }
+            )
+          : null;
+
+      return {
+        ...riderObj,
+        distanceFromStore,
+      };
+    });
+
+    res.json({ riders: ridersWithDistance, storeLocation });
   } catch (error) {
     console.error("라이더 조회 오류:", error);
     res.status(500).json({ message: "라이더 조회 실패" });
   }
 });
+
+// 라이더 현재 위치 업데이트
+router.patch("/location", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "rider") {
+      return res.status(403).json({ message: "라이더만 위치를 업데이트할 수 있습니다." });
+    }
+
+    const { lat, lng } = req.body;
+
+    if (typeof lat !== "number" || typeof lng !== "number") {
+      return res.status(400).json({ message: "위도(lat)와 경도(lng)를 숫자로 전달해주세요." });
+    }
+
+    const rider = await User.findById(req.user._id);
+    if (!rider) {
+      return res.status(404).json({ message: "라이더 정보를 찾을 수 없습니다." });
+    }
+
+    rider.riderInfo = rider.riderInfo || {};
+    rider.riderInfo.location = {
+      lat,
+      lng,
+      updatedAt: new Date(),
+    };
+    rider.markModified("riderInfo");
+    await rider.save();
+
+    res.json({
+      message: "라이더 위치가 업데이트되었습니다.",
+      location: rider.riderInfo.location,
+    });
+  } catch (error) {
+    console.error("라이더 위치 업데이트 오류:", error);
+    res.status(500).json({ message: "라이더 위치 업데이트에 실패했습니다." });
+  }
+});
+
+const calculateDistanceKm = (
+  from,
+  to
+) => {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const R = 6371; // km
+  const dLat = toRad(to.lat - from.lat);
+  const dLon = toRad(to.lng - from.lng);
+  const lat1 = toRad(from.lat);
+  const lat2 = toRad(to.lat);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c * 10) / 10; // 소수점 1자리까지 반올림
+};
 
 export default router;

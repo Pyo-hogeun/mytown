@@ -56,7 +56,15 @@ export interface UserOrder {
   _id: string;
   user?: { _id: string; name?: string; email?: string };
   store?: string | { _id: string; name?: string };
-  assignedRider?: { _id: string; name?: string; phone?: string; riderInfo?: { status?: string } };
+  assignedRider?: {
+    _id: string;
+    name?: string;
+    phone?: string;
+    riderInfo?: {
+      status?: string;
+      location?: { lat?: number; lng?: number; updatedAt?: string };
+    };
+  };
   orderItems: {
     product: string | { _id: string; name?: string; price?: number };
     quantity: number;
@@ -79,7 +87,8 @@ export interface AvailableRider {
   _id: string;
   name: string;
   phone?: string;
-  riderInfo?: { status?: string };
+  riderInfo?: { status?: string; location?: { lat?: number; lng?: number; updatedAt?: string } };
+  distanceFromStore?: number | null;
 }
 
 export const createOrder = createAsyncThunk(
