@@ -41,6 +41,12 @@ const OrderItem = ({ order, onStatusChange }: OrderItemProps) => {
       <Item><Label>연락처:</Label> {order.phone}</Item>
       <Item><Label>주소:</Label> {order.address}</Item>
       <Item><Label>가게명:</Label> {typeof order.store === "string" ? order.store : order.store?.name}</Item>
+      {order.assignedRider?.name && (
+        <Item>
+          <Label>배정된 라이더:</Label>
+          {order.assignedRider.name} {order.assignedRider.phone ? `(${order.assignedRider.phone})` : ""}
+        </Item>
+      )}
       <Item><Label>총 결제금액:</Label> {order.totalPrice?.toLocaleString()}원</Item>
 
       <label>상태:</label>

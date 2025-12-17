@@ -36,6 +36,7 @@ const menus: Menu[] = [
   { path: "/stores", label: "매장 목록", roles: ["master", "admin", "manager", "user", null] },
   { path: "/users", label: "사용자관리", roles: ["master", "admin", "manager"] },
   { path: "/orders/manage", label: "주문관리", roles: ["master", "admin", "manager"] },
+  { path: "/orders/assign", label: "라이더 배정", roles: ["manager"] },
   { path: "/login", label: "로그인", roles: [null] },
   { path: "/register", label: "회원가입", roles: [null] },
   { path: "/orders", label: "주문조회", roles: ["user"] },

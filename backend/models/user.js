@@ -11,6 +11,11 @@ const RiderInfoSchema = new mongoose.Schema({
     verified: { type: Boolean, default: false },
   },
   vehicleType: { type: String, enum: ["motorcycle", "car"], required: true },
+  status: {
+    type: String,
+    enum: ["AVAILABLE", "UNAVAILABLE"],
+    default: "AVAILABLE",
+  },
 }, { _id: false });
 
 const UserSchema = new mongoose.Schema({

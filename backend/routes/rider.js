@@ -93,6 +93,7 @@ router.post("/register", authMiddleware, async (req, res) => {
       deliveryArea,
       settlementAccount,
       vehicleType,
+      status: "AVAILABLE",
     };
 
     await user.save();
@@ -104,6 +105,25 @@ router.post("/register", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("라이더 등록 오류:", error);
     res.status(500).json({ message: "라이더 정보 등록 실패" });
+  }
+});
+
+// 매니저가 배정 가능한 라이더 목록 조회
+router.get("/available", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "manager") {
+      return res.status(403).json({ message: "매니저만 라이더 목록을 조회할 수 있습니다." });
+    }
+
+    const riders = await User.find({
+      role: "rider",
+      "riderInfo.status": "AVAILABLE",
+    }).select("name phone riderInfo");
+
+    res.json({ riders });
+  } catch (error) {
+    console.error("라이더 조회 오류:", error);
+    res.status(500).json({ message: "라이더 조회 실패" });
   }
 });
 

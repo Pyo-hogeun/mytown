@@ -11,6 +11,7 @@ export interface RiderInfo {
     verified: boolean;
   };
   vehicleType: 'motorcycle' | 'car';
+  status?: 'AVAILABLE' | 'UNAVAILABLE';
 }
 export interface SavedDeliveryInfo {
   receiver?: string;

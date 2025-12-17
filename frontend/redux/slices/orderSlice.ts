@@ -56,6 +56,7 @@ export interface UserOrder {
   _id: string;
   user?: { _id: string; name?: string; email?: string };
   store?: string | { _id: string; name?: string };
+  assignedRider?: { _id: string; name?: string; phone?: string; riderInfo?: { status?: string } };
   orderItems: {
     product: string | { _id: string; name?: string; price?: number };
     quantity: number;
@@ -72,6 +73,13 @@ export interface UserOrder {
   address: string;
   detailAddress: string;
   deliveryTime?: DeliveryTime;
+}
+
+export interface AvailableRider {
+  _id: string;
+  name: string;
+  phone?: string;
+  riderInfo?: { status?: string };
 }
 
 export const createOrder = createAsyncThunk(
@@ -163,6 +171,39 @@ export const updateOrderStatus = createAsyncThunk(
   }
 );
 
+// 매니저 - 배정 가능한 라이더 목록
+export const fetchAvailableRiders = createAsyncThunk(
+  "order/fetchAvailableRiders",
+  async (_, thunkAPI) => {
+    try {
+      const res = await axios.get("/rider/available");
+      return res.data.riders as AvailableRider[];
+    } catch (err: any) {
+      const message = err.response?.data?.message || "라이더 목록 조회 실패";
+      alert(message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// 매니저 - 라이더 배정
+export const assignRiderToOrder = createAsyncThunk(
+  "order/assignRiderToOrder",
+  async (
+    { orderId, riderId }: { orderId: string; riderId: string },
+    thunkAPI
+  ) => {
+    try {
+      const res = await axios.patch(`/order/${orderId}/assign`, { riderId });
+      return res.data.order as UserOrder;
+    } catch (err: any) {
+      const message = err.response?.data?.message || "라이더 배정 실패";
+      alert(message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 
 
 interface OrderState {
@@ -175,6 +216,8 @@ interface OrderState {
 
   orders: UserOrder[];
   selectedOrder?: UserOrder;
+  availableRiders: AvailableRider[];
+  ridersStatus: "idle" | "loading" | "succeeded" | "failed";
 
   // ✅ 배송 관련 상태
   receiver: string;
@@ -192,6 +235,8 @@ const initialState: OrderState = {
   maskedCard: null,
   orders: [],
   selectedOrder: undefined,
+  availableRiders: [],
+  ridersStatus: "idle",
   receiver: "",
   phone: "",
   address: "",
@@ -280,7 +325,31 @@ const orderSlice = createSlice({
           state.selectedOrder = action.payload;
         }
       })
-      
+      .addCase(fetchAvailableRiders.pending, (state) => {
+        state.ridersStatus = "loading";
+      })
+      .addCase(fetchAvailableRiders.fulfilled, (state, action: PayloadAction<AvailableRider[]>) => {
+        state.ridersStatus = "succeeded";
+        state.availableRiders = action.payload;
+      })
+      .addCase(fetchAvailableRiders.rejected, (state) => {
+        state.ridersStatus = "failed";
+      })
+      .addCase(assignRiderToOrder.fulfilled, (state, action: PayloadAction<UserOrder>) => {
+        const idx = state.orders.findIndex((o) => o._id === action.payload._id);
+        if (idx !== -1) {
+          state.orders[idx] = action.payload;
+        }
+        if (state.selectedOrder?._id === action.payload._id) {
+          state.selectedOrder = action.payload;
+        }
+        if (action.payload.assignedRider?._id) {
+          state.availableRiders = state.availableRiders.filter(
+            (rider) => rider._id !== action.payload.assignedRider?._id
+          );
+        }
+      })
+
   },
 });
 

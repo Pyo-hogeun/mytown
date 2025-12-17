@@ -310,6 +310,7 @@ router.get("/manager", authMiddleware, async (req, res) => {
       .sort({ createdAt: -1 })
       .populate("user", "name email")
       .populate("orderItems.product", "name price")
+      .populate("assignedRider", "name phone riderInfo")
       .lean();
 
     res.json({ orders });
@@ -503,6 +504,61 @@ router.patch("/:id/status", authMiddleware, async (req, res) => {
   }
 });
 
+// 매니저가 라이더를 수동 배정
+router.patch("/:id/assign", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "manager") {
+      return res.status(403).json({ message: "매니저만 라이더를 배정할 수 있습니다." });
+    }
+
+    const { id } = req.params;
+    const { riderId } = req.body;
+
+    if (!riderId) {
+      return res.status(400).json({ message: "배정할 라이더를 선택해주세요." });
+    }
+
+    const order = await Order.findById(id).populate("store");
+
+    if (!order) {
+      return res.status(404).json({ message: "주문을 찾을 수 없습니다." });
+    }
+
+    if (!order.store || order.store._id.toString() !== req.user.store?.toString()) {
+      return res.status(403).json({ message: "본인 매장의 주문만 배정할 수 있습니다." });
+    }
+
+    const rider = await User.findOne({
+      _id: riderId,
+      role: "rider",
+      "riderInfo.status": "AVAILABLE",
+    });
+
+    if (!rider) {
+      return res.status(400).json({ message: "배정 가능한 라이더가 아닙니다." });
+    }
+
+    order.assignedRider = rider._id;
+    order.status = "assigned";
+    await order.save();
+
+    rider.riderInfo = rider.riderInfo || {};
+    rider.riderInfo.status = "UNAVAILABLE";
+    rider.markModified("riderInfo");
+    await rider.save();
+
+    const populated = await Order.findById(order._id)
+      .populate("user", "name email")
+      .populate("orderItems.product", "name price")
+      .populate("assignedRider", "name phone riderInfo");
+
+    return res.json({ success: true, order: populated });
+  } catch (err) {
+    console.error("라이더 배정 오류:", err);
+    return res.status(500).json({ message: "라이더 배정 실패" });
+  }
+});
+
 /**
  * @swagger
  * /order/rider/available:
@@ -577,6 +633,13 @@ router.post("/rider/:orderId/assign", authMiddleware, async (req, res) => {
 
     if (!order) {
       return res.status(400).json({ message: "이미 다른 라이더에게 배정되었거나 주문을 찾을 수 없습니다." });
+    }
+
+    const rider = await User.findById(req.user._id);
+    if (rider?.riderInfo) {
+      rider.riderInfo.status = "UNAVAILABLE";
+      rider.markModified("riderInfo");
+      await rider.save();
     }
 
     return res.json({
@@ -728,8 +791,17 @@ router.patch("/rider/:id/status", authMiddleware, async (req, res) => {
     if (status === "completed") {
       order.completedAt = new Date();
     }
-    
+
     await order.save();
+
+    if (req.user.role === "rider" && req.user._id?.toString() === order.assignedRider?.toString()) {
+      const rider = await User.findById(req.user._id);
+      if (rider?.riderInfo) {
+        rider.riderInfo.status = status === "completed" ? "AVAILABLE" : "UNAVAILABLE";
+        rider.markModified("riderInfo");
+        await rider.save();
+      }
+    }
 
     res.json({ success: true, order });
   } catch (err) {
