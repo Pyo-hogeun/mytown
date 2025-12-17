@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const DEFAULT_ENDPOINT = "https://dapi.kakao.com/v2/local/search/address.json";
+const DEFAULT_ENDPOINT = 'https://nominatim.openstreetmap.org/search';
 const GEOCODER_ENDPOINT = process.env.GEOCODING_ENDPOINT || DEFAULT_ENDPOINT;
 
 export async function geocodeAddress(address) {
@@ -12,19 +12,26 @@ export async function geocodeAddress(address) {
 
   try {
     const { data } = await axios.get(endpoint, {
-      params: { query: address },
+      params: {
+        q: address,
+        format: 'json',
+        addressdetails: 1,
+        limit: 1,
+      },
       headers: {
-        Authorization: `KakaoAK ${process.env.KAKAO_REST_KEY}`,
+        'User-Agent': 'mytown-geocoder/1.0',
       },
     });
 
-    const doc = res.data.documents[0];
-    if (!doc) throw new Error("주소를 좌표로 변환할 수 없습니다.");
+    if (Array.isArray(data) && data.length > 0) {
+      const { lat, lon } = data[0];
+      const parsedLat = Number(lat);
+      const parsedLng = Number(lon);
 
-    return {
-      lat: Number(doc.address.y),
-      lng: Number(doc.address.x),
-    };
+      if (!Number.isNaN(parsedLat) && !Number.isNaN(parsedLng)) {
+        return { lat: parsedLat, lng: parsedLng };
+      }
+    }
 
     return null;
   } catch (err) {

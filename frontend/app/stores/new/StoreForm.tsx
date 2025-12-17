@@ -9,12 +9,16 @@ const Input = styled.input`
   width: 100%;
   padding: 0.5rem;
   margin-top: 1rem;
-`;
-
-const AddressRow = styled.div`
+  `;
+  
+  const AddressRow = styled.div`
   display: flex;
   gap: 8px;
   align-items: flex-start;
+  margin-top: 1rem;
+  input{
+    margin-top: 0;
+  }
 `;
 
 const Button = styled.button`
@@ -86,7 +90,7 @@ const StoreForm = () => {
       <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="마트 이름" required />
       <AddressRow>
         <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="주소" />
-        <Button type="button" onClick={handleAddressSearch} style={{ marginTop: 0 }}>
+        <Button type="button" onClick={handleAddressSearch} style={{ marginTop: 0, whiteSpace: 'nowrap' }}>
           주소 검색
         </Button>
       </AddressRow>
