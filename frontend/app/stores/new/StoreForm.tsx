@@ -10,8 +10,8 @@ const Input = styled.input`
   padding: 0.5rem;
   margin-top: 1rem;
   `;
-  
-  const AddressRow = styled.div`
+
+const AddressRow = styled.div`
   display: flex;
   gap: 8px;
   align-items: flex-start;
