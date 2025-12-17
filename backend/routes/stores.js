@@ -3,8 +3,30 @@
 import express from 'express';
 import Store from '../models/store.js';
 import { authMiddleware, adminOnly } from '../middlewares/authMiddleware.js';
+import { geocodeAddress } from '../services/geocode.js';
 
 const router = express.Router();
+
+function parseLocation(location) {
+  if (!location) {
+    return undefined;
+  }
+
+  const { lat, lng } = location;
+
+  if (lat === undefined || lng === undefined) {
+    return undefined;
+  }
+
+  const parsedLat = Number(lat);
+  const parsedLng = Number(lng);
+
+  if (Number.isNaN(parsedLat) || Number.isNaN(parsedLng)) {
+    throw new Error('위도/경도는 숫자여야 합니다.');
+  }
+
+  return { lat: parsedLat, lng: parsedLng };
+}
 
 /**
  * @openapi
@@ -57,24 +79,33 @@ router.post('/', authMiddleware, adminOnly, async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const coords = {};
+    let resolvedLocation;
 
-    if (location) {
-      const { lat, lng } = location;
+    try {
+      resolvedLocation = parseLocation(location);
+    } catch (err) {
+      return res.status(400).json({ message: err.message });
+    }
 
-      if (lat !== undefined && lng !== undefined) {
-        const parsedLat = Number(lat);
-        const parsedLng = Number(lng);
-
-        if (Number.isNaN(parsedLat) || Number.isNaN(parsedLng)) {
-          return res.status(400).json({ message: '위도/경도는 숫자여야 합니다.' });
-        }
-
-        coords.location = { lat: parsedLat, lng: parsedLng };
+    if (!resolvedLocation && address) {
+      try {
+        resolvedLocation = await geocodeAddress(address);
+      } catch (err) {
+        return res.status(502).json({ message: '주소 좌표 변환에 실패했습니다.', error: err.message });
       }
     }
 
-    const store = new Store({ name, address, owner: userId, phone, ...coords });
+    if (!resolvedLocation && address) {
+      return res.status(404).json({ message: '주소로 좌표를 찾을 수 없습니다.' });
+    }
+
+    const store = new Store({
+      name,
+      address,
+      owner: userId,
+      phone,
+      ...(resolvedLocation ? { location: resolvedLocation } : {}),
+    });
     await store.save();
     res.status(201).json(store);
   } catch (err) {
@@ -160,19 +191,28 @@ router.put('/:id/location', authMiddleware, adminOnly, async (req, res) => {
     update.address = address;
   }
 
-  if (location) {
-    const { lat, lng } = location;
+  let parsedLocation;
 
-    if (lat !== undefined && lng !== undefined) {
-      const parsedLat = Number(lat);
-      const parsedLng = Number(lng);
+  try {
+    parsedLocation = parseLocation(location);
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
 
-      if (Number.isNaN(parsedLat) || Number.isNaN(parsedLng)) {
-        return res.status(400).json({ message: '위도/경도는 숫자여야 합니다.' });
-      }
+  if (parsedLocation) {
+    update.location = parsedLocation;
+  }
 
-      update.location = { lat: parsedLat, lng: parsedLng };
+  if (!update.location && address) {
+    try {
+      update.location = await geocodeAddress(address);
+    } catch (err) {
+      return res.status(502).json({ message: '주소 좌표 변환에 실패했습니다.', error: err.message });
     }
+  }
+
+  if (!update.location && address) {
+    return res.status(404).json({ message: '주소로 좌표를 찾을 수 없습니다.' });
   }
 
   if (!Object.keys(update).length) {
