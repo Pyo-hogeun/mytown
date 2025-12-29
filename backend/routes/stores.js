@@ -76,7 +76,7 @@ function parseLocation(location) {
  */
 router.post('/', authMiddleware, adminOnly, async (req, res) => {
   const { name, address, phone, location } = req.body;
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   try {
     let resolvedLocation;
@@ -109,7 +109,7 @@ router.post('/', authMiddleware, adminOnly, async (req, res) => {
     await store.save();
     res.status(201).json(store);
   } catch (err) {
-    res.status(500).json({ message: '마트 등록 실패', error: err.message });
+    res.status(500).json({ message: '마트 등록 실패 BE', error: err.message });
   }
 });
 

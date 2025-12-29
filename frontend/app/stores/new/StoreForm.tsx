@@ -57,7 +57,7 @@ const StoreForm = () => {
       alert('마트 등록 성공');
       router.push('/stores');
     } catch (err: any) {
-      console.error('마트 등록 실패', err.response?.data || err.message);
+      console.error('마트 등록 실패 FE', err.response?.data || err.message);
       alert(err.response?.data?.message || '마트 등록 실패');
     }
   };
