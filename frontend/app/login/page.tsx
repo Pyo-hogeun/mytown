@@ -159,6 +159,7 @@ const LoginPage = () => {
     { label: 'User 02', email: 'user02@gmail.com', password: '1234' },
     { label: 'Manager 01', email: 'manager01@gmail.com', password: '1234' },
     { label: 'Manager 02', email: 'manager02@gmail.com', password: '1234' },
+    { label: '새마을 Manager', email: 'manager04@gmail.com', password: '1234' },
     { label: 'Rider 01', email: 'rider01@gmail.com', password: '1234' },
     { label: 'Rider 02', email: 'rider02@gmail.com', password: '1234' },
   ];
