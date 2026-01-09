@@ -5,10 +5,17 @@
   "scripts": {
     "dev": "NODE_OPTIONS='--inspect' next dev -p 3001",
     "build": "next build",
+    "export": "next build && next export",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "cap:sync": "cap sync",
+    "cap:add:ios": "cap add ios",
+    "cap:add:android": "cap add android",
+    "cap:open:ios": "cap open ios",
+    "cap:open:android": "cap open android"
   },
   "dependencies": {
+    "@capacitor/core": "^7.1.0",
     "@portone/browser-sdk": "^0.1.1",
     "@reduxjs/toolkit": "^2.8.2",
     "axios": "^1.9.0",
@@ -20,6 +27,9 @@
     "styled-components": "^6.1.18"
   },
   "devDependencies": {
+    "@capacitor/android": "^7.1.0",
+    "@capacitor/cli": "^7.1.0",
+    "@capacitor/ios": "^7.1.0",
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^19",
