@@ -83,6 +83,22 @@ export const saveDeliveryInfoToUser = createAsyncThunk(
   }
 );
 
+// ✅ 라이더 위치 업데이트
+export const updateRiderLocation = createAsyncThunk(
+  "auth/updateRiderLocation",
+  async (
+    { lat, lng }: { lat: number; lng: number },
+    thunkAPI
+  ) => {
+    try {
+      const res = await axios.patch("/rider/location", { lat, lng });
+      return res.data.location;
+    } catch (err: any) {
+      return thunkAPI.rejectWithValue("라이더 위치 업데이트 실패");
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -137,6 +153,21 @@ const authSlice = createSlice({
           detailAddress: action.payload?.detailAddress || '',
           updatedAt: action.payload?.updatedAt || new Date().toISOString(),
         };
+      })
+      // ✅ 라이더 위치 업데이트 성공 시 user.riderInfo.location 갱신
+      .addCase(updateRiderLocation.fulfilled, (state, action) => {
+        if (!state.user || state.user.role !== "rider") return;
+        state.user.riderInfo = {
+          ...(state.user.riderInfo ?? ({} as RiderInfo)),
+          location: {
+            lat: action.payload?.lat ?? 0,
+            lng: action.payload?.lng ?? 0,
+            updatedAt: action.payload?.updatedAt || new Date().toISOString(),
+          },
+        };
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('user', JSON.stringify(state.user));
+        }
       });
   },
 });

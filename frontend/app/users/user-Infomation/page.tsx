@@ -8,9 +8,13 @@ import { Card } from "@/app/component/Card";
 import ProfileImage from "@/app/component/ProfileImage";
 import styled from "styled-components";
 import Link from "next/link";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "@/redux/store";
+import { updateRiderLocation } from "@/redux/slices/authSlice";
 
 const UserInfomationContent = () => {
   interface User {
+    _id?: string;
     name?: string;
     phone?: string;
     email: string;
@@ -23,6 +27,12 @@ const UserInfomationContent = () => {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
   const [userInfo, setUserInfo] = useState<User>();
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const authUser = useSelector((state: RootState) => state.auth.user);
+  const riderLocation = authUser?.riderInfo?.location;
+  const isRiderSelf = authUser?.role === "rider" && authUser?.id === id;
 
   const Title = styled.h2`
     margin: 0 0 1em 0;
@@ -50,15 +60,62 @@ const UserInfomationContent = () => {
       content: '>';
     }
   `
+  const LocationButton = styled.button`
+    border: 1px solid #666;
+    background: #fff;
+    color: #333;
+    padding: 0.3em 0.6em;
+    font-size: 0.85em;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  `;
+  const LocationStatus = styled.span`
+    font-size: 0.85em;
+    color: #666;
+  `;
 
   useEffect(() => {
+    if (!id) return;
     axios.get(`/users/${id}`)
       .then((res) => {
         setUserInfo(res.data);
         console.log('userInfo', res.data);
       })
       .catch(err => console.log(err));
-  }, [])
+  }, [id])
+
+  const handleUpdateLocation = () => {
+    setLocationError(null);
+    if (!navigator.geolocation) {
+      setLocationError("현재 브라우저에서는 위치 정보를 사용할 수 없습니다.");
+      return;
+    }
+
+    setIsUpdatingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          await dispatch(updateRiderLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          })).unwrap();
+        } catch (error) {
+          setLocationError(typeof error === "string" ? error : "위치 업데이트에 실패했습니다.");
+        } finally {
+          setIsUpdatingLocation(false);
+        }
+      },
+      () => {
+        setLocationError("위치 권한을 확인해주세요.");
+        setIsUpdatingLocation(false);
+      }
+    );
+  };
   return (
     <Container>
       <Card>
@@ -99,6 +156,37 @@ const UserInfomationContent = () => {
             </li>
           }
         </List>
+        {isRiderSelf && (
+          <>
+            <h3>라이더 위치</h3>
+            <List>
+              <li>
+                <Label>현재 위치:</Label>
+                <Value>
+                  {riderLocation
+                    ? `${riderLocation.lat?.toFixed(5)}, ${riderLocation.lng?.toFixed(5)}`
+                    : "위치 정보 없음"}
+                </Value>
+              </li>
+              <li>
+                <LocationButton onClick={handleUpdateLocation} disabled={isUpdatingLocation}>
+                  {isUpdatingLocation ? "업데이트 중..." : "위치 업데이트"}
+                </LocationButton>
+                {riderLocation?.updatedAt && (
+                  <LocationStatus>
+                    {" "}
+                    (마지막 업데이트: {new Date(riderLocation.updatedAt).toLocaleString()})
+                  </LocationStatus>
+                )}
+              </li>
+              {locationError && (
+                <li>
+                  <LocationStatus>{locationError}</LocationStatus>
+                </li>
+              )}
+            </List>
+          </>
+        )}
       </Card>
 
     </Container>
