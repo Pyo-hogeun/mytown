@@ -15,7 +15,9 @@
     "cap:open:android": "cap open android"
   },
   "dependencies": {
-    "@capacitor/core": "^7.1.0",
+    "@capacitor/camera": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/geolocation": "^8.0.0",
     "@portone/browser-sdk": "^0.1.1",
     "@reduxjs/toolkit": "^2.8.2",
     "axios": "^1.9.0",
@@ -27,9 +29,9 @@
     "styled-components": "^6.1.18"
   },
   "devDependencies": {
-    "@capacitor/android": "^7.1.0",
-    "@capacitor/cli": "^7.1.0",
-    "@capacitor/ios": "^7.1.0",
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^19",

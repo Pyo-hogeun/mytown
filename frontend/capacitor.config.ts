@@ -3,11 +3,10 @@ import { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
   appId: "com.mytown.app",
   appName: "MyTown",
-  webDir: "out",
-  bundledWebRuntime: false,
+  webDir: "public",
   server: {
-    url: "http://localhost:3001",
-    cleartext: true,
+    url: "https://mytown-ruby.vercel.app",
+    cleartext: false,
   },
 };
 
