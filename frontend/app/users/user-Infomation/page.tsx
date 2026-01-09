@@ -12,17 +12,63 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/redux/store";
 import { updateRiderLocation } from "@/redux/slices/authSlice";
 
-const UserInfomationContent = () => {
-  interface User {
-    _id?: string;
-    name?: string;
-    phone?: string;
-    email: string;
-    snsId?: string;
-    snsProvider?: string;
-    role: string;
-    profile_image?: string;
+const Title = styled.h2`
+  margin: 0 0 1em 0;
+`;
+
+const List = styled.ul`
+  padding: 0;
+  li{
+    height: 2em;
+    margin-bottom: 0.5em;
   }
+`;
+const Label = styled.span`
+  margin-right: 0.3em;
+`;
+const Value = styled.span`
+  font-weight: 700;
+`;
+const StyledLink = styled(Link)`
+  display: flex;
+  gap: 1em;
+  height: 2em;
+  align-items: center;
+  &:after{
+    content: '>';
+  }
+`;
+const LocationButton = styled.button`
+  border: 1px solid #666;
+  background: #fff;
+  color: #333;
+  padding: 0.3em 0.6em;
+  font-size: 0.85em;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+`;
+const LocationStatus = styled.span`
+  font-size: 0.85em;
+  color: #666;
+`;
+
+interface User {
+  _id?: string;
+  name?: string;
+  phone?: string;
+  email: string;
+  snsId?: string;
+  snsProvider?: string;
+  role: string;
+  profile_image?: string;
+}
+
+const UserInfomationContent = () => {
 
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
@@ -33,51 +79,6 @@ const UserInfomationContent = () => {
   const authUser = useSelector((state: RootState) => state.auth.user);
   const riderLocation = authUser?.riderInfo?.location;
   const isRiderSelf = authUser?.role === "rider" && authUser?.id === id;
-
-  const Title = styled.h2`
-    margin: 0 0 1em 0;
-  `
-
-  const List = styled.ul`
-    padding: 0;
-    li{
-      height: 2em;
-      margin-bottom: 0.5em;
-    }
-  `;
-  const Label = styled.span`
-    margin-right: 0.3em;
-  `;
-  const Value = styled.span`
-    font-weight: 700;
-  `;
-  const StyledLink = styled(Link)`
-    display: flex;
-    gap: 1em;
-    height: 2em;
-    align-items: center;
-    &:after{
-      content: '>';
-    }
-  `
-  const LocationButton = styled.button`
-    border: 1px solid #666;
-    background: #fff;
-    color: #333;
-    padding: 0.3em 0.6em;
-    font-size: 0.85em;
-    border-radius: 4px;
-    cursor: pointer;
-
-    &:disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-  `;
-  const LocationStatus = styled.span`
-    font-size: 0.85em;
-    color: #666;
-  `;
 
   useEffect(() => {
     if (!id) return;
