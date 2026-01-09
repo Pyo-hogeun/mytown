@@ -56,6 +56,11 @@ const LocationStatus = styled.span`
   font-size: 0.85em;
   color: #666;
 `;
+const LocationButtonRow = styled.div`
+  display: inline-flex;
+  gap: 0.5em;
+  align-items: center;
+`;
 
 interface User {
   _id?: string;
@@ -79,6 +84,12 @@ const UserInfomationContent = () => {
   const authUser = useSelector((state: RootState) => state.auth.user);
   const riderLocation = authUser?.riderInfo?.location;
   const isRiderSelf = authUser?.role === "rider" && authUser?.id === id;
+  const seoulBounds = {
+    latMin: 37.413,
+    latMax: 37.715,
+    lngMin: 126.734,
+    lngMax: 127.269,
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -116,6 +127,21 @@ const UserInfomationContent = () => {
         setIsUpdatingLocation(false);
       }
     );
+  };
+
+  const handleRandomLocation = async () => {
+    setLocationError(null);
+    setIsUpdatingLocation(true);
+    const lat = seoulBounds.latMin + Math.random() * (seoulBounds.latMax - seoulBounds.latMin);
+    const lng = seoulBounds.lngMin + Math.random() * (seoulBounds.lngMax - seoulBounds.lngMin);
+
+    try {
+      await dispatch(updateRiderLocation({ lat, lng })).unwrap();
+    } catch (error) {
+      setLocationError(typeof error === "string" ? error : "위치 업데이트에 실패했습니다.");
+    } finally {
+      setIsUpdatingLocation(false);
+    }
   };
   return (
     <Container>
@@ -170,9 +196,14 @@ const UserInfomationContent = () => {
                 </Value>
               </li>
               <li>
-                <LocationButton onClick={handleUpdateLocation} disabled={isUpdatingLocation}>
-                  {isUpdatingLocation ? "업데이트 중..." : "위치 업데이트"}
-                </LocationButton>
+                <LocationButtonRow>
+                  <LocationButton onClick={handleUpdateLocation} disabled={isUpdatingLocation}>
+                    {isUpdatingLocation ? "업데이트 중..." : "위치 업데이트"}
+                  </LocationButton>
+                  <LocationButton onClick={handleRandomLocation} disabled={isUpdatingLocation}>
+                    랜덤위치
+                  </LocationButton>
+                </LocationButtonRow>
                 {riderLocation?.updatedAt && (
                   <LocationStatus>
                     {" "}
