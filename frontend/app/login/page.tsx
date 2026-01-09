@@ -74,6 +74,75 @@ const Spinner = styled.div`
   top: calc(50% - 8px);
 `;
 
+const DevFloatingMenu = styled.div`
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  z-index: 10;
+`;
+
+const DevFloatingButton = styled.button`
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: #111827;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(17, 24, 39, 0.2);
+`;
+
+const DevMenu = styled.div`
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  width: 260px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const DevMenuTitle = styled.p`
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: #111827;
+`;
+
+const DevMenuItem = styled.button`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  cursor: pointer;
+  text-align: left;
+
+  strong {
+    font-size: 13px;
+    color: #111827;
+  }
+
+  span {
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  &:hover {
+    border-color: #cbd5f5;
+    background: #eef2ff;
+  }
+`;
+
 const LoginPage = () => {
   const dispatch = useDispatch();
   const router = useRouter();
@@ -81,6 +150,18 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isDevMenuOpen, setIsDevMenuOpen] = useState(false);
+  const isDev = process.env.NODE_ENV !== 'production';
+
+  const devAccounts = [
+    { label: 'Admin', email: 'admin01@gmail.com', password: '1234' },
+    { label: 'User 01', email: 'user01@gmail.com', password: '1234' },
+    { label: 'User 02', email: 'user02@gmail.com', password: '1234' },
+    { label: 'Manager 01', email: 'manager01@gmail.com', password: '1234' },
+    { label: 'Manager 02', email: 'manager02@gmail.com', password: '1234' },
+    { label: 'Rider 01', email: 'rider01@gmail.com', password: '1234' },
+    { label: 'Rider 02', email: 'rider02@gmail.com', password: '1234' },
+  ];
 
   // ✅ 클라이언트 렌더링 후 localStorage에서 토큰 초기화
   useEffect(() => {
@@ -91,12 +172,12 @@ const LoginPage = () => {
     }
   }, [dispatch]);
 
-  const handleLogin = async () => {
+  const loginWithCredentials = async (loginEmail: string, loginPassword: string) => {
     if (loading) return;
     setLoading(true);
 
     try {
-      const data = await login({ email, password });
+      const data = await login({ email: loginEmail, password: loginPassword });
       console.log("로그인 성공:", data);
 
       // ✅ localStorage는 클라이언트 환경에서만 접근
@@ -124,6 +205,16 @@ const LoginPage = () => {
     }
   };
 
+  const handleLogin = async () => {
+    await loginWithCredentials(email, password);
+  };
+
+  const handleQuickLogin = async (loginEmail: string, loginPassword: string) => {
+    setEmail(loginEmail);
+    setPassword(loginPassword);
+    await loginWithCredentials(loginEmail, loginPassword);
+  };
+
   return (
     <Container>
       <Card>
@@ -146,6 +237,32 @@ const LoginPage = () => {
         <hr />
         <KakaoLoginButton />
       </Card>
+      {isDev && (
+        <DevFloatingMenu>
+          {isDevMenuOpen && (
+            <DevMenu>
+              <DevMenuTitle>개발용 계정 전환</DevMenuTitle>
+              {devAccounts.map((account) => (
+                <DevMenuItem
+                  key={account.email}
+                  type="button"
+                  onClick={() => handleQuickLogin(account.email, account.password)}
+                >
+                  <strong>{account.label}</strong>
+                  <span>{account.email}</span>
+                </DevMenuItem>
+              ))}
+            </DevMenu>
+          )}
+          <DevFloatingButton
+            type="button"
+            aria-label="개발용 계정 전환 메뉴"
+            onClick={() => setIsDevMenuOpen((prev) => !prev)}
+          >
+            DEV
+          </DevFloatingButton>
+        </DevFloatingMenu>
+      )}
     </Container>
   );
 };
