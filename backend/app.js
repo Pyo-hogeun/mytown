@@ -26,14 +26,19 @@ const app = express();
 // ----------------- 설정: CORS -----------------
 // CORS_ORIGINS 예시: "https://yourapp.vercel.app, http://localhost:3000"
 const originsEnv = process.env.CORS_ORIGINS || 'http://localhost:3000';
-const allowedOrigins = originsEnv.split(',').map((s) => s.trim());
+const allowedOrigins = [
+  'http://localhost:3001',                 // 웹 로컬 개발
+  'https://YOUR-VERCEL-DOMAIN.vercel.app', // 웹 운영
+  'capacitor://localhost',                 // ✅ Capacitor iOS/Android
+  'ionic://localhost',                     // (혹시 Ionic 스킴 사용 시)
+];
 
 app.use(
   cors({
     origin: function (origin, callback) {
       // origin이 없으면 (서버사이 호출 또는 Postman) 허용
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       } else {
         return callback(new Error('Not allowed by CORS'));
