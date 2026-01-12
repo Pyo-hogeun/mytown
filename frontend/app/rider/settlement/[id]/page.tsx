@@ -1,35 +1,72 @@
-import SettlementDetailPageClient from './SettlementDetailPageClient';
+// app/settlement/[id]/page.tsx
+"use client";
 
-type SettlementSummary = {
-  _id?: string;
-  id?: string;
-};
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import axios from "@/utils/axiosInstance";
+import styled from "styled-components";
+import Container from "@/app/component/Container";
+import Button from "@/app/component/Button";
 
-export async function generateStaticParams() {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-  if (!apiBaseUrl) {
-    return [];
-  }
-
-  try {
-    const response = await fetch(`${apiBaseUrl}/settlement/manage`, { cache: 'no-store' });
-    if (!response.ok) {
-      return [];
-    }
-
-    const data = (await response.json()) as { settlements?: SettlementSummary[] };
-    const settlements = data.settlements ?? [];
-
-    return settlements
-      .map((settlement) => ({ id: String(settlement._id ?? settlement.id) }))
-      .filter((settlement) => settlement.id && settlement.id !== 'undefined');
-  } catch {
-    return [];
-  }
+interface Order {
+  _id: string;
+  totalPrice: number;
+  store?: { name: string };
+  completedAt: string;
 }
 
-const SettlementDetailPage = () => {
-  return <SettlementDetailPageClient />;
-};
+interface Settlement {
+  _id: string;
+  weekStart: string;
+  weekEnd: string;
+  totalLength: number;
+  commission: number;
+  status: string;
+  orders: Order[];
+}
 
-export default SettlementDetailPage;
+const OrderItem = styled.div`
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+`;
+
+const SettlementDetailPage = () => {
+  const params = useParams();
+  const router = useRouter(); // ✅ router 선언
+
+  const id = params?.id as string;
+
+  const [settlement, setSettlement] = useState<Settlement | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    axios.get(`/settlement/${id}`).then((res) => {
+      setSettlement(res.data.settlement);
+    });
+  }, [id]);
+
+  if (!settlement) return <Container>로딩중...</Container>;
+
+  return (
+    <Container>
+      <h2><Button onClick={() => router.push('/rider?tab=settlement')}>뒤로</Button> 정산 상세</h2>
+      <p>
+        기간: {new Date(settlement.weekStart).toLocaleDateString()} ~{" "}
+        {new Date(settlement.weekEnd).toLocaleDateString()}
+      </p>
+      <p>배달 총 건수: {settlement.totalLength} 개</p>
+      <p>수수료: {settlement.commission.toLocaleString()}원</p>
+      <p>상태: {settlement.status}</p>
+
+      <h3>주문 내역</h3>
+      {settlement.orders.map((o) => (
+        <OrderItem key={o._id}>
+          <div>매장: {o.store?.name || "-"}</div>
+          <div>금액: {o.totalPrice.toLocaleString()}원</div>
+          <div>완료일: {new Date(o.completedAt).toLocaleString()}</div>
+        </OrderItem>
+      ))}
+    </Container>
+  );
+}
+export default SettlementDetailPage
