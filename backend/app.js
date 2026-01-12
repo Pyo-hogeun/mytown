@@ -38,7 +38,7 @@ app.use(
     origin: function (origin, callback) {
       // origin이 없으면 (서버사이 호출 또는 Postman) 허용
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
+      if (allowedOrigins.has(origin)) {
         return callback(null, true);
       } else {
         return callback(new Error('Not allowed by CORS'));
