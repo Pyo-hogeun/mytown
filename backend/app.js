@@ -28,7 +28,7 @@ const app = express();
 const originsEnv = process.env.CORS_ORIGINS || 'http://localhost:3000';
 const allowedOrigins = [
   'http://localhost:3001',                 // 웹 로컬 개발
-  'https://YOUR-VERCEL-DOMAIN.vercel.app', // 웹 운영
+  'https://mytown-ruby.vercel.app', // 웹 운영
   'capacitor://localhost',                 // ✅ Capacitor iOS/Android
   'ionic://localhost',                     // (혹시 Ionic 스킴 사용 시)
 ];
