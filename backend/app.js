@@ -25,13 +25,13 @@ const app = express();
 
 // ----------------- 설정: CORS -----------------
 // CORS_ORIGINS 예시: "https://yourapp.vercel.app, http://localhost:3000"
-const originsEnv = process.env.CORS_ORIGINS || 'http://localhost:3000';
-const allowedOrigins = [
-  'http://localhost:3001',                 // 웹 로컬 개발
-  'https://mytown-ruby.vercel.app', // 웹 운영
-  'capacitor://localhost',                 // ✅ Capacitor iOS/Android
-  'ionic://localhost',                     // (혹시 Ionic 스킴 사용 시)
-];
+// const originsEnv = process.env.CORS_ORIGINS || 'http://localhost:3000';
+const allowedOrigins = new Set(
+  (process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:3001')
+    .split(",")
+    .map(origin => origin.trim())
+    .filter(Boolean)
+);
 
 app.use(
   cors({
