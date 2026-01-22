@@ -2,13 +2,22 @@
 
 import { Provider } from 'react-redux';
 import { store } from '@/redux/store';
-import { ThemeProvider } from 'styled-components';
+import styled, { ThemeProvider } from 'styled-components';
 import theme from '@/styles/theme';
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider theme={theme}>
-      <Provider store={store}>{children}</Provider>
+      <AppWrapper store={store}>
+        {children}
+      </AppWrapper>
     </ThemeProvider>
   );
 }
+
+
+const AppWrapper = styled(Provider)`
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  min-height: 100dvh;
+`;
