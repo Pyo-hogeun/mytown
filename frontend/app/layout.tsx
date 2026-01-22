@@ -4,6 +4,7 @@ import GlobalStyle from '@/styles/GlobalStyle';
 import { AppProviders } from './providers';
 import Nav from './component/Nav';
 import Script from 'next/script';
+import styled from 'styled-components';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -21,12 +22,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <AppProviders>
-          <GlobalStyle />
-          <Nav />
+          <AppWrapper>
+            <GlobalStyle />
+            <Nav />
 
-          {children}
+            {children}
+          </AppWrapper>
         </AppProviders>
       </body>
     </html>
   );
 }
+const AppWrapper = styled.div`
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  // min-height: 100dvh;
+`

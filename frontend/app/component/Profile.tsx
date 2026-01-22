@@ -7,9 +7,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const ProfileWrapper = styled.div`
-  position: absolute;
-  right: 10px;
-  top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  > span, button, a{
+    white-space: nowrap;
+  }
 `
 const Name = styled.span`
   color: #000;
@@ -71,7 +74,6 @@ const CartBadge = styled.span.withConfig({ shouldForwardProp: (props) => props !
 const CartButton = styled.div`
   display: inline-block;
   position: relative;
-  padding: 0 40px 0 10px;
 `;
 
 const Profile = () => {

@@ -10,18 +10,26 @@ import { User } from "@/redux/slices/authSlice"
 
 type Role = User["role"];
 const Container = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  padding: 10px;
+  gap: 20px;
   ul{
     display: flex;
+    flex-wrap: wrap;
     gap: 20px;
     ${(props) => props.theme.breakpoints.mobile} {
-      display: block;
+      // display: block;
     }
   }
 `;
 const Item = styled.li`
+  display: inline-flex;
+  align-items: center;
   list-style: none;
+  white-space: nowrap;
   ${(props) => props.theme.breakpoints.mobile} {
-    margin-bottom: 1em;
+    // margin-bottom: 1em;
   }
 `;
 interface Menu {

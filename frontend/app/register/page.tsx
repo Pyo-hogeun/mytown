@@ -11,19 +11,10 @@ import Button from '../component/Button';
 
 // 📌 스타일 정의
 const CenterContainer = styled(Container)`
-  position: fixed;
   display: flex;
   align-items: center;
   justify-content: center;
-  top: 0;
-  left: 0;
-  min-height: 100vh;
-  width: 100%;
-  background: #f5f6f8;
-  z-index: -1;
-  ${(props) => props.theme.breakpoints.mobile} {
-    width: auto;
-  }
+  min-height: 50vh;
 `;
 
 const StyledButton = styled(Button)`

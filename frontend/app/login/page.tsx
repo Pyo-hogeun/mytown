@@ -17,16 +17,12 @@ const spin = keyframes`
 `;
 
 const Container = styled.div`
-  position: fixed;
   display: flex;
   align-items: center;
   justify-content: center;
-  top: 0;
-  left: 0;
-  height: 100vh;
+  
+  height: 50vh;
   width: 100vw;
-  background: #f5f6f8;
-  z-index: -1;
 `;
 
 const Card = styled.div`
