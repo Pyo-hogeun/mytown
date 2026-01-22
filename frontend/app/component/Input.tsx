@@ -6,7 +6,7 @@ const Input = styled.input`
   margin-bottom: 16px;
   border: 1px solid #ccc;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
   outline: none;
   transition: border-color 0.2s;
   box-sizing: border-box;
