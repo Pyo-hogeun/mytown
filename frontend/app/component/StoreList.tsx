@@ -7,10 +7,15 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
+const TableScroll = styled.div`
+  width: 100%;
+  overflow-x: auto;
+`
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
+  white-space: nowrap;
 `;
 
 const Th = styled.th`
@@ -40,7 +45,7 @@ const MapButton = styled.a`
 `;
 
 const getMapUrl = (store: Store) => {
-  const {lat, lng} = store.location ?? {};
+  const { lat, lng } = store.location ?? {};
 
   if (lat !== undefined && lng !== undefined) {
     return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
@@ -55,7 +60,7 @@ const getMapUrl = (store: Store) => {
 
 const StoreList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const {items: stores, loading} = useSelector((state:RootState)=> state.store)
+  const { items: stores, loading } = useSelector((state: RootState) => state.store)
 
   useEffect(() => {
     dispatch(fetchStores())
@@ -69,48 +74,51 @@ const StoreList: React.FC = () => {
       {stores.length === 0 ? (
         <p>등록된 매장이 없습니다.</p>
       ) : (
-        <Table>
-          <thead>
-            <tr>
-              <Th>이름</Th>
-              <Th>주소</Th>
-              <Th>전화번호</Th>
-              <Th>위도</Th>
-              <Th>경도</Th>
-              <Th>지도보기</Th>
-              <Th>등록일</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {stores.map((store) => {
-              const mapUrl = getMapUrl(store);
+        <TableScroll>
 
-              return (
-                <tr key={store._id}>
-                  <Td><Link href={`/products?storeId=${store._id}&storeName=${store.name}`}>{store.name}</Link></Td>
-                  <Td>{store.address}</Td>
-                  <Td>{store.phone}</Td>
-                  <Td>{store.location?.lat ?? '-'}</Td>
-                  <Td>{store.location?.lng ?? '-'}</Td>
-                  <Td>
-                    {mapUrl ? (
-                      <MapButton
-                        href={mapUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        지도보기
-                      </MapButton>
-                    ) : (
-                      '-'
-                    )}
-                  </Td>
-                  <Td>{new Date(store.createdAt).toLocaleDateString()}</Td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </Table>
+          <Table>
+            <thead>
+              <tr>
+                <Th>이름</Th>
+                <Th>주소</Th>
+                <Th>전화번호</Th>
+                <Th>위도</Th>
+                <Th>경도</Th>
+                <Th>지도보기</Th>
+                <Th>등록일</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {stores.map((store) => {
+                const mapUrl = getMapUrl(store);
+
+                return (
+                  <tr key={store._id}>
+                    <Td><Link href={`/products?storeId=${store._id}&storeName=${store.name}`}>{store.name}</Link></Td>
+                    <Td>{store.address}</Td>
+                    <Td>{store.phone}</Td>
+                    <Td>{store.location?.lat ?? '-'}</Td>
+                    <Td>{store.location?.lng ?? '-'}</Td>
+                    <Td>
+                      {mapUrl ? (
+                        <MapButton
+                          href={mapUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          지도보기
+                        </MapButton>
+                      ) : (
+                        '-'
+                      )}
+                    </Td>
+                    <Td>{new Date(store.createdAt).toLocaleDateString()}</Td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </Table>
+        </TableScroll>
       )}
     </div>
   );
