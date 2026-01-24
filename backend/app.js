@@ -32,21 +32,22 @@ const allowedOrigins = new Set(
     .map(origin => origin.trim())
     .filter(Boolean)
 );
+const corsOptions = {
+  origin: (origin, cb) => {
+    // ✅ 네이티브(WebView)나 일부 요청은 Origin이 없을 수 있음(null)
+    if (!origin) return cb(null, true);
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // origin이 없으면 (서버사이 호출 또는 Postman) 허용
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.has(origin)) {
-        return callback(null, true);
-      } else {
-        return callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-  })
-);
+    if (allowedOrigins.has(origin)) return cb(null, true);
+
+    // 필요하면 로그로 실제 origin을 확인
+    console.log("❗️CORS blocked origin:", origin);
+    return cb(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+};
+app.use(cors(corsOptions));
+// ✅ Preflight(OPTIONS) 명시 처리 (cors가 대부분 처리하지만 명시해두면 디버깅이 쉬움)
+app.options("*", cors(corsOptions));
 
 // 기본 미들웨어
 app.use(express.json());

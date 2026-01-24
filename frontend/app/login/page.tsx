@@ -175,7 +175,7 @@ const LoginPage = () => {
 
     try {
       const data = await login({ email: loginEmail, password: loginPassword });
-      console.log("로그인 성공:", data);
+      // console.log("로그인 성공:", data);
 
       // ✅ localStorage는 클라이언트 환경에서만 접근
       if (typeof window !== 'undefined') {
@@ -185,7 +185,7 @@ const LoginPage = () => {
       dispatch(setUser(data.user));
       dispatch(setToken(data.token));
 
-      console.log('user', user?.role);
+      // console.log('user', user?.role);
 
       if (data.user.role === 'rider') {
         router.push('/rider');
