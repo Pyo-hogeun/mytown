@@ -1,7 +1,31 @@
 // 🌐 Axios 인스턴스: 모든 요청에 자동으로 토큰 포함
 import axios from 'axios';
-// ✅ 환경변수에서 API URL을 불러옴
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+// ✅ 환경변수 우선, 개발/프로덕션 URL 자동 선택 후 필요 시 fallback
+const resolveApiBaseUrl = () => {
+  const envBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (envBaseUrl) {
+    return envBaseUrl;
+  }
+
+  const devBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_DEV;
+  const prodBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_PROD;
+
+  if (process.env.NODE_ENV === 'production') {
+    if (prodBaseUrl) {
+      return prodBaseUrl;
+    }
+  } else if (devBaseUrl) {
+    return devBaseUrl;
+  }
+
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
+  return `${window.location.origin}/api`;
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
 const instance = axios.create({
   baseURL: API_BASE_URL, // 🌍 백엔드 API 주소
 });
