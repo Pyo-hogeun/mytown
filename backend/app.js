@@ -63,6 +63,19 @@ app.use(bodyParser.json());
 app.get('/health', (req, res) => {
   res.json({ ok: true, env: process.env.NODE_ENV || 'development', time: new Date().toISOString() });
 });
+// ✅ 모든 요청을 콘솔에 찍는 초간단 로거 (Render Logs에서 바로 확인 가능)
+app.use((req, res, next) => {
+  const start = Date.now();
+
+  res.on("finish", () => {
+    const ms = Date.now() - start;
+    console.log(
+      `[REQ] ${req.method} ${req.originalUrl} -> ${res.statusCode} (${ms}ms) origin=${req.headers.origin ?? "-"}`
+    );
+  });
+
+  next();
+});
 
 // ----------------- 라우트 -----------------
 app.use('/api/auth', authRoutes);
