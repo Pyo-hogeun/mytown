@@ -65,13 +65,14 @@ app.get('/health', (req, res) => {
 });
 // ✅ 모든 요청을 콘솔에 찍는 초간단 로거 (Render Logs에서 바로 확인 가능)
 app.use((req, res, next) => {
-  const start = Date.now();
-
   res.on("finish", () => {
-    const ms = Date.now() - start;
-    console.log(
-      `[REQ] ${req.method} ${req.originalUrl} -> ${res.statusCode} (${ms}ms) origin=${req.headers.origin ?? "-"}`
-    );
+    if (req.originalUrl.startsWith("/api/")) {
+      console.log("[CORS-RES]", req.method, req.originalUrl, {
+        origin: req.headers.origin,
+        allowOrigin: res.getHeader("access-control-allow-origin"),
+        allowCred: res.getHeader("access-control-allow-credentials"),
+      });
+    }
   });
 
   next();
