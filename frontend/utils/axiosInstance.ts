@@ -28,24 +28,8 @@ const resolveApiBaseUrl = () => {
 const API_BASE_URL = resolveApiBaseUrl();
 const instance = axios.create({
   baseURL: API_BASE_URL, // 🌍 백엔드 API 주소
-  timeout: 15000, // ✅ 15초 타임아웃으로 무한대기 방지
-  withCredentials: true, // ✅ 쿠키 필요 없으면 false로 바꿔 테스트
-});
-instance.interceptors.request.use((config) => {
-  console.log("[REQ]", config.method, config.baseURL, config.url);
-  return config;
 });
 
-instance.interceptors.response.use(
-  (res) => {
-    console.log("[RES]", res.status, res.config.url, "len:", JSON.stringify(res.data).length);
-    return res;
-  },
-  (err) => {
-    console.log("[ERR]", err.code, err.message);
-    return Promise.reject(err);
-  }
-);
 instance.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('token');
