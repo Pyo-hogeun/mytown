@@ -123,20 +123,7 @@ async function start() {
     const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server listening on port ${PORT} (env: ${process.env.NODE_ENV || 'development'})`);
     });
-    // ✅ iOS WebView에서 axios vs fetch 분리 테스트
-    async function testStores() {
-      const res = await fetch("https://mytown-myui.onrender.com/api/stores", {
-        method: "GET",
-        credentials: "include", // 쿠키 기반이면 include, 아니면 빼도 됨
-      });
-
-      const text = await res.text(); // ✅ json() 대신 text()로 먼저 받아보기(파싱 이슈 분리)
-      console.log("status:", res.status);
-      console.log("body:", text.slice(0, 200));
-    }
-
-    testStores();
-
+    
     // graceful shutdown
     const graceful = async (signal) => {
       console.info(`${signal} received — closing server`);
