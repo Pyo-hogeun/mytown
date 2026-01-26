@@ -62,23 +62,8 @@ const StoreList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { items: stores, loading } = useSelector((state: RootState) => state.store)
 
-  // ✅ iOS WebView에서 axios vs fetch 분리 테스트
-  async function testStores() {
-    const res = await fetch("https://mytown-myui.onrender.com/api/stores", {
-      method: "GET",
-      credentials: "include", // 쿠키 기반이면 include, 아니면 빼도 됨
-    });
-
-    const text = await res.text(); // ✅ json() 대신 text()로 먼저 받아보기(파싱 이슈 분리)
-    console.log("status:", res.status);
-    console.log("body:", text.slice(0, 200));
-  }
-  useEffect(()=>{
-    testStores();
-  },[]);
-
   useEffect(() => {
-    // dispatch(fetchStores())
+    dispatch(fetchStores())
   }, [dispatch]);
 
   if (loading) return <p>불러오는 중...</p>;
