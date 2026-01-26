@@ -69,10 +69,12 @@ app.get('/health', (req, res) => {
 app.use((req, res, next) => {
   res.on("finish", () => {
     if (req.originalUrl.startsWith("/api/")) {
-      console.log("[CORS-RES]", req.method, req.originalUrl, {
-        origin: req.headers.origin,
-        allowOrigin: res.getHeader("access-control-allow-origin"),
-        allowCred: res.getHeader("access-control-allow-credentials"),
+      console.log("[RES-HDR]", req.method, req.originalUrl, {
+        status: res.statusCode,
+        contentLength: res.getHeader("content-length"),
+        transferEncoding: res.getHeader("transfer-encoding"),
+        contentEncoding: res.getHeader("content-encoding"),
+        connection: res.getHeader("connection"),
       });
     }
   });
