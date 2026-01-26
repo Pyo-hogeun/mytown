@@ -1,6 +1,6 @@
 'use client';
 
-import { Store, fetchStores } from '@/redux/slices/storeSlice';
+import { Store } from '@/redux/slices/storeSlice';
 import { AppDispatch, RootState } from '@/redux/store';
 import Link from 'next/link';
 import React, { useEffect } from 'react';
