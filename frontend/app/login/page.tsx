@@ -1,13 +1,13 @@
 'use client';
 
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setToken, setUser } from '@/redux/slices/authSlice';
 import { login } from '@/services/authService';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styled, { keyframes } from 'styled-components';
 import Input from '../component/Input';
-// import { RootState } from '@/redux/store';
+import { RootState } from '@/redux/store';
 import KakaoLoginButton from '../component/KakaoLoginButton';
 
 // 🔄 로딩 스피너 애니메이션
