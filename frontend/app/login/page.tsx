@@ -142,7 +142,7 @@ const DevMenuItem = styled.button`
 const LoginPage = () => {
   const dispatch = useDispatch();
   const router = useRouter();
-  // const user = useSelector((state: RootState) => state.auth.user);
+  const user = useSelector((state: RootState) => state.auth.user);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -185,7 +185,7 @@ const LoginPage = () => {
       dispatch(setUser(data.user));
       dispatch(setToken(data.token));
 
-      // console.log('user', user?.role);
+      console.log('user', user?.role);
 
       if (data.user.role === 'rider') {
         router.push('/rider');
