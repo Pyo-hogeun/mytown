@@ -79,6 +79,15 @@ app.use((req, res, next) => {
         connection: res.getHeader("connection"),
       });
     }
+    if (req.originalUrl.includes("/api/auth/login")) {
+      console.log("[LOGIN-RES]", {
+        method: req.method,
+        status: res.statusCode,
+        origin: req.headers.origin,
+        allowOrigin: res.getHeader("access-control-allow-origin"),
+        allowCred: res.getHeader("access-control-allow-credentials"),
+      });
+    }
   });
 
   next();
