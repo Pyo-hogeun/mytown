@@ -49,6 +49,21 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 app.use(cors(corsOptions));
+// ✅ HIT 로거 + OPTIONS 강제 204 종료
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith("/api/")) {
+    console.log("[HIT]", req.method, req.originalUrl, {
+      origin: req.headers.origin,
+      ua: req.headers["user-agent"],
+    });
+  }
+
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+
+  next();
+});
 // ✅ Preflight(OPTIONS) 명시 처리 (cors가 대부분 처리하지만 명시해두면 디버깅이 쉬움)
 app.options("*", cors(corsOptions));
 app.options("/api/auth/login", cors(corsOptions));
