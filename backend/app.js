@@ -46,10 +46,12 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
+  optionsSuccessStatus: 204,
 };
 app.use(cors(corsOptions));
 // ✅ Preflight(OPTIONS) 명시 처리 (cors가 대부분 처리하지만 명시해두면 디버깅이 쉬움)
 app.options("*", cors(corsOptions));
+app.options("/api/auth/login", cors(corsOptions));
 
 // 기본 미들웨어
 app.use(express.json());
