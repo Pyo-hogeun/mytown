@@ -32,6 +32,11 @@ const allowedOrigins = new Set(
     .map(origin => origin.trim())
     .filter(Boolean)
 );
+// ✅ Capacitor/iOS WebView에서 사용하는 로컬 Origin 허용
+[
+  'capacitor://localhost',
+  'ionic://localhost',
+].forEach((origin) => allowedOrigins.add(origin));
 const corsOptions = {
   origin: (origin, cb) => {
     // ✅ 네이티브(WebView)나 일부 요청은 Origin이 없을 수 있음(null)
