@@ -22,7 +22,15 @@ const resolveApiBaseUrl = () => {
     return undefined;
   }
 
-  return `${window.location.origin}/api`;
+  const origin = window.location.origin;
+  const isNativeOrigin = ['capacitor://', 'ionic://', 'file://'].some((scheme) =>
+    origin.startsWith(scheme),
+  );
+  if (isNativeOrigin) {
+    return prodBaseUrl || devBaseUrl;
+  }
+
+  return `${origin}/api`;
 };
 
 const API_BASE_URL = resolveApiBaseUrl();
