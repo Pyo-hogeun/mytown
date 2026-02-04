@@ -59,6 +59,11 @@ app.use((req, res, next) => {
   }
 
   if (req.method === "OPTIONS") {
+    console.log("[HIT]", req.method, req.originalUrl, {
+      origin: req.headers.origin,
+      acrm: req.headers["access-control-request-method"],
+      acrh: req.headers["access-control-request-headers"],
+    });
     return res.status(204).end();
   }
 
