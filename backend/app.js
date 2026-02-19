@@ -40,7 +40,7 @@ const corsOptions = {
     if (allowedOrigins.has(origin)) return cb(null, true);
 
     // 필요하면 로그로 실제 origin을 확인
-    console.log("❗️CORS blocked origin:", origin);
+    console.log("CORS blocked origin:", origin);
     return cb(new Error("Not allowed by CORS"));
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
