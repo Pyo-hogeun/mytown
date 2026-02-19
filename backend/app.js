@@ -32,15 +32,10 @@ const allowedOrigins = new Set(
     .map(origin => origin.trim())
     .filter(Boolean)
 );
-// ✅ Capacitor/iOS WebView에서 사용하는 로컬 Origin 허용
-[
-  'capacitor://localhost',
-  'ionic://localhost',
-].forEach((origin) => allowedOrigins.add(origin));
 const corsOptions = {
   origin: (origin, cb) => {
     // ✅ 네이티브(WebView)나 일부 요청은 Origin이 없을 수 있음(null)
-    if (!origin) return cb(null, true);
+    if (!origin || origin === 'null') return cb(null, true);
 
     if (allowedOrigins.has(origin)) return cb(null, true);
 
@@ -126,6 +121,7 @@ app.use("/api", (req, res, next) => {
   res.setHeader("Surrogate-Control", "no-store");
   next();
 });
+app.set("etag", false);
 
 
 // ----------------- 라우트 -----------------
