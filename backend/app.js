@@ -32,15 +32,35 @@ const allowedOrigins = new Set(
     .map(origin => origin.trim())
     .filter(Boolean)
 );
+// ✅ Capacitor/iOS WebView에서 사용하는 로컬 Origin 허용
+[
+  'capacitor://localhost',
+  'ionic://localhost',
+  'http://localhost',
+  'https://localhost',
+].forEach((origin) => allowedOrigins.add(origin));
+
+const isLocalWebViewOrigin = (origin) => {
+  try {
+    const parsed = new URL(origin);
+    return (
+      parsed.hostname === 'localhost' &&
+      ['http:', 'https:', 'capacitor:', 'ionic:'].includes(parsed.protocol)
+    );
+  } catch {
+    return false;
+  }
+};
+
 const corsOptions = {
   origin: (origin, cb) => {
-    // ✅ 네이티브(WebView)나 일부 요청은 Origin이 없을 수 있음(null)
+    // ✅ 네이티브(WebView)나 일부 요청은 Origin이 비어있거나 문자열 'null'로 올 수 있음
     if (!origin || origin === 'null') return cb(null, true);
 
-    if (allowedOrigins.has(origin)) return cb(null, true);
+    if (allowedOrigins.has(origin) || isLocalWebViewOrigin(origin)) return cb(null, true);
 
     // 필요하면 로그로 실제 origin을 확인
-    console.log("CORS blocked origin:", origin);
+    console.log("❗️CORS blocked origin:", origin);
     return cb(new Error("Not allowed by CORS"));
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -121,7 +141,6 @@ app.use("/api", (req, res, next) => {
   res.setHeader("Surrogate-Control", "no-store");
   next();
 });
-app.set("etag", false);
 
 
 // ----------------- 라우트 -----------------
