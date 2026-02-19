@@ -36,13 +36,28 @@ const allowedOrigins = new Set(
 [
   'capacitor://localhost',
   'ionic://localhost',
+  'http://localhost',
+  'https://localhost',
 ].forEach((origin) => allowedOrigins.add(origin));
+
+const isLocalWebViewOrigin = (origin) => {
+  try {
+    const parsed = new URL(origin);
+    return (
+      parsed.hostname === 'localhost' &&
+      ['http:', 'https:', 'capacitor:', 'ionic:'].includes(parsed.protocol)
+    );
+  } catch {
+    return false;
+  }
+};
+
 const corsOptions = {
   origin: (origin, cb) => {
-    // ✅ 네이티브(WebView)나 일부 요청은 Origin이 없을 수 있음(null)
-    if (!origin) return cb(null, true);
+    // ✅ 네이티브(WebView)나 일부 요청은 Origin이 비어있거나 문자열 'null'로 올 수 있음
+    if (!origin || origin === 'null') return cb(null, true);
 
-    if (allowedOrigins.has(origin)) return cb(null, true);
+    if (allowedOrigins.has(origin) || isLocalWebViewOrigin(origin)) return cb(null, true);
 
     // 필요하면 로그로 실제 origin을 확인
     console.log("❗️CORS blocked origin:", origin);
