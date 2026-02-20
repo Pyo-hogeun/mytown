@@ -41,6 +41,22 @@ const RiderHomeContent = () => {
     fetchAssignedOrders();
   }, []);
 
+  const getLocationErrorMessage = (error: GeolocationPositionError) => {
+    if (error.code === error.PERMISSION_DENIED) {
+      return '위치 권한을 확인해주세요.';
+    }
+
+    if (error.code === error.POSITION_UNAVAILABLE) {
+      return '현재 위치를 확인할 수 없습니다. 잠시 후 다시 시도해주세요.';
+    }
+
+    if (error.code === error.TIMEOUT) {
+      return '위치 확인 시간이 초과되었습니다. 다시 시도해주세요.';
+    }
+
+    return '위치 정보를 가져오지 못했습니다. 다시 시도해주세요.';
+  };
+
   const handleManualLocationUpdate = () => {
     setLocationStatus(null);
     if (!navigator.geolocation) {
@@ -65,8 +81,8 @@ const RiderHomeContent = () => {
           setIsUpdatingLocation(false);
         }
       },
-      () => {
-        setLocationStatus('위치 권한을 확인해주세요.');
+      (error) => {
+        setLocationStatus(getLocationErrorMessage(error));
         setIsUpdatingLocation(false);
       },
       { enableHighAccuracy: true, timeout: 10000 },
