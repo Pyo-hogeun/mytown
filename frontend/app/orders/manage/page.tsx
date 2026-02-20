@@ -22,6 +22,13 @@ const List = styled.ul`
     padding: 16px;
     background-color: #fff;
   }
+  @media screen and (max-width: 1080px){
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media screen and (max-width: 800px){
+    grid-template-columns: 1fr;
+  }
 `;
 const SearchItem = styled.div`
   display: flex;
