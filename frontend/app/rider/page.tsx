@@ -7,15 +7,19 @@ import RiderOrdersPage from '@/app/rider/order/page';
 import axios from '@/utils/axiosInstance';
 import Settlement from './settlement/page';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/redux/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/redux/store';
+import { updateRiderLocation } from '@/redux/slices/authSlice';
 
 const RiderHomeContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
   const initialTab = (searchParams.get("tab") as 'available' | 'assigned' | 'settlement') || 'available';
 
   const [activeKey, setActiveKey] = useState<'available' | 'assigned' | 'settlement'>(initialTab);
+  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+  const [locationStatus, setLocationStatus] = useState<string | null>(null);
   const user = useSelector((state: RootState) => state.auth.user);
 
   // 🚀 최초 로딩 시 배정된 주문 여부 확인
@@ -37,6 +41,38 @@ const RiderHomeContent = () => {
     fetchAssignedOrders();
   }, []);
 
+  const handleManualLocationUpdate = () => {
+    setLocationStatus(null);
+    if (!navigator.geolocation) {
+      setLocationStatus('현재 브라우저에서는 위치 정보를 사용할 수 없습니다.');
+      return;
+    }
+
+    setIsUpdatingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          await dispatch(
+            updateRiderLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            }),
+          ).unwrap();
+          setLocationStatus('현재 위치가 업데이트되었습니다.');
+        } catch {
+          setLocationStatus('위치 업데이트에 실패했습니다.');
+        } finally {
+          setIsUpdatingLocation(false);
+        }
+      },
+      () => {
+        setLocationStatus('위치 권한을 확인해주세요.');
+        setIsUpdatingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
+
   const tabs = [
     { key: 'available', label: '배정 전 주문' },
     { key: 'assigned', label: '배정된 주문' },
@@ -45,6 +81,12 @@ const RiderHomeContent = () => {
 
   return (
     <div>
+      <div style={{ marginBottom: '12px' }}>
+        <button onClick={handleManualLocationUpdate} disabled={isUpdatingLocation}>
+          {isUpdatingLocation ? '위치 업데이트 중...' : '현재 위치 업데이트'}
+        </button>
+        {locationStatus && <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>{locationStatus}</p>}
+      </div>
       <Tabs tabs={tabs} activeKey={activeKey} onChange={(key) => setActiveKey(key as 'available' | 'assigned' | 'settlement')} />
       <div>
         {activeKey === 'available' && <AvailableOrdersPage />}
