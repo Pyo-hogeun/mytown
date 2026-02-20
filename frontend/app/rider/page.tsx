@@ -76,6 +76,12 @@ const RiderHomeContent = () => {
     return true;
   };
 
+
+  const getCurrentPosition = (options: PositionOptions) =>
+    new Promise<GeolocationPosition>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, options);
+    });
+
   const handleManualLocationUpdate = async () => {
     setLocationStatus(null);
     if (!navigator.geolocation) {
@@ -89,28 +95,34 @@ const RiderHomeContent = () => {
     }
 
     setIsUpdatingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          await dispatch(
-            updateRiderLocation({
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            }),
-          ).unwrap();
-          setLocationStatus('현재 위치가 업데이트되었습니다.');
-        } catch {
-          setLocationStatus('위치 업데이트에 실패했습니다.');
-        } finally {
-          setIsUpdatingLocation(false);
+
+    try {
+      let position: GeolocationPosition;
+
+      try {
+        position = await getCurrentPosition({ enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+      } catch (error) {
+        const geoError = error as GeolocationPositionError;
+        if (geoError.code !== geoError.POSITION_UNAVAILABLE) {
+          throw geoError;
         }
-      },
-      (error) => {
-        setLocationStatus(getLocationErrorMessage(error));
-        setIsUpdatingLocation(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
+
+        setLocationStatus('GPS 신호가 불안정해 저정밀 위치로 다시 시도합니다...');
+        position = await getCurrentPosition({ enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 });
+      }
+
+      await dispatch(
+        updateRiderLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        }),
+      ).unwrap();
+      setLocationStatus('현재 위치가 업데이트되었습니다.');
+    } catch (error) {
+      setLocationStatus(getLocationErrorMessage(error as GeolocationPositionError));
+    } finally {
+      setIsUpdatingLocation(false);
+    }
   };
 
   const tabs = [
