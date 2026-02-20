@@ -74,9 +74,12 @@ const CheckoutPageContent = () => {
   const { receiver, phone, address, detailAddress, deliveryTime } = orderState;
 
   const NEXT_PUBLIC_PORTONE_STORE_ID = process.env.NEXT_PUBLIC_PORTONE_STORE_ID!;
-  const redirectUrl = typeof window !== 'undefined'
-    ? new URL('/order-complete', window.location.origin).toString()
-    : 'http://localhost:3001/order-complete';
+  const API_BASE_URL = process.env.NODE_ENV === 'production'
+    ? process.env.NEXT_PUBLIC_API_BASE_URL_PROD
+    : process.env.NEXT_PUBLIC_API_BASE_URL_DEV;
+  const redirectUrl = API_BASE_URL
+    ? `${API_BASE_URL.replace(/\/+$/, '')}/payment-redirect`
+    : undefined;
 
   // 선택 항목 파싱
   const items: CheckoutItem[] = useMemo(() => {
@@ -107,6 +110,14 @@ const CheckoutPageContent = () => {
   const isWaitingPayment = paymentStatus.status !== "IDLE"
 
   const handleSubmit = async (e: any) => {
+    if (!redirectUrl) {
+      setPaymentStatus({
+        status: "FAILED",
+        message: "결제 리다이렉트 URL 환경변수가 설정되지 않았습니다.",
+      });
+      return;
+    }
+
     const { data: { channelKey } } = await axios.get("/payment/channel-key");
     e.preventDefault();
     setPaymentStatus({ status: "PENDING" })
