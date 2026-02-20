@@ -53,9 +53,11 @@ const bounce = keyframes`
 `
 // 📌 장바구니 갯수 뱃지 스타일
 const CartBadge = styled.span.withConfig({ shouldForwardProp: (props) => props !== 'animate' }) <{ animate: boolean }>`
-  position: absolute;
-  top: -8px;
-  right: 10px;
+  // position: absolute;
+  // top: -8px;
+  // right: 10px;
+  display: inline-block;
+  vertical-align: middle;
   background: #ff4d4f;
   color: white;
   font-size: 12px;
