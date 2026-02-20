@@ -57,10 +57,34 @@ const RiderHomeContent = () => {
     return '위치 정보를 가져오지 못했습니다. 다시 시도해주세요.';
   };
 
-  const handleManualLocationUpdate = () => {
+
+  const ensureLocationPermission = async () => {
+    if (!navigator.permissions?.query) {
+      return true;
+    }
+
+    try {
+      const permissionStatus = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+      if (permissionStatus.state === 'denied') {
+        setLocationStatus('브라우저에서 위치 권한이 차단되어 있습니다. 권한을 허용해주세요.');
+        return false;
+      }
+    } catch (error) {
+      console.warn('위치 권한 상태 조회 실패:', error);
+    }
+
+    return true;
+  };
+
+  const handleManualLocationUpdate = async () => {
     setLocationStatus(null);
     if (!navigator.geolocation) {
       setLocationStatus('현재 브라우저에서는 위치 정보를 사용할 수 없습니다.');
+      return;
+    }
+
+    const hasPermission = await ensureLocationPermission();
+    if (!hasPermission) {
       return;
     }
 
