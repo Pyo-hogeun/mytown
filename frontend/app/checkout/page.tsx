@@ -74,7 +74,9 @@ const CheckoutPageContent = () => {
   const { receiver, phone, address, detailAddress, deliveryTime } = orderState;
 
   const NEXT_PUBLIC_PORTONE_STORE_ID = process.env.NEXT_PUBLIC_PORTONE_STORE_ID!;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const redirectUrl = typeof window !== 'undefined'
+    ? new URL('/order-complete', window.location.origin).toString()
+    : 'http://localhost:3001/order-complete';
 
   // 선택 항목 파싱
   const items: CheckoutItem[] = useMemo(() => {
@@ -117,7 +119,7 @@ const CheckoutPageContent = () => {
       totalAmount: totalPrice,
       currency: "KRW",
       payMethod: "CARD",
-      redirectUrl: `${API_BASE_URL}/payment-redirect`,
+      redirectUrl,
     })
     if (payment?.code !== undefined) {
       setPaymentStatus({
