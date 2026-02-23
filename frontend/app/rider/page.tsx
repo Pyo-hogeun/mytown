@@ -153,6 +153,7 @@ const RiderHomeContent = () => {
 
       try {
         position = await getCurrentPosition({ enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+        console.log('통과 pos: ', position);
       } catch (error) {
         const geoError = error as GeolocationPositionError;
         if (geoError.code !== geoError.POSITION_UNAVAILABLE && geoError.code !== geoError.TIMEOUT) {
