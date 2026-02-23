@@ -77,15 +77,67 @@ const RiderHomeContent = () => {
   };
 
 
-  const getCurrentPosition = (options: PositionOptions) =>
+  const createGeoError = (code: number, message: string) => ({
+    code,
+    message,
+    PERMISSION_DENIED: 1,
+    POSITION_UNAVAILABLE: 2,
+    TIMEOUT: 3,
+  }) as GeolocationPositionError;
+
+  const getCurrentPosition = (options: PositionOptions, guardTimeoutMs = 20000) =>
     new Promise<GeolocationPosition>((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, options);
+      const timeoutId = window.setTimeout(() => {
+        reject(createGeoError(3, '위치 확인 응답이 지연되고 있습니다.'));
+      }, guardTimeoutMs);
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          window.clearTimeout(timeoutId);
+          resolve(position);
+        },
+        (error) => {
+          window.clearTimeout(timeoutId);
+          reject(error);
+        },
+        options,
+      );
+    });
+
+  const getCurrentPositionViaWatch = (options: PositionOptions, guardTimeoutMs = 25000) =>
+    new Promise<GeolocationPosition>((resolve, reject) => {
+      let watchId = -1;
+      const timeoutId = window.setTimeout(() => {
+        if (watchId !== -1) {
+          navigator.geolocation.clearWatch(watchId);
+        }
+        reject(createGeoError(3, '위치 확인 응답이 지연되고 있습니다.'));
+      }, guardTimeoutMs);
+
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          window.clearTimeout(timeoutId);
+          navigator.geolocation.clearWatch(watchId);
+          resolve(position);
+        },
+        (error) => {
+          window.clearTimeout(timeoutId);
+          navigator.geolocation.clearWatch(watchId);
+          reject(error);
+        },
+        options,
+      );
     });
 
   const handleManualLocationUpdate = async () => {
     setLocationStatus(null);
     if (!navigator.geolocation) {
       setLocationStatus('현재 브라우저에서는 위치 정보를 사용할 수 없습니다.');
+      return;
+    }
+
+    if (!window.isSecureContext) {
+      setLocationStatus('보안 연결(HTTPS) 환경에서만 위치 정보를 가져올 수 있습니다.');
       return;
     }
 
@@ -103,12 +155,12 @@ const RiderHomeContent = () => {
         position = await getCurrentPosition({ enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
       } catch (error) {
         const geoError = error as GeolocationPositionError;
-        if (geoError.code !== geoError.POSITION_UNAVAILABLE) {
+        if (geoError.code !== geoError.POSITION_UNAVAILABLE && geoError.code !== geoError.TIMEOUT) {
           throw geoError;
         }
 
-        setLocationStatus('GPS 신호가 불안정해 저정밀 위치로 다시 시도합니다...');
-        position = await getCurrentPosition({ enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 });
+        setLocationStatus('GPS 응답이 지연되어 대체 방식으로 다시 시도합니다...');
+        position = await getCurrentPositionViaWatch({ enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 });
       }
 
       await dispatch(
