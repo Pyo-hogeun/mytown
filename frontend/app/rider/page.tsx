@@ -10,6 +10,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/redux/store';
 import { updateRiderLocation } from '@/redux/slices/authSlice';
+import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 
 const RiderHomeContent = () => {
   const searchParams = useSearchParams();
@@ -85,6 +87,26 @@ const RiderHomeContent = () => {
     TIMEOUT: 3,
   }) as GeolocationPositionError;
 
+  const getCapacitorPosition = async () => {
+    const permissionStatus = await Geolocation.checkPermissions();
+    if (permissionStatus.location === 'denied') {
+      throw createGeoError(1, '위치 권한이 거부되었습니다.');
+    }
+
+    if (permissionStatus.location !== 'granted') {
+      const requestStatus = await Geolocation.requestPermissions();
+      if (requestStatus.location !== 'granted') {
+        throw createGeoError(1, '위치 권한이 거부되었습니다.');
+      }
+    }
+
+    return Geolocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    });
+  };
+
   const getCurrentPosition = (options: PositionOptions, guardTimeoutMs = 20000) =>
     new Promise<GeolocationPosition>((resolve, reject) => {
       const timeoutId = window.setTimeout(() => {
@@ -131,12 +153,14 @@ const RiderHomeContent = () => {
 
   const handleManualLocationUpdate = async () => {
     setLocationStatus(null);
-    if (!navigator.geolocation) {
+    const isNativePlatform = Capacitor.isNativePlatform();
+
+    if (!isNativePlatform && !navigator.geolocation) {
       setLocationStatus('현재 브라우저에서는 위치 정보를 사용할 수 없습니다.');
       return;
     }
 
-    if (!window.isSecureContext) {
+    if (!isNativePlatform && !window.isSecureContext) {
       setLocationStatus('보안 연결(HTTPS) 환경에서만 위치 정보를 가져올 수 있습니다.');
       return;
     }
@@ -149,25 +173,37 @@ const RiderHomeContent = () => {
     setIsUpdatingLocation(true);
 
     try {
-      let position: GeolocationPosition;
+      let latitude: number;
+      let longitude: number;
 
-      try {
-        position = await getCurrentPosition({ enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
-        console.log('통과 pos: ', position);
-      } catch (error) {
-        const geoError = error as GeolocationPositionError;
-        if (geoError.code !== geoError.POSITION_UNAVAILABLE && geoError.code !== geoError.TIMEOUT) {
-          throw geoError;
+      if (isNativePlatform) {
+        const position = await getCapacitorPosition();
+        latitude = position.coords.latitude;
+        longitude = position.coords.longitude;
+      } else {
+        let position: GeolocationPosition;
+
+        try {
+          position = await getCurrentPosition({ enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+          console.log('통과 pos: ', position);
+        } catch (error) {
+          const geoError = error as GeolocationPositionError;
+          if (geoError.code !== geoError.POSITION_UNAVAILABLE && geoError.code !== geoError.TIMEOUT) {
+            throw geoError;
+          }
+
+          setLocationStatus('GPS 응답이 지연되어 대체 방식으로 다시 시도합니다...');
+          position = await getCurrentPositionViaWatch({ enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 });
         }
 
-        setLocationStatus('GPS 응답이 지연되어 대체 방식으로 다시 시도합니다...');
-        position = await getCurrentPositionViaWatch({ enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 });
+        latitude = position.coords.latitude;
+        longitude = position.coords.longitude;
       }
 
       await dispatch(
         updateRiderLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
+          lat: latitude,
+          lng: longitude,
         }),
       ).unwrap();
       setLocationStatus('현재 위치가 업데이트되었습니다.');

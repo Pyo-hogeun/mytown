@@ -49,9 +49,11 @@
 		<true />
 		<key>NSAppTransportSecurity</key>
 		<dict>
-			<key>NSAllowsArbitraryLoadsInWebContent</key>
-			<true />
-		</dict>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true />
+	</dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>라이더 배송을 위해 현재 위치 정보를 사용합니다.</string>
 
 	</dict>
 </plist>
