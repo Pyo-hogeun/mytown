@@ -1,13 +1,12 @@
 'use client';
 
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { setToken, setUser } from '@/redux/slices/authSlice';
 import { login } from '@/services/authService';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styled, { keyframes } from 'styled-components';
 import Input from '../component/Input';
-import { RootState } from '@/redux/store';
 import KakaoLoginButton from '../component/KakaoLoginButton';
 
 // 🔄 로딩 스피너 애니메이션
@@ -142,7 +141,6 @@ const DevMenuItem = styled.button`
 const LoginPage = () => {
   const dispatch = useDispatch();
   const router = useRouter();
-  const user = useSelector((state: RootState) => state.auth.user);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -184,6 +182,7 @@ const LoginPage = () => {
 
       dispatch(setUser(data.user));
       dispatch(setToken(data.token));
+      router.replace('/');
 
     } catch (err) {
       console.error("로그인 실패:", err);
@@ -202,17 +201,6 @@ const LoginPage = () => {
     setPassword(loginPassword);
     await loginWithCredentials(loginEmail, loginPassword);
   };
-
-  useEffect(() => {
-    if (!user?.role) return;
-
-    if (user.role === 'rider') {
-      router.replace('/rider');
-      return;
-    }
-
-    router.replace('/products');
-  }, [router, user?.role]);
 
   return (
     <Container>

@@ -21,8 +21,7 @@ const KakaoCallbackContent = () => {
         dispatch(setUser(res.data.user));
         dispatch(setToken(res.data.token));
 
-        const targetPath = res.data.user?.role === "rider" ? "/rider" : "/products";
-        router.replace(targetPath);
+        router.replace("/");
       });
 
     }
