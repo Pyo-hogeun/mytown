@@ -34,8 +34,14 @@ const StyledLink = styled(Link)`
   gap: 1em;
   height: 2em;
   align-items: center;
-  &:after{
+  &:not(.back):after{
     content: '>';
+  }
+  &.back{
+    &:before{
+      content: '<';
+    }
+
   }
 `;
 const LocationButton = styled.button`
@@ -145,6 +151,7 @@ const UserInfomationContent = () => {
   };
   return (
     <Container>
+      <StyledLink className="back" href="/">뒤로</StyledLink>
       <Card>
         <Title>사용자 정보</Title>
         <ProfileImage>
