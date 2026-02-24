@@ -185,15 +185,6 @@ const LoginPage = () => {
       dispatch(setUser(data.user));
       dispatch(setToken(data.token));
 
-      console.log('user', user?.role);
-
-      if (data.user.role === 'rider') {
-        router.push('/rider');
-      } else {
-
-        router.push('/products');
-      }
-
     } catch (err) {
       console.error("로그인 실패:", err);
       alert("로그인 실패! 이메일/비밀번호를 확인하세요.");
@@ -211,6 +202,17 @@ const LoginPage = () => {
     setPassword(loginPassword);
     await loginWithCredentials(loginEmail, loginPassword);
   };
+
+  useEffect(() => {
+    if (!user?.role) return;
+
+    if (user.role === 'rider') {
+      router.replace('/rider');
+      return;
+    }
+
+    router.replace('/products');
+  }, [router, user?.role]);
 
   return (
     <Container>

@@ -20,11 +20,13 @@ const KakaoCallbackContent = () => {
 
         dispatch(setUser(res.data.user));
         dispatch(setToken(res.data.token));
-        router.push("/"); // 홈으로 리다이렉트
+
+        const targetPath = res.data.user?.role === "rider" ? "/rider" : "/products";
+        router.replace(targetPath);
       });
 
     }
-  }, [code]);
+  }, [code, dispatch, router]);
 
   return <p>카카오 로그인 처리중...</p>;
 }
