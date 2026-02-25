@@ -1,8 +1,9 @@
 // rider/orders/page.tsx
 'use client';
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Capacitor } from "@capacitor/core";
 import { AppDispatch, RootState } from "@/redux/store";
 import { clearOrders, fetchAssignedOrders, updateOrderStatus } from "@/redux/slices/riderOrderSlice";
 import styled from "styled-components";
@@ -10,6 +11,8 @@ import { OrderStatus } from "@/redux/slices/orderSlice";
 import Button from "@/app/component/Button";
 import CodeColorTransfer from "@/app/component/CodeColorTransfer";
 import Container from "@/app/component/Container";
+import { convertImageToDataUrl, takePhoto } from "@/utils/camera";
+
 const OrderItem = styled.div`
   margin-top: 12px;
   border: 1px solid #999;
@@ -23,7 +26,7 @@ const SubTitle = styled.div`
 const DeliveryCharge = styled.div`
   font-size: 16px;
   font-weight: 700;
-`
+`;
 const List = styled.div`
   display: flex;
   font-size: 13px;
@@ -33,7 +36,12 @@ const Label = styled.span`
   flex-basis: 20%;
   font-weight: 700;
 `;
-const TotalPrice = styled.div`
+const TotalPrice = styled.div``;
+const DeliveryProofImage = styled.img`
+  width: 100%;
+  margin-top: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
 `;
 const RiderButton = styled(Button) <{ $delivering?: boolean; $completed?: boolean }>`
   width: 100%;
@@ -47,29 +55,64 @@ const RiderButton = styled(Button) <{ $delivering?: boolean; $completed?: boolea
   
   ${(props) => props.$completed ? `
     background-color: red;
-  `: false}
+  ` : false}
 `;
+
 const Page = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { currentOrders, loading, error } = useSelector(
     (state: RootState) => state.riderOrders
   );
+  const [photoUploadingOrderId, setPhotoUploadingOrderId] = useState<string | null>(null);
+
   const statusTransfer = (value: OrderStatus) => {
     switch (value) {
       case "pending":
-        return "대기중"
+        return "대기중";
       case "accepted":
-        return "승인"
+        return "승인";
       case "assigned":
-        return "배차완료"
+        return "배차완료";
       case "delivering":
-        return "배달중"
+        return "배달중";
       case "completed":
-        return "완료"
+        return "완료";
       case "canceled":
-        return "취소"
+        return "취소";
     }
-  }
+  };
+
+  const handleCompleteWithPhoto = async (orderId: string) => {
+    const platform = Capacitor.getPlatform();
+
+    if (platform !== "ios") {
+      alert("현재는 iOS 앱에서만 사진 인증 후 배달 완료를 지원합니다.");
+      return;
+    }
+
+    try {
+      setPhotoUploadingOrderId(orderId);
+      const webPath = await takePhoto();
+      if (!webPath) {
+        alert("사진 촬영이 취소되었습니다.");
+        return;
+      }
+
+      const deliveryProofImage = await convertImageToDataUrl(webPath);
+
+      await dispatch(
+        updateOrderStatus({
+          orderId,
+          status: "completed",
+          deliveryProofImage,
+        })
+      ).unwrap();
+    } catch (err: any) {
+      alert(err?.message || "사진 인증 처리 중 오류가 발생했습니다.");
+    } finally {
+      setPhotoUploadingOrderId(null);
+    }
+  };
 
   useEffect(() => {
     dispatch(fetchAssignedOrders());
@@ -108,6 +151,13 @@ const Page = () => {
           <TotalPrice>주문 금액: {order.totalPrice.toLocaleString()}원</TotalPrice>
           <DeliveryCharge>수수료: {order.deliveryCharge}원</DeliveryCharge>
 
+          {order.deliveryProofImage && (
+            <>
+              <SubTitle>배달 인증 사진</SubTitle>
+              <DeliveryProofImage src={order.deliveryProofImage} alt="배달 인증" />
+            </>
+          )}
+
           {/* ✅ 상태 변경 버튼 */}
           {order.status === "assigned" && (
             <RiderButton
@@ -119,9 +169,10 @@ const Page = () => {
           {order.status === "delivering" && (
             <RiderButton
               $delivering={true}
-              onClick={() => dispatch(updateOrderStatus({ orderId: order._id, status: "completed" }))}
+              onClick={() => handleCompleteWithPhoto(order._id)}
+              disabled={photoUploadingOrderId === order._id}
             >
-              배달 완료했습니다
+              {photoUploadingOrderId === order._id ? "사진 인증 처리 중..." : "배달 완료했습니다"}
             </RiderButton>
           )}
           {order.status === "completed" && (
@@ -136,5 +187,6 @@ const Page = () => {
       ))}
     </Container>
   );
-}
-export default Page
+};
+
+export default Page;

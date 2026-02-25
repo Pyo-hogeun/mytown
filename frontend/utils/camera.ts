@@ -12,3 +12,16 @@ export async function takePhoto() {
 
   return photo.webPath; // <img src="...">로 바로 표시 가능
 }
+
+// ✅ webPath 이미지를 base64 data URL로 변환 (서버 전송용)
+export async function convertImageToDataUrl(webPath: string) {
+  const response = await fetch(webPath);
+  const blob = await response.blob();
+
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("이미지 변환 실패"));
+    reader.readAsDataURL(blob);
+  });
+}
