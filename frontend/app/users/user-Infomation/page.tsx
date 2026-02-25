@@ -150,6 +150,7 @@ const UserInfomationContent = () => {
     }
   };
   return (
+    
     <Container>
       <StyledLink className="back" href="/">뒤로</StyledLink>
       <Card>

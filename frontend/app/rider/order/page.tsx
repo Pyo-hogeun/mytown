@@ -113,7 +113,7 @@ const Page = () => {
             <RiderButton
               onClick={() => dispatch(updateOrderStatus({ orderId: order._id, status: "delivering" }))}
             >
-              배달 시작
+              배달 시작합니다
             </RiderButton>
           )}
           {order.status === "delivering" && (
@@ -121,7 +121,7 @@ const Page = () => {
               $delivering={true}
               onClick={() => dispatch(updateOrderStatus({ orderId: order._id, status: "completed" }))}
             >
-              배달 완료
+              배달 완료했습니다
             </RiderButton>
           )}
           {order.status === "completed" && (
@@ -129,7 +129,7 @@ const Page = () => {
               $completed={true}
               disabled
             >
-              배달 완료
+              종료된 배달
             </RiderButton>
           )}
         </OrderItem>
