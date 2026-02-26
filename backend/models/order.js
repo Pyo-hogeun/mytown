@@ -110,6 +110,12 @@ const OrderSchema = new Schema({
     default: null,
   },
 
+  // ✅ 라이더 배달 인증 사진(base64 data URL)
+  deliveryProofImage: {
+    type: String,
+    default: "",
+  },
+
   // ✅ 주문 완료 시각
   completedAt: {
     type: Date,

@@ -770,7 +770,7 @@ router.patch("/rider/:id/status", authMiddleware, async (req, res) => {
     }
 
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, deliveryProofImage } = req.body;
 
     const order = await Order.findOne({
       _id: id,
@@ -787,8 +787,13 @@ router.patch("/rider/:id/status", authMiddleware, async (req, res) => {
 
     order.status = status;
 
-    // ✅ 완료 시 completedAt 기록
     if (status === "completed") {
+      if (!deliveryProofImage || typeof deliveryProofImage !== "string") {
+        return res.status(400).json({ message: "배달 완료 처리 시 인증 사진이 필요합니다." });
+      }
+
+      order.deliveryProofImage = deliveryProofImage;
+      // ✅ 완료 시 completedAt 기록
       order.completedAt = new Date();
     }
 

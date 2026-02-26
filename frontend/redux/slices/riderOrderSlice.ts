@@ -41,6 +41,7 @@ export interface OrderDetail {
   };
   deliveryCharge: number;
   orderItems: OrderItem[];
+  deliveryProofImage?: string;
 }
 
 interface RiderOrderState {
@@ -127,9 +128,16 @@ export const assignOrder = createAsyncThunk(
 // ✅ 주문 상태 업데이트
 export const updateOrderStatus = createAsyncThunk(
   "riderOrders/updateOrderStatus",
-  async ({ orderId, status }: { orderId: string; status: OrderStatus }, { rejectWithValue }) => {
+  async (
+    {
+      orderId,
+      status,
+      deliveryProofImage,
+    }: { orderId: string; status: OrderStatus; deliveryProofImage?: string },
+    { rejectWithValue }
+  ) => {
     try {
-      const res = await axios.patch(`/order/rider/${orderId}/status`, { status });
+      const res = await axios.patch(`/order/rider/${orderId}/status`, { status, deliveryProofImage });
       return res.data.order as OrderDetail;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "주문 상태 업데이트 실패");
