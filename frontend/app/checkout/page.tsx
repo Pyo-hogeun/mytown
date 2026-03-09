@@ -5,6 +5,7 @@ import { Suspense, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
 import PortOne from "@portone/browser-sdk/v2"
+import { Capacitor } from '@capacitor/core';
 import type { RootState } from '@/redux/store';
 import axios from '@/utils/axiosInstance';
 import { createOrder } from '@/redux/slices/orderSlice';
@@ -77,9 +78,13 @@ const CheckoutPageContent = () => {
   const API_BASE_URL = process.env.NODE_ENV === 'production'
     ? process.env.NEXT_PUBLIC_API_BASE_URL_PROD
     : process.env.NEXT_PUBLIC_API_BASE_URL_DEV;
-  const redirectUrl = API_BASE_URL
-    ? `${API_BASE_URL.replace(/\/+$/, '')}/payment-redirect`
-    : undefined;
+  const APP_SCHEME = process.env.NEXT_PUBLIC_APP_SCHEME || 'com.mytown.app';
+  const isNativePlatform = Capacitor.isNativePlatform();
+  const redirectUrl = isNativePlatform
+    ? `${APP_SCHEME}://payment-redirect`
+    : API_BASE_URL
+      ? `${API_BASE_URL.replace(/\/+$/, '')}/payment-redirect`
+      : undefined;
 
   // 선택 항목 파싱
   const items: CheckoutItem[] = useMemo(() => {
@@ -131,6 +136,7 @@ const CheckoutPageContent = () => {
       currency: "KRW",
       payMethod: "CARD",
       redirectUrl,
+      ...(isNativePlatform ? { appScheme: APP_SCHEME } : {}),
     })
     if (payment?.code !== undefined) {
       setPaymentStatus({
