@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
 import PortOne from "@portone/browser-sdk/v2"
@@ -71,6 +71,7 @@ const CheckoutPageContent = () => {
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>({
     status: 'IDLE',
   })
+  const processedPaymentIdRef = useRef<string | null>(null);
   // Redux에서 배송 정보 가져오기
   const { receiver, phone, address, detailAddress, deliveryTime } = orderState;
 
@@ -114,6 +115,86 @@ const CheckoutPageContent = () => {
     })
   const isWaitingPayment = paymentStatus.status !== "IDLE"
 
+  const finalizePayment = useCallback(async (paymentId: string) => {
+    try {
+      const { data } = await axios.post("/payment/complete", {
+        paymentId,
+        amount: totalPrice,
+      });
+
+      if (data.status !== "PAID") {
+        setPaymentStatus({
+          status: "FAILED",
+          message: "결제 상태가 PAID가 아닙니다.",
+        });
+        return;
+      }
+
+      setPaymentStatus({ status: "PAID" });
+
+      const payloadItems = items.map(i => ({
+        _id: i._id,
+        product: i.product,
+        name: i.name,
+        store: i.store,
+        quantity: i.quantity,
+        unitPrice: i.unitPrice,
+        optionName: i.optionName,
+        optionExtraPrice: i.optionExtraPrice,
+      }));
+
+      const action = await dispatch(
+        createOrder({
+          items: payloadItems,
+          paymentMethod: "CARD",
+          receiver,
+          phone,
+          address,
+          detailAddress,
+          deliveryTime,
+          totalPrice,
+        })
+      );
+
+      if (createOrder.fulfilled.match(action)) {
+        dispatch(fetchCart());
+        router.push(`/order-complete`);
+      } else {
+        setPaymentStatus({
+          status: "FAILED",
+          message: "주문 생성에 실패했습니다.",
+        });
+      }
+    } catch (err: any) {
+      console.error(err);
+      setPaymentStatus({
+        status: "FAILED",
+        message: err.response?.data?.message || "결제 검증 실패",
+      });
+    }
+  }, [address, deliveryTime, detailAddress, dispatch, items, phone, receiver, router, totalPrice]);
+
+  useEffect(() => {
+    const redirectedPaymentId = searchParams.get("paymentId");
+    const errorCode = searchParams.get("code");
+    const errorMessage = searchParams.get("message");
+
+    if (errorCode) {
+      setPaymentStatus({
+        status: "FAILED",
+        message: errorMessage || "결제가 취소되었거나 실패했습니다.",
+      });
+      return;
+    }
+
+    if (!redirectedPaymentId) return;
+    if (processedPaymentIdRef.current === redirectedPaymentId) return;
+
+    processedPaymentIdRef.current = redirectedPaymentId;
+    setPaymentStatus({ status: "PENDING" });
+    finalizePayment(redirectedPaymentId);
+  }, [finalizePayment, searchParams]);
+
   const handleSubmit = async (e: any) => {
     if (!redirectUrl) {
       setPaymentStatus({
@@ -146,66 +227,12 @@ const CheckoutPageContent = () => {
       return
     }
 
-    try {
-      // 백엔드에 검증 요청
-      const { data } = await axios.post("/payment/complete", {
-        paymentId: payment?.paymentId,
-        amount: totalPrice,
-      });
-      console.log('data: ', data);
-
-      if (data.status === "PAID") {
-        setPaymentStatus({ status: "PAID" });
-        alert("결제 성공! 주문을 생성합니다.");
-
-        // 주문 생성
-        const payloadItems = items.map(i => ({
-          _id: i._id,
-          product: i.product,
-          name: i.name,
-          store: i.store,
-          quantity: i.quantity,
-          unitPrice: i.unitPrice,
-          optionName: i.optionName,
-          optionExtraPrice: i.optionExtraPrice,
-        }));
-
-        const action = await dispatch(
-          createOrder({
-            items: payloadItems,
-            paymentMethod: "CARD",
-            receiver,
-            phone,
-            address,
-            detailAddress,
-            deliveryTime,
-            totalPrice,
-          })
-        );
-
-        if (createOrder.fulfilled.match(action)) {
-          dispatch(fetchCart());
-          setPaymentStatus({ status: "PAID" });
-          router.push(`/order-complete`);
-        } else {
-          setPaymentStatus({
-            status: "FAILED",
-            message: "주문 생성에 실패했습니다.",
-          });
-        }
-      } else {
-        setPaymentStatus({
-          status: "FAILED",
-          message: "결제 상태가 PAID가 아닙니다.",
-        });
-      }
-    } catch (err: any) {
-      console.error(err);
-      setPaymentStatus({
-        status: "FAILED",
-        message: err.response?.data?.message || "결제 검증 실패",
-      });
+    if (!payment?.paymentId) {
+      // 모바일 앱에서는 외부 결제창 완료 후 redirectUrl로 복귀하며 query 파라미터로 paymentId를 전달한다.
+      return;
     }
+
+    await finalizePayment(payment.paymentId);
   }
 
   return (
